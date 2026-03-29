@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function App() {
   return (
-    <div className="min-h-screen bg-background p-4 pb-safe">
+    <div className="h-svh bg-background p-4 pb-safe">
       <div className="mx-auto max-w-md">
         <header className="mb-6 pt-safe">
           <h1 className="text-2xl font-bold text-center">
@@ -24,7 +24,7 @@ function App() {
         </main>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
