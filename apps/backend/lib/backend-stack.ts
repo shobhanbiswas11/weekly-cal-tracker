@@ -21,15 +21,14 @@ export class BackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: BackendStackProps) {
     super(scope, id, props);
 
-    // Configuration from context or environment
-    const clerkIssuer =
-      props?.clerkIssuer ||
-      this.node.tryGetContext("clerkIssuer") ||
-      "https://YOUR_CLERK_DOMAIN.clerk.accounts.dev";
-    const clerkAudience =
-      props?.clerkAudience || this.node.tryGetContext("clerkAudience") || "";
-    const allowedOrigin =
-      props?.allowedOrigin || this.node.tryGetContext("allowedOrigin") || "*";
+    // Configuration from props (passed from environment variables in bin/backend.ts)
+    const clerkIssuer = props?.clerkIssuer;
+    const clerkAudience = props?.clerkAudience || "";
+    const allowedOrigin = props?.allowedOrigin || "*";
+
+    if (!clerkIssuer) {
+      throw new Error("CLERK_ISSUER environment variable is required");
+    }
 
     // =====================
     // DynamoDB Table
