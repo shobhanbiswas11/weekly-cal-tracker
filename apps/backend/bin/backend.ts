@@ -7,9 +7,15 @@ const app = new cdk.App();
 
 // Get configuration from environment variables
 const clerkIssuer = process.env.CLERK_ISSUER;
-const clerkAudience = process.env.CLERK_AUDIENCE || "";
-const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
 const openaiApiKey = process.env.OPENAI_API_KEY;
+
+if (!clerkIssuer) {
+  throw new Error("CLERK_ISSUER environment variable is required");
+}
+
+if (!openaiApiKey) {
+  throw new Error("OPENAI_API_KEY environment variable is required");
+}
 
 new BackendStack(app, "CalorieTrackerStack", {
   // Deploy to the current CLI-configured account/region
@@ -20,8 +26,6 @@ new BackendStack(app, "CalorieTrackerStack", {
 
   // Stack-specific configuration
   clerkIssuer,
-  clerkAudience,
-  allowedOrigin,
   openaiApiKey,
 
   // Stack tags

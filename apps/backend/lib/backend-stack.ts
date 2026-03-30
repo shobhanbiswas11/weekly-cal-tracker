@@ -9,31 +9,19 @@ import { Construct } from "constructs";
 import * as path from "path";
 
 interface BackendStackProps extends cdk.StackProps {
-  clerkIssuer?: string;
-  clerkAudience?: string;
-  allowedOrigin?: string;
-  openaiApiKey?: string;
+  clerkIssuer: string;
+  openaiApiKey: string;
 }
 
 export class BackendStack extends cdk.Stack {
   public readonly apiUrl: cdk.CfnOutput;
 
-  constructor(scope: Construct, id: string, props?: BackendStackProps) {
+  constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
     // Configuration from props (passed from environment variables in bin/backend.ts)
-    const clerkIssuer = props?.clerkIssuer;
-    const clerkAudience = props?.clerkAudience || "";
-    const allowedOrigin = props?.allowedOrigin || "*";
-    const openaiApiKey = props?.openaiApiKey;
-
-    if (!clerkIssuer) {
-      throw new Error("CLERK_ISSUER environment variable is required");
-    }
-
-    if (!openaiApiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is required");
-    }
+    const clerkIssuer = props.clerkIssuer;
+    const openaiApiKey = props.openaiApiKey;
 
     // =====================
     // DynamoDB Table
@@ -61,7 +49,7 @@ export class BackendStack extends cdk.Stack {
     // =====================
     const lambdaEnvironment = {
       TABLE_NAME: calorieEntriesTable.tableName,
-      ALLOWED_ORIGIN: allowedOrigin,
+      ALLOWED_ORIGIN: "*",
     };
 
     const lambdaDefaults: Partial<lambdaNodejs.NodejsFunctionProps> = {
@@ -130,7 +118,7 @@ export class BackendStack extends cdk.Stack {
     const httpApi = new apigatewayv2.HttpApi(this, "CalorieTrackerApi", {
       apiName: "CalorieTrackerApi",
       corsPreflight: {
-        allowOrigins: [allowedOrigin],
+        allowOrigins: ["*"],
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,
@@ -142,20 +130,11 @@ export class BackendStack extends cdk.Stack {
       },
     });
 
-    // JWT Authorizer for Clerk
-    // Note: For Clerk, the audience should be your Clerk Frontend API URL
-    // e.g., "https://your-app.clerk.accounts.dev"
-    if (!clerkAudience) {
-      throw new Error(
-        "clerkAudience is required. Set it to your Clerk Frontend API URL in env",
-      );
-    }
-
     const jwtAuthorizer = new apigatewayv2Authorizers.HttpJwtAuthorizer(
       "ClerkJwtAuthorizer",
       clerkIssuer,
       {
-        jwtAudience: [clerkAudience],
+        jwtAudience: ["*"],
         identitySource: ["$request.header.Authorization"],
       },
     );
