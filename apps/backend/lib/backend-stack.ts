@@ -48,10 +48,7 @@ export class BackendStack extends cdk.Stack {
           type: dynamodb.AttributeType.STRING,
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy: cdk.RemovalPolicy.RETAIN, // Keep data on stack deletion
-        pointInTimeRecoverySpecification: {
-          pointInTimeRecoveryEnabled: true,
-        },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
     );
 

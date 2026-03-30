@@ -2,13 +2,14 @@
   "name": "backend",
   "version": "0.1.0",
   "bin": {
-    "backend": "bin/backend.js"
+    "backend": "dist/bin/backend.js"
   },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "synth": "cdk synth"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",

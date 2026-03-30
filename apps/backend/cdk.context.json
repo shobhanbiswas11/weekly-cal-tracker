@@ -1,5 +1,5 @@
 {
-  "clerkIssuer": "https://YOUR_CLERK_DOMAIN.clerk.accounts.dev",
-  "clerkAudience": "YOUR_CLERK_FRONTEND_API_URL",
+  "clerkIssuer": "https://renewed-bug-36.clerk.accounts.dev",
+  "clerkAudience": "",
   "allowedOrigin": "*"
 }
