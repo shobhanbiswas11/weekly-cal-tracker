@@ -68,7 +68,7 @@ export default function HomePage() {
       />
 
       {/* Chat Navigation */}
-      <div className="fixed bottom-20 left-4 right-4">
+      <div className="fixed bottom-0 left-0 right-0 p-4">
         <Button
           onClick={() => navigate("/chat")}
           className="w-full h-12 gap-2 text-base shadow-lg"
