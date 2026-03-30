@@ -23,7 +23,7 @@ export default function HomePage() {
   const weekGoal = lastWeekSummary.weeklyCalorieGoal;
 
   return (
-    <div className="flex flex-col gap-4 p-4 pb-24">
+    <div className="flex flex-col gap-4 p-4 pb-32">
       {/* Time-based greeting */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">{getGreeting()}</h1>
@@ -68,7 +68,7 @@ export default function HomePage() {
       />
 
       {/* Chat Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
         <Button
           onClick={() => navigate("/chat")}
           className="w-full h-12 gap-2 text-base shadow-lg"

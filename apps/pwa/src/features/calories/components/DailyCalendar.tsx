@@ -12,7 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { addDays, formatDateDisplay, formatDateToISO, isToday } from "../utils";
+import {
+  addDays,
+  formatDateDisplay,
+  formatDateToISO,
+  isToday,
+  parseLocalDate,
+} from "../utils";
 
 interface DailyCalendarProps {
   date: string; // YYYY-MM-DD
@@ -20,7 +26,7 @@ interface DailyCalendarProps {
 }
 
 export function DailyCalendar({ date, onDateChange }: DailyCalendarProps) {
-  const currentDate = new Date(date);
+  const currentDate = parseLocalDate(date);
 
   const handlePrev = () => {
     const newDate = addDays(currentDate, -1);

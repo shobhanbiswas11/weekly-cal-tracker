@@ -1,10 +1,6 @@
 // Grid of macros with optional progress
 
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressTrack,
-} from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { MacroTotals, UserGoals } from "../types";
 import { DEFAULT_GOALS } from "../types";
@@ -62,11 +58,13 @@ export function MacroGrid({
               showLabel
             />
             {showProgress && macro.goal && (
-              <Progress value={macro.value} max={macro.goal} className="w-16">
-                <ProgressTrack className="h-1.5">
-                  <ProgressIndicator className={progressColors[macro.type]} />
-                </ProgressTrack>
-              </Progress>
+              <Progress
+                value={macro.value}
+                max={macro.goal}
+                className="w-16"
+                trackClassName="h-1.5"
+                indicatorClassName={progressColors[macro.type]}
+              />
             )}
           </div>
         ))}

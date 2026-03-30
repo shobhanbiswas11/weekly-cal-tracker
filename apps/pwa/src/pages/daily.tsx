@@ -1,9 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressTrack,
-} from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import {
   calculatePercentage,
   DailyCalendar,
@@ -59,11 +55,12 @@ export default function DailyPage() {
             </span>
           </div>
 
-          <Progress value={totals.calories} max={calorieGoal}>
-            <ProgressTrack className="h-3 rounded-full">
-              <ProgressIndicator className={getProgressColor()} />
-            </ProgressTrack>
-          </Progress>
+          <Progress
+            value={totals.calories}
+            max={calorieGoal}
+            trackClassName="h-3 rounded-full"
+            indicatorClassName={getProgressColor()}
+          />
 
           <p className="text-center text-sm">
             {caloriesRemaining > 0 ? (

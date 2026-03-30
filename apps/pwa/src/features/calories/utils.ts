@@ -8,10 +8,21 @@ export function getToday(): string {
 }
 
 /**
- * Format a Date object to YYYY-MM-DD
+ * Format a Date object to YYYY-MM-DD (local time)
  */
 export function formatDateToISO(date: Date): string {
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parse a YYYY-MM-DD string to a Date object in local time
+ */
+export function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 /**
