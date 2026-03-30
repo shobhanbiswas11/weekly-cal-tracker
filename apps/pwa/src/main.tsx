@@ -19,12 +19,45 @@ createRoot(document.getElementById("root")!).render(
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
       appearance={{
+        baseTheme: undefined,
         variables: {
-          colorPrimary: "oklch(0.7 0.2 145)",
-          colorBackground: "oklch(0.15 0.02 260)",
-          colorText: "oklch(0.95 0.01 260)",
-          colorInputBackground: "oklch(0.2 0.02 260)",
-          colorInputText: "oklch(0.95 0.01 260)",
+          colorPrimary: "#a3e635",
+          colorBackground: "#18181b",
+          colorText: "#fafafa",
+          colorTextSecondary: "#a1a1aa",
+          colorInputBackground: "#27272a",
+          colorInputText: "#fafafa",
+          colorNeutral: "#fafafa",
+          colorDanger: "#ef4444",
+          colorSuccess: "#22c55e",
+          borderRadius: "0.5rem",
+          fontFamily: "'Geist Variable', sans-serif",
+        },
+        elements: {
+          rootBox: "w-full",
+          card: "bg-zinc-900 border border-zinc-800 shadow-xl",
+          headerTitle: "text-zinc-50 text-xl font-semibold",
+          headerSubtitle: "text-zinc-400",
+          socialButtonsBlockButton:
+            "bg-zinc-800 border border-zinc-700 text-zinc-50 hover:bg-zinc-700 transition-colors",
+          socialButtonsBlockButtonText: "text-zinc-50 font-medium",
+          dividerLine: "bg-zinc-700",
+          dividerText: "text-zinc-500",
+          formFieldLabel: "text-zinc-300",
+          formFieldInput:
+            "bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500 focus:border-lime-500 focus:ring-lime-500/20",
+          formButtonPrimary:
+            "bg-lime-500 hover:bg-lime-600 text-zinc-900 font-semibold",
+          footerActionText: "text-zinc-400",
+          footerActionLink: "text-lime-400 hover:text-lime-300",
+          identityPreviewText: "text-zinc-50",
+          identityPreviewEditButton: "text-lime-400",
+          userButtonPopoverCard: "bg-zinc-900 border border-zinc-800",
+          userButtonPopoverActionButton: "text-zinc-300 hover:bg-zinc-800",
+          userButtonPopoverActionButtonText: "text-zinc-300",
+          userButtonPopoverFooter: "border-zinc-800",
+          userPreviewMainIdentifier: "text-zinc-50",
+          userPreviewSecondaryIdentifier: "text-zinc-400",
         },
       }}
     >
