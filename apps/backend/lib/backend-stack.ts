@@ -4,7 +4,6 @@ import * as apigatewayv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrat
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
-import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import * as path from "path";
@@ -13,6 +12,7 @@ interface BackendStackProps extends cdk.StackProps {
   clerkIssuer?: string;
   clerkAudience?: string;
   allowedOrigin?: string;
+  openaiApiKey?: string;
 }
 
 export class BackendStack extends cdk.Stack {
@@ -25,9 +25,14 @@ export class BackendStack extends cdk.Stack {
     const clerkIssuer = props?.clerkIssuer;
     const clerkAudience = props?.clerkAudience || "";
     const allowedOrigin = props?.allowedOrigin || "*";
+    const openaiApiKey = props?.openaiApiKey;
 
     if (!clerkIssuer) {
       throw new Error("CLERK_ISSUER environment variable is required");
+    }
+
+    if (!openaiApiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is required");
     }
 
     // =====================
@@ -50,20 +55,6 @@ export class BackendStack extends cdk.Stack {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
     );
-
-    // =====================
-    // SSM Parameter for OpenAI API Key
-    // =====================
-    // Note: You need to create this parameter manually in AWS SSM Parameter Store
-    // aws ssm put-parameter --name "/calorie-tracker/openai-api-key" --value "sk-xxx" --type SecureString
-    const openaiApiKeyParam =
-      ssm.StringParameter.fromSecureStringParameterAttributes(
-        this,
-        "OpenAIApiKey",
-        {
-          parameterName: "/calorie-tracker/openai-api-key",
-        },
-      );
 
     // =====================
     // Shared Lambda Configuration
@@ -94,7 +85,7 @@ export class BackendStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(60), // Longer timeout for OpenAI calls
       environment: {
         ...lambdaEnvironment,
-        OPENAI_API_KEY: openaiApiKeyParam.stringValue,
+        OPENAI_API_KEY: openaiApiKey,
       },
     });
 
@@ -156,7 +147,7 @@ export class BackendStack extends cdk.Stack {
     // e.g., "https://your-app.clerk.accounts.dev"
     if (!clerkAudience) {
       throw new Error(
-        "clerkAudience is required. Set it to your Clerk Frontend API URL in cdk.context.json",
+        "clerkAudience is required. Set it to your Clerk Frontend API URL in env",
       );
     }
 

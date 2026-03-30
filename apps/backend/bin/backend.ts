@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib/core";
+import "dotenv/config";
 import { BackendStack } from "../lib/backend-stack";
 
 const app = new cdk.App();
@@ -8,6 +9,7 @@ const app = new cdk.App();
 const clerkIssuer = process.env.CLERK_ISSUER;
 const clerkAudience = process.env.CLERK_AUDIENCE || "";
 const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
+const openaiApiKey = process.env.OPENAI_API_KEY;
 
 new BackendStack(app, "CalorieTrackerStack", {
   // Deploy to the current CLI-configured account/region
@@ -20,6 +22,7 @@ new BackendStack(app, "CalorieTrackerStack", {
   clerkIssuer,
   clerkAudience,
   allowedOrigin,
+  openaiApiKey,
 
   // Stack tags
   tags: {
