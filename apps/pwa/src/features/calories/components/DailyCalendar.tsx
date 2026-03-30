@@ -7,18 +7,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { addDays, isToday as dateFnsIsToday } from "date-fns";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import {
-  addDays,
-  formatDateDisplay,
-  formatDateToISO,
-  isToday,
-  parseLocalDate,
-} from "../utils";
+import { formatDateDisplay, formatDateToISO, parseLocalDate } from "../utils";
 
 interface DailyCalendarProps {
   date: string; // YYYY-MM-DD
@@ -44,7 +39,7 @@ export function DailyCalendar({ date, onDateChange }: DailyCalendarProps) {
     }
   };
 
-  const isTodaySelected = isToday(date);
+  const isTodaySelected = dateFnsIsToday(currentDate);
 
   return (
     <div className="flex items-center justify-between gap-2 px-4 py-3 bg-card rounded-xl ring-1 ring-foreground/10">

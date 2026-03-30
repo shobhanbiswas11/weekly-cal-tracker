@@ -31,7 +31,9 @@ export function Header({ menuContent }: HeaderProps) {
         {/* Logo - Left */}
         <div className="shrink-0">
           <Button variant="ghost" size="icon-lg" onClick={() => navigate("/")}>
-            <Flame className="size-6" />
+            <Flame
+              className={`size-6 ${location.pathname === "/" ? "text-primary" : ""}`}
+            />
           </Button>
         </div>
 

@@ -1,9 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressTrack,
-} from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import {
   MacroGrid,
   WeekSelector,
@@ -83,11 +79,12 @@ export default function WeeklyPage() {
             </span>
           </div>
 
-          <Progress value={weeklyTotals.calories} max={weeklyCalorieGoal}>
-            <ProgressTrack className="h-3 rounded-full">
-              <ProgressIndicator className={getProgressColor()} />
-            </ProgressTrack>
-          </Progress>
+          <Progress
+            value={weeklyTotals.calories}
+            max={weeklyCalorieGoal}
+            trackClassName="h-3 rounded-full"
+            indicatorClassName={getProgressColor()}
+          />
 
           <p className="text-center text-sm text-muted-foreground">
             <span className="font-medium text-foreground">
