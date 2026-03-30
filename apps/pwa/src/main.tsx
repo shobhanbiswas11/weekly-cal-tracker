@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ClerkProvider } from "@clerk/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -61,7 +62,9 @@ createRoot(document.getElementById("root")!).render(
         },
       }}
     >
-      <App />
+      <TooltipProvider>
+        <App />
+      </TooltipProvider>
     </ClerkProvider>
   </StrictMode>,
 );
