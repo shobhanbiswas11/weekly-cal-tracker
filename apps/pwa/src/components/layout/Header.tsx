@@ -27,7 +27,7 @@ export function Header({ menuContent }: HeaderProps) {
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 h-14">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 h-14">
         {/* Logo - Left */}
         <div className="shrink-0">
           <Button variant="ghost" size="icon-lg" onClick={() => navigate("/")}>

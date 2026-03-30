@@ -1,0 +1,10 @@
+// Barrel export for calorie components
+export { CalorieKPI } from "./CalorieKPI";
+export { DailyCalendar } from "./DailyCalendar";
+export { EntryList } from "./EntryList";
+export { MacroDisplay } from "./MacroDisplay";
+export { MacroGrid } from "./MacroGrid";
+export { ProgressRing } from "./ProgressRing";
+export { Suggestions } from "./Suggestions";
+export { WeeklyGraph } from "./WeeklyGraph";
+export { WeekSelector } from "./WeekSelector";

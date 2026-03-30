@@ -7,7 +7,7 @@ import WeeklyPage from "./pages/weekly";
 
 function App() {
   return (
-    <div className="flex flex-col h-dvh overflow-hidden">
+    <div className="flex flex-col h-dvh">
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />
