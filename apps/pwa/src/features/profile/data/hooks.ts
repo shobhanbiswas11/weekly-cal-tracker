@@ -1,187 +1,86 @@
-// Data hooks for user profile
-// Currently uses localStorage, same interface as future API hooks
+// Data hooks for user profile using TanStack Query
+// Reads profile from /dashboard endpoint, writes via /profile
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ProfileUpdate, UserProfile } from "../types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import {
-  createEmptyProfile,
-  getStoredProfile,
-  MOCK_COMPLETE_PROFILE,
-  saveProfile,
-} from "./mock-data";
+  updateProfile as apiUpdateProfile,
+  fetchDashboard,
+} from "../../../lib/api";
+import type { ProfileUpdate, UserProfile } from "../types";
+import { isProfileComplete } from "../types";
 
-interface UseDataResult<T> {
-  data: T | undefined;
-  isLoading: boolean;
-  error: Error | null;
+// Query keys
+export const dashboardKeys = {
+  all: ["dashboard"] as const,
+};
+
+// =============================================================================
+// Query Hooks
+// =============================================================================
+
+/**
+ * Get the dashboard data (profile + current week)
+ * This is the primary data fetch for app init
+ */
+export function useDashboard() {
+  return useQuery({
+    queryKey: dashboardKeys.all,
+    queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 }
-
-interface UseProfileResult extends UseDataResult<UserProfile> {
-  /** Whether the profile exists (user has started onboarding) */
-  exists: boolean;
-}
-
-interface UseMutationResult<TData, TVariables> {
-  mutate: (variables: TVariables) => void;
-  mutateAsync: (variables: TVariables) => Promise<TData>;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-// Use mock data in development, localStorage in production
-const USE_MOCK_DATA = false; // Set to true to always use mock profile
 
 /**
  * Get the current user's profile
+ * Extracts profile from dashboard query
  */
-export function useProfile(): UseProfileResult {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate async load
-    const loadProfile = () => {
-      if (USE_MOCK_DATA) {
-        setProfile(MOCK_COMPLETE_PROFILE);
-      } else {
-        const stored = getStoredProfile();
-        setProfile(stored);
-      }
-      setIsLoading(false);
-    };
-
-    // Small delay to simulate network request
-    const timer = setTimeout(loadProfile, 100);
-    return () => clearTimeout(timer);
-  }, []);
+export function useProfile() {
+  const dashboard = useDashboard();
 
   return {
-    data: profile ?? undefined,
-    exists: profile !== null,
-    isLoading,
-    error: null,
+    data: dashboard.data?.profile as UserProfile | undefined,
+    exists:
+      dashboard.data?.profile !== null && dashboard.data?.profile !== undefined,
+    isLoading: dashboard.isLoading,
+    error: dashboard.error,
+    refetch: dashboard.refetch,
   };
 }
+
+// =============================================================================
+// Mutation Hooks
+// =============================================================================
 
 /**
  * Update the user's profile
  */
-export function useUpdateProfile(): UseMutationResult<
-  UserProfile,
-  ProfileUpdate
-> {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
 
-  const mutateAsync = useCallback(
-    async (updates: ProfileUpdate): Promise<UserProfile> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Get existing profile or create new one
-        const existing = getStoredProfile();
-        const now = new Date().toISOString();
-
-        const updated: UserProfile = existing
-          ? {
-              ...existing,
-              ...updates,
-              updatedAt: now,
-            }
-          : {
-              ...createEmptyProfile(crypto.randomUUID()),
-              ...updates,
-              updatedAt: now,
-            };
-
-        // Save to localStorage
-        saveProfile(updated);
-
-        setIsLoading(false);
-        return updated;
-      } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Failed to update profile");
-        setError(error);
-        setIsLoading(false);
-        throw error;
-      }
+  return useMutation({
+    mutationFn: (updates: ProfileUpdate) => apiUpdateProfile(updates),
+    onSuccess: (data) => {
+      // Update the dashboard cache with the new profile
+      queryClient.setQueryData(dashboardKeys.all, (old: any) => ({
+        ...old,
+        profile: data.profile,
+      }));
     },
-    [],
-  );
-
-  const mutate = useCallback(
-    (updates: ProfileUpdate) => {
-      mutateAsync(updates).catch(() => {
-        // Error is already set in state
-      });
-    },
-    [mutateAsync],
-  );
-
-  return {
-    mutate,
-    mutateAsync,
-    isLoading,
-    error,
-  };
+  });
 }
 
 /**
  * Create a new profile (for onboarding)
+ * Uses the same update endpoint with initial data
  */
-export function useCreateProfile(): UseMutationResult<
-  UserProfile,
-  Partial<UserProfile>
-> {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const mutateAsync = useCallback(
-    async (initialData: Partial<UserProfile>): Promise<UserProfile> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const now = new Date().toISOString();
-        const profile: UserProfile = {
-          ...createEmptyProfile(crypto.randomUUID()),
-          ...initialData,
-          createdAt: now,
-          updatedAt: now,
-        };
-
-        saveProfile(profile);
-        setIsLoading(false);
-        return profile;
-      } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Failed to create profile");
-        setError(error);
-        setIsLoading(false);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const mutate = useCallback(
-    (initialData: Partial<UserProfile>) => {
-      mutateAsync(initialData).catch(() => {
-        // Error is already set in state
-      });
-    },
-    [mutateAsync],
-  );
-
-  return {
-    mutate,
-    mutateAsync,
-    isLoading,
-    error,
-  };
+export function useCreateProfile() {
+  return useUpdateProfile();
 }
+
+// =============================================================================
+// Derived Hooks
+// =============================================================================
 
 /**
  * Check if the profile has all required fields for AI calculations
@@ -222,14 +121,15 @@ export function useProfileCompleteness(): {
       (field) => profile[field] === undefined || profile[field] === null,
     );
 
-    const filledCount = requiredFields.length - missingFields.length;
+    const totalFields = requiredFields.length;
+    const completedFields = totalFields - missingFields.length;
     const completionPercentage = Math.round(
-      (filledCount / requiredFields.length) * 100,
+      (completedFields / totalFields) * 100,
     );
 
     return {
-      isComplete: missingFields.length === 0,
-      missingFields: missingFields as unknown as string[],
+      isComplete: isProfileComplete(profile),
+      missingFields: missingFields as string[],
       completionPercentage,
     };
   }, [profile]);

@@ -15,40 +15,35 @@ interface BackendStackProps extends cdk.StackProps {
 
 export class BackendStack extends cdk.Stack {
   public readonly apiUrl: cdk.CfnOutput;
+  public readonly chatUrl: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    // Configuration from props (passed from environment variables in bin/backend.ts)
-    const clerkIssuer = props.clerkIssuer;
-    const openaiApiKey = props.openaiApiKey;
+    const { clerkIssuer, openaiApiKey } = props;
 
     // =====================
-    // DynamoDB Table
+    // DynamoDB Table (Single Table Design)
     // =====================
-    const calorieEntriesTable = new dynamodb.Table(
-      this,
-      "CalorieEntriesTable",
-      {
-        tableName: "CalorieEntries",
-        partitionKey: {
-          name: "PK",
-          type: dynamodb.AttributeType.STRING,
-        },
-        sortKey: {
-          name: "SK",
-          type: dynamodb.AttributeType.STRING,
-        },
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
+    const table = new dynamodb.Table(this, "WeeklyCalorieTrackerTable", {
+      tableName: "WeeklyCalorieTracker",
+      partitionKey: {
+        name: "PK",
+        type: dynamodb.AttributeType.STRING,
       },
-    );
+      sortKey: {
+        name: "SK",
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     // =====================
     // Shared Lambda Configuration
     // =====================
     const lambdaEnvironment = {
-      TABLE_NAME: calorieEntriesTable.tableName,
+      TABLE_NAME: table.tableName,
       ALLOWED_ORIGIN: "*",
     };
 
@@ -59,69 +54,59 @@ export class BackendStack extends cdk.Stack {
       bundling: {
         minify: true,
         sourceMap: true,
-        externalModules: ["@aws-sdk/*"], // Use SDK from Lambda runtime
+        externalModules: ["@aws-sdk/*"],
       },
     };
 
     // =====================
-    // Lambda Functions
+    // Data Lambda (all queries + mutations)
     // =====================
-    const parseEntryFn = new lambdaNodejs.NodejsFunction(this, "ParseEntryFn", {
+    const dataFn = new lambdaNodejs.NodejsFunction(this, "DataFn", {
       ...lambdaDefaults,
-      entry: path.join(__dirname, "../functions/parseEntry/index.ts"),
+      entry: path.join(__dirname, "../functions/data/index.ts"),
       handler: "handler",
-      timeout: cdk.Duration.seconds(60), // Longer timeout for OpenAI calls
+      environment: lambdaEnvironment,
+    });
+
+    table.grantReadWriteData(dataFn);
+
+    // =====================
+    // Chat Lambda (AI streaming)
+    // =====================
+    const chatFn = new lambdaNodejs.NodejsFunction(this, "ChatFn", {
+      ...lambdaDefaults,
+      entry: path.join(__dirname, "../functions/chat/index.ts"),
+      handler: "handler",
+      timeout: cdk.Duration.seconds(120), // Longer timeout for AI responses
+      memorySize: 512,
       environment: {
         ...lambdaEnvironment,
         OPENAI_API_KEY: openaiApiKey,
       },
     });
 
-    const getEntriesFn = new lambdaNodejs.NodejsFunction(this, "GetEntriesFn", {
-      ...lambdaDefaults,
-      entry: path.join(__dirname, "../functions/getEntries/index.ts"),
-      handler: "handler",
-      environment: lambdaEnvironment,
+    // Add Lambda Function URL with response streaming for chat
+    const chatFnUrl = chatFn.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE, // We handle auth in the Lambda
+      invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+      cors: {
+        allowedOrigins: ["*"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        allowedMethods: [lambda.HttpMethod.POST, lambda.HttpMethod.OPTIONS],
+      },
     });
-
-    const getWeeklySummaryFn = new lambdaNodejs.NodejsFunction(
-      this,
-      "GetWeeklySummaryFn",
-      {
-        ...lambdaDefaults,
-        entry: path.join(__dirname, "../functions/getWeeklySummary/index.ts"),
-        handler: "handler",
-        environment: lambdaEnvironment,
-      },
-    );
-
-    const deleteEntryFn = new lambdaNodejs.NodejsFunction(
-      this,
-      "DeleteEntryFn",
-      {
-        ...lambdaDefaults,
-        entry: path.join(__dirname, "../functions/deleteEntry/index.ts"),
-        handler: "handler",
-        environment: lambdaEnvironment,
-      },
-    );
-
-    // Grant DynamoDB permissions
-    calorieEntriesTable.grantReadWriteData(parseEntryFn);
-    calorieEntriesTable.grantReadData(getEntriesFn);
-    calorieEntriesTable.grantReadData(getWeeklySummaryFn);
-    calorieEntriesTable.grantReadWriteData(deleteEntryFn);
 
     // =====================
     // HTTP API with JWT Authorizer
     // =====================
-    const httpApi = new apigatewayv2.HttpApi(this, "CalorieTrackerApi", {
-      apiName: "CalorieTrackerApi",
+    const httpApi = new apigatewayv2.HttpApi(this, "WeeklyCalorieTrackerApi", {
+      apiName: "WeeklyCalorieTrackerApi",
       corsPreflight: {
         allowOrigins: ["*"],
         allowMethods: [
           apigatewayv2.CorsHttpMethod.GET,
           apigatewayv2.CorsHttpMethod.POST,
+          apigatewayv2.CorsHttpMethod.PUT,
           apigatewayv2.CorsHttpMethod.DELETE,
           apigatewayv2.CorsHttpMethod.OPTIONS,
         ],
@@ -139,51 +124,52 @@ export class BackendStack extends cdk.Stack {
       },
     );
 
+    const dataIntegration = new apigatewayv2Integrations.HttpLambdaIntegration(
+      "DataIntegration",
+      dataFn,
+    );
+
     // =====================
     // API Routes
     // =====================
 
-    // POST /entries/parse - Parse natural language and create entries
+    // Dashboard - app init
     httpApi.addRoutes({
-      path: "/entries/parse",
-      methods: [apigatewayv2.HttpMethod.POST],
-      integration: new apigatewayv2Integrations.HttpLambdaIntegration(
-        "ParseEntryIntegration",
-        parseEntryFn,
-      ),
+      path: "/dashboard",
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: dataIntegration,
       authorizer: jwtAuthorizer,
     });
 
-    // GET /entries - Get entries for a date
+    // Weekly summary
+    httpApi.addRoutes({
+      path: "/weeks/{weekId}",
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: dataIntegration,
+      authorizer: jwtAuthorizer,
+    });
+
+    // Entries - create
     httpApi.addRoutes({
       path: "/entries",
-      methods: [apigatewayv2.HttpMethod.GET],
-      integration: new apigatewayv2Integrations.HttpLambdaIntegration(
-        "GetEntriesIntegration",
-        getEntriesFn,
-      ),
+      methods: [apigatewayv2.HttpMethod.POST],
+      integration: dataIntegration,
       authorizer: jwtAuthorizer,
     });
 
-    // GET /summary - Get weekly summary
-    httpApi.addRoutes({
-      path: "/summary",
-      methods: [apigatewayv2.HttpMethod.GET],
-      integration: new apigatewayv2Integrations.HttpLambdaIntegration(
-        "GetWeeklySummaryIntegration",
-        getWeeklySummaryFn,
-      ),
-      authorizer: jwtAuthorizer,
-    });
-
-    // DELETE /entries/{date}/{id} - Delete an entry
+    // Entries - update/delete
     httpApi.addRoutes({
       path: "/entries/{date}/{id}",
-      methods: [apigatewayv2.HttpMethod.DELETE],
-      integration: new apigatewayv2Integrations.HttpLambdaIntegration(
-        "DeleteEntryIntegration",
-        deleteEntryFn,
-      ),
+      methods: [apigatewayv2.HttpMethod.PUT, apigatewayv2.HttpMethod.DELETE],
+      integration: dataIntegration,
+      authorizer: jwtAuthorizer,
+    });
+
+    // Profile - update
+    httpApi.addRoutes({
+      path: "/profile",
+      methods: [apigatewayv2.HttpMethod.PUT],
+      integration: dataIntegration,
       authorizer: jwtAuthorizer,
     });
 
@@ -195,8 +181,13 @@ export class BackendStack extends cdk.Stack {
       description: "HTTP API endpoint URL",
     });
 
+    this.chatUrl = new cdk.CfnOutput(this, "ChatUrl", {
+      value: chatFnUrl.url,
+      description: "Chat Lambda Function URL (streaming)",
+    });
+
     new cdk.CfnOutput(this, "TableName", {
-      value: calorieEntriesTable.tableName,
+      value: table.tableName,
       description: "DynamoDB table name",
     });
   }

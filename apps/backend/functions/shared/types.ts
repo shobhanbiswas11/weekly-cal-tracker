@@ -1,8 +1,27 @@
 // Shared types for Lambda functions
 
-export interface CalorieEntry {
+// =============================================================================
+// DynamoDB Item Types (Single Table Design)
+// =============================================================================
+
+// Base DynamoDB item with PK/SK
+export interface DynamoDBItem {
+  PK: string; // USER#<userId>
+  SK: string; // Type-specific sort key
+}
+
+// Profile item stored in DynamoDB
+export interface ProfileItem extends DynamoDBItem {
+  SK: "PROFILE";
+  data: Record<string, unknown>; // Flexible profile data - frontend owns types
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// Food entry item stored in DynamoDB
+export interface FoodEntryItem extends DynamoDBItem {
+  SK: string; // FOOD_ENTRY#<YYYY-MM-DD>#<uuid>
   id: string;
-  userId: string;
   date: string; // YYYY-MM-DD
   name: string;
   calories: number;
@@ -13,30 +32,58 @@ export interface CalorieEntry {
   rawInput?: string;
 }
 
-export interface DynamoDBEntry {
-  PK: string; // USER#<userId>
-  SK: string; // DATE#YYYY-MM-DD#ENTRY#<uuid>
+// =============================================================================
+// API Types (what frontend sends/receives)
+// =============================================================================
+
+// Food entry (API representation)
+export interface FoodEntry {
   id: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   name: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  timestamp: string;
+  timestamp: string; // ISO 8601
   rawInput?: string;
 }
 
+// Create food entry request
+export interface CreateFoodEntryRequest {
+  date?: string; // Optional, defaults to today
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+// Update food entry request (partial)
+export interface UpdateFoodEntryRequest {
+  name?: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
+// Profile (API representation - flexible record)
+export type Profile = Record<string, unknown>;
+
+// Daily summary
 export interface DailySummary {
   date: string;
-  entries: CalorieEntry[];
+  entries: FoodEntry[];
   totalCalories: number;
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
 }
 
+// Weekly summary
 export interface WeeklySummary {
+  weekId: string; // ISO week: 2026-W13
   startDate: string;
   endDate: string;
   days: DailySummary[];
@@ -47,77 +94,18 @@ export interface WeeklySummary {
   averageDailyCalories: number;
 }
 
-export interface ParseEntryRequest {
-  input: string;
-  date?: string; // Optional, defaults to today
+// Dashboard response (app init)
+export interface DashboardResponse {
+  profile: Profile | null;
+  currentWeek: WeeklySummary;
 }
 
-export interface ParseEntryResponse {
-  entries: CalorieEntry[];
-  message: string;
-}
+// =============================================================================
+// Legacy types (for backwards compatibility during migration)
+// =============================================================================
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+/** @deprecated Use FoodEntry instead */
+export type CalorieEntry = FoodEntry;
 
-// OpenAI tool definition for save_calorie_entry
-export const SAVE_ENTRY_TOOL = {
-  type: "function" as const,
-  function: {
-    name: "save_calorie_entry",
-    description:
-      "Save a food entry with its nutritional information. Call this function for each distinct food item the user mentions.",
-    parameters: {
-      type: "object",
-      properties: {
-        name: {
-          type: "string",
-          description:
-            "Name of the food item (e.g., 'Turkey sandwich', 'Large latte')",
-        },
-        calories: {
-          type: "number",
-          description: "Estimated total calories for this food item",
-        },
-        protein: {
-          type: "number",
-          description: "Estimated grams of protein",
-        },
-        carbs: {
-          type: "number",
-          description: "Estimated grams of carbohydrates",
-        },
-        fat: {
-          type: "number",
-          description: "Estimated grams of fat",
-        },
-      },
-      required: ["name", "calories", "protein", "carbs", "fat"],
-    },
-  },
-};
-
-export const SYSTEM_PROMPT = `You are a nutrition assistant for a calorie tracking app. When the user describes what they ate or drank, extract each distinct food item and estimate its nutritional content.
-
-For each food item mentioned, call the save_calorie_entry function with:
-- name: A clear, concise name for the food
-- calories: Your best estimate of total calories
-- protein: Estimated grams of protein
-- carbs: Estimated grams of carbohydrates  
-- fat: Estimated grams of fat
-
-Guidelines:
-- If the user mentions multiple items (e.g., "eggs and toast"), make separate function calls for each
-- Use reasonable estimates based on typical portions if quantity isn't specified
-- For branded items, use typical nutritional values
-- Round nutritional values to reasonable numbers
-- If unsure, use conservative middle-ground estimates
-
-Examples:
-- "2 eggs" → ~140 cal, 12g protein, 1g carbs, 10g fat
-- "slice of toast with butter" → ~150 cal, 3g protein, 20g carbs, 7g fat
-- "large latte" → ~190 cal, 10g protein, 18g carbs, 7g fat
-- "chicken caesar salad" → ~400 cal, 35g protein, 15g carbs, 22g fat`;
+/** @deprecated Use FoodEntryItem instead */
+export type DynamoDBEntry = FoodEntryItem;

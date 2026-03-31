@@ -4,6 +4,7 @@ import {
   useChatRuntime,
 } from "@assistant-ui/react-ai-sdk";
 import { type ReactNode } from "react";
+import { CHAT_URL, getAuthToken } from "../../lib/api";
 import { toolkit } from "./toolkit";
 
 interface ChatRuntimeProviderProps {
@@ -13,7 +14,13 @@ interface ChatRuntimeProviderProps {
 export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
   const runtime = useChatRuntime({
     transport: new AssistantChatTransport({
-      api: `api/chat`,
+      api: CHAT_URL,
+      headers: async () => {
+        const token = await getAuthToken();
+        return {
+          Authorization: `Bearer ${token}`,
+        };
+      },
     }),
   });
 

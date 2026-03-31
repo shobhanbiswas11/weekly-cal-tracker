@@ -1,96 +1,240 @@
-// Data hooks for calorie tracking
-// These currently use mock data but have the same interface as future API hooks
-// When ready to connect to backend, replace implementations with TanStack Query
+// Data hooks for calorie tracking using TanStack Query
+// Fetches from /dashboard and /weeks/{weekId} endpoints
 
-import { useMemo } from "react";
-import type { DailySummary, WeeklySummary } from "../types";
-import { getCurrentWeek, getToday } from "../utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getMockCurrentWeekSummary,
-  getMockDailySummary,
-  getMockTodaySummary,
-  getMockWeeklySummary,
-} from "./mock-data";
+  createEntry as apiCreateEntry,
+  deleteEntry as apiDeleteEntry,
+  updateEntry as apiUpdateEntry,
+  fetchDashboard,
+  fetchWeeklySummary,
+  type CreateEntryRequest,
+  type DailySummary,
+  type FoodEntry,
+  type UpdateEntryRequest,
+  type WeeklySummary,
+} from "../../../lib/api";
+import { dashboardKeys } from "../../profile/data/hooks";
+import { getCurrentWeek, getToday } from "../utils";
 
-interface UseDataResult<T> {
-  data: T | undefined;
-  isLoading: boolean;
-  error: Error | null;
-}
+// Re-export types for convenience
+export type { DailySummary, FoodEntry, WeeklySummary };
+
+// Query keys
+export const calorieKeys = {
+  weeks: (weekId: string) => ["weeks", weekId] as const,
+};
+
+// =============================================================================
+// Query Hooks
+// =============================================================================
 
 /**
  * Get entries and summary for a specific date
+ * Extracts from the appropriate week's data
  */
-export function useEntries(date?: string): UseDataResult<DailySummary> {
+export function useEntries(date?: string) {
   const targetDate = date || getToday();
+  // Calculate which week this date belongs to
+  const weekId = getWeekIdForDate(targetDate);
 
-  // In a real app, this would be useQuery from TanStack Query
-  const data = useMemo(() => {
-    // Simulate the data
-    return getMockDailySummary(targetDate);
-  }, [targetDate]);
+  const weekQuery = useWeeklySummary(weekId);
+
+  // Extract the specific day from the week data
+  const dayData = weekQuery.data?.days.find((d) => d.date === targetDate);
 
   return {
-    data,
-    isLoading: false,
-    error: null,
+    data: dayData,
+    isLoading: weekQuery.isLoading,
+    error: weekQuery.error,
+    refetch: weekQuery.refetch,
   };
 }
 
 /**
  * Get today's summary (convenience hook)
+ * Uses dashboard data which includes current week
  */
-export function useTodaySummary(): UseDataResult<DailySummary> {
-  const data = useMemo(() => getMockTodaySummary(), []);
+export function useTodaySummary() {
+  const dashboard = useQuery({
+    queryKey: dashboardKeys.all,
+    queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const today = getToday();
+  const dayData = dashboard.data?.currentWeek.days.find(
+    (d) => d.date === today,
+  );
 
   return {
-    data,
-    isLoading: false,
-    error: null,
+    data: dayData,
+    isLoading: dashboard.isLoading,
+    error: dashboard.error,
   };
 }
 
 /**
  * Get weekly summary for a specific ISO week
  */
-export function useWeeklySummary(
-  weekId?: string,
-): UseDataResult<WeeklySummary> {
+export function useWeeklySummary(weekId?: string) {
   const targetWeek = weekId || getCurrentWeek();
+  const currentWeek = getCurrentWeek();
 
-  const data = useMemo(() => {
-    return getMockWeeklySummary(targetWeek);
-  }, [targetWeek]);
+  // Use dashboard data for current week, fetch for other weeks
+  const isCurrentWeek = targetWeek === currentWeek;
+
+  // Dashboard query (for current week)
+  const dashboardQuery = useQuery({
+    queryKey: dashboardKeys.all,
+    queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 5,
+    enabled: isCurrentWeek,
+  });
+
+  // Week query (for historical weeks)
+  const weekQuery = useQuery({
+    queryKey: calorieKeys.weeks(targetWeek),
+    queryFn: () => fetchWeeklySummary(targetWeek),
+    staleTime: 1000 * 60 * 30, // 30 minutes for historical data
+    enabled: !isCurrentWeek,
+  });
+
+  if (isCurrentWeek) {
+    return {
+      data: dashboardQuery.data?.currentWeek,
+      isLoading: dashboardQuery.isLoading,
+      error: dashboardQuery.error,
+      refetch: dashboardQuery.refetch,
+    };
+  }
 
   return {
-    data,
-    isLoading: false,
-    error: null,
+    data: weekQuery.data,
+    isLoading: weekQuery.isLoading,
+    error: weekQuery.error,
+    refetch: weekQuery.refetch,
   };
 }
 
 /**
  * Get current week's summary (convenience hook)
  */
-export function useCurrentWeekSummary(): UseDataResult<WeeklySummary> {
-  const data = useMemo(() => getMockCurrentWeekSummary(), []);
-
-  return {
-    data,
-    isLoading: false,
-    error: null,
-  };
+export function useCurrentWeekSummary() {
+  return useWeeklySummary(getCurrentWeek());
 }
 
 /**
- * Get the previous week's summary (useful for "this week so far" when week just started)
+ * Get the previous week's summary
  */
-export function useLastWeekSummary(): UseDataResult<WeeklySummary> {
-  const data = useMemo(() => getMockWeeklySummary("2026-W13"), []);
+export function useLastWeekSummary() {
+  const lastWeek = getPreviousWeek(getCurrentWeek());
+  return useWeeklySummary(lastWeek);
+}
 
-  return {
-    data,
-    isLoading: false,
-    error: null,
-  };
+// =============================================================================
+// Mutation Hooks
+// =============================================================================
+
+/**
+ * Create a new food entry
+ */
+export function useCreateEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateEntryRequest) => apiCreateEntry(data),
+    onSuccess: (entry) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      const weekId = getWeekIdForDate(entry.date);
+      queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+    },
+  });
+}
+
+/**
+ * Update an existing food entry
+ */
+export function useUpdateEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      date,
+      id,
+      data,
+    }: {
+      date: string;
+      id: string;
+      data: UpdateEntryRequest;
+    }) => apiUpdateEntry(date, id, data),
+    onSuccess: (entry) => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      const weekId = getWeekIdForDate(entry.date);
+      queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+    },
+  });
+}
+
+/**
+ * Delete a food entry
+ */
+export function useDeleteEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ date, id }: { date: string; id: string }) =>
+      apiDeleteEntry(date, id),
+    onSuccess: (_result, { date }) => {
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      const weekId = getWeekIdForDate(date);
+      queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+    },
+  });
+}
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Get ISO week ID for a date
+ */
+function getWeekIdForDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  // January 4 is always in week 1
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  // Calculate full weeks to Thursday
+  const weekNum =
+    1 +
+    Math.round(
+      ((date.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    );
+  return `${date.getFullYear()}-W${weekNum.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Get the previous week's ID
+ */
+function getPreviousWeek(weekId: string): string {
+  const match = weekId.match(/^(\d{4})-W(\d{2})$/);
+  if (!match) return weekId;
+
+  let year = parseInt(match[1]);
+  let week = parseInt(match[2]) - 1;
+
+  if (week < 1) {
+    year--;
+    // Get last week of previous year (simplified - assumes 52 weeks)
+    week = 52;
+  }
+
+  return `${year}-W${week.toString().padStart(2, "0")}`;
 }
