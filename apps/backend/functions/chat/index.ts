@@ -4,7 +4,6 @@
 import { openai } from "@ai-sdk/openai";
 import type { UIMessage } from "ai";
 import { convertToModelMessages, streamText } from "ai";
-import { pipeline } from "stream/promises";
 
 interface ChatRequest {
   messages: UIMessage[];
@@ -40,6 +39,9 @@ export const handler = awslambda.streamifyResponse(
 
     if (!body.messages || !Array.isArray(body.messages)) {
       responseStream.setContentType("application/json");
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        responseStream.setHeader?.(key, value);
+      });
       responseStream.write(
         JSON.stringify({ error: "Messages array required" }),
       );
@@ -47,7 +49,7 @@ export const handler = awslambda.streamifyResponse(
       return;
     }
 
-    // Set up streaming response with correct content type for UI message stream
+    // Set up streaming response
     responseStream.setContentType("text/plain; charset=utf-8");
     Object.entries(corsHeaders).forEach(([key, value]) => {
       responseStream.setHeader?.(key, value);
@@ -60,6 +62,19 @@ export const handler = awslambda.streamifyResponse(
       messages: await convertToModelMessages(body.messages),
     });
 
-    await pipeline(result.toUIMessageStream(), responseStream);
+    // Get the encoded UI message stream from the Response body
+    const response = result.toUIMessageStreamResponse();
+    const reader = response.body!.getReader();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        responseStream.write(value);
+      }
+    } finally {
+      reader.releaseLock();
+      responseStream.end();
+    }
   },
 );
