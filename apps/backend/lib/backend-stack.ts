@@ -92,7 +92,7 @@ export class BackendStack extends cdk.Stack {
       cors: {
         allowedOrigins: ["*"],
         allowedHeaders: ["Content-Type", "Authorization"],
-        allowedMethods: [lambda.HttpMethod.POST, lambda.HttpMethod.OPTIONS],
+        allowedMethods: [lambda.HttpMethod.POST],
       },
     });
 
