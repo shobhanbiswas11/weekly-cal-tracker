@@ -1,4 +1,5 @@
 // Data Lambda routes - handles all data queries and mutations
+// Minimal validation - only check required fields (id, date)
 
 import type {
   APIGatewayProxyHandlerV2WithJWTAuthorizer,
@@ -14,11 +15,7 @@ import {
   parseBody,
   type Route,
 } from "../shared/http";
-import type {
-  CreateFoodEntryRequest,
-  Profile,
-  UpdateFoodEntryRequest,
-} from "../shared/types";
+import type { DataRecord } from "../shared/types";
 import * as dashboardService from "./domain/dashboard-service";
 import * as entryRepo from "./domain/entry-repository";
 import * as profileRepo from "./domain/profile-repository";
@@ -27,19 +24,23 @@ import * as profileRepo from "./domain/profile-repository";
 // Route Handlers
 // =============================================================================
 
+type ApiEvent = Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0];
+type ApiResult = Promise<APIGatewayProxyResultV2>;
+type RouteHandler = (event: ApiEvent, userId: string) => ApiResult;
+
 // GET /dashboard - App init data
-const handleGetDashboard = async (
-  _event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
+const handleGetDashboard: RouteHandler = async (
+  _event,
+  userId,
 ): Promise<APIGatewayProxyResultV2> => {
   const dashboard = await dashboardService.getDashboard(userId);
   return createResponse(dashboard);
 };
 
 // GET /weeks/{weekId} - Get specific week summary
-const handleGetWeek = async (
-  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
+const handleGetWeek: RouteHandler = async (
+  event,
+  userId,
 ): Promise<APIGatewayProxyResultV2> => {
   const weekId = event.pathParameters?.weekId;
 
@@ -58,56 +59,46 @@ const handleGetWeek = async (
   return createResponse(summary);
 };
 
+// GET /entries/{date} - Get entries for a specific date
+const handleGetEntriesByDate: RouteHandler = async (event, userId) => {
+  const date = event.pathParameters?.date;
+
+  if (!date) {
+    return createErrorResponse("Date is required", 400);
+  }
+
+  if (!isValidDateFormat(date)) {
+    return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
+  }
+
+  const entries = await entryRepo.getEntriesByDate(userId, date);
+  return createResponse({ entries });
+};
+
 // POST /entries - Create new food entry
-const handleCreateEntry = async (
-  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
-): Promise<APIGatewayProxyResultV2> => {
-  const body = parseBody<CreateFoodEntryRequest>(event.body);
+const handleCreateEntry: RouteHandler = async (event, userId) => {
+  const body = parseBody<DataRecord>(event.body);
 
   if (!body) {
     return createErrorResponse("Request body is required", 400);
   }
 
-  if (!body.name || typeof body.name !== "string") {
-    return createErrorResponse("Name is required", 400);
-  }
-
-  if (typeof body.calories !== "number" || body.calories < 0) {
-    return createErrorResponse("Valid calories value is required", 400);
-  }
-
-  if (typeof body.protein !== "number" || body.protein < 0) {
-    return createErrorResponse("Valid protein value is required", 400);
-  }
-
-  if (typeof body.carbs !== "number" || body.carbs < 0) {
-    return createErrorResponse("Valid carbs value is required", 400);
-  }
-
-  if (typeof body.fat !== "number" || body.fat < 0) {
-    return createErrorResponse("Valid fat value is required", 400);
-  }
-
-  // Validate date if provided
-  if (body.date && !isValidDateFormat(body.date)) {
+  // Only validate date format if provided
+  if (body.date && !isValidDateFormat(body.date as string)) {
     return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
   }
 
   const entryId = uuidv4();
   const entry = await entryRepo.createEntry(userId, entryId, {
     ...body,
-    date: body.date || getTodayDate(),
+    date: (body.date as string) || getTodayDate(),
   });
 
   return createResponse(entry, 201);
 };
 
 // PUT /entries/{date}/{id} - Update food entry
-const handleUpdateEntry = async (
-  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
-): Promise<APIGatewayProxyResultV2> => {
+const handleUpdateEntry: RouteHandler = async (event, userId) => {
   const { date, id } = event.pathParameters || {};
 
   if (!date || !id) {
@@ -118,36 +109,10 @@ const handleUpdateEntry = async (
     return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
   }
 
-  const body = parseBody<UpdateFoodEntryRequest>(event.body);
+  const body = parseBody<DataRecord>(event.body);
 
   if (!body) {
     return createErrorResponse("Request body is required", 400);
-  }
-
-  // Validate numeric fields if provided
-  if (
-    body.calories !== undefined &&
-    (typeof body.calories !== "number" || body.calories < 0)
-  ) {
-    return createErrorResponse("Invalid calories value", 400);
-  }
-  if (
-    body.protein !== undefined &&
-    (typeof body.protein !== "number" || body.protein < 0)
-  ) {
-    return createErrorResponse("Invalid protein value", 400);
-  }
-  if (
-    body.carbs !== undefined &&
-    (typeof body.carbs !== "number" || body.carbs < 0)
-  ) {
-    return createErrorResponse("Invalid carbs value", 400);
-  }
-  if (
-    body.fat !== undefined &&
-    (typeof body.fat !== "number" || body.fat < 0)
-  ) {
-    return createErrorResponse("Invalid fat value", 400);
   }
 
   const entry = await entryRepo.updateEntry(userId, date, id, body);
@@ -160,10 +125,7 @@ const handleUpdateEntry = async (
 };
 
 // DELETE /entries/{date}/{id} - Delete food entry
-const handleDeleteEntry = async (
-  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
-): Promise<APIGatewayProxyResultV2> => {
+const handleDeleteEntry: RouteHandler = async (event, userId) => {
   const { date, id } = event.pathParameters || {};
 
   if (!date || !id) {
@@ -180,11 +142,8 @@ const handleDeleteEntry = async (
 };
 
 // PUT /profile - Update user profile
-const handleUpdateProfile = async (
-  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
-  userId: string,
-): Promise<APIGatewayProxyResultV2> => {
-  const body = parseBody<Profile>(event.body);
+const handleUpdateProfile: RouteHandler = async (event, userId) => {
+  const body = parseBody<DataRecord>(event.body);
 
   if (!body || typeof body !== "object") {
     return createErrorResponse("Request body is required", 400);
@@ -193,6 +152,19 @@ const handleUpdateProfile = async (
   const profile = await profileRepo.upsertProfile(userId, body);
 
   return createResponse({ profile });
+};
+
+// POST /profile - Create user profile
+const handleCreateProfile: RouteHandler = async (event, userId) => {
+  const body = parseBody<DataRecord>(event.body);
+
+  if (!body || typeof body !== "object") {
+    return createErrorResponse("Request body is required", 400);
+  }
+
+  const profile = await profileRepo.upsertProfile(userId, body);
+
+  return createResponse({ profile }, 201);
 };
 
 // =============================================================================
@@ -211,6 +183,11 @@ export const routes: Route[] = [
     pattern: /^\/weeks\/[^/]+$/,
     handler: handleGetWeek,
   },
+  {
+    method: "GET",
+    pattern: /^\/entries\/[^/]+$/,
+    handler: handleGetEntriesByDate,
+  },
   // Entry mutations
   {
     method: "POST",
@@ -228,6 +205,11 @@ export const routes: Route[] = [
     handler: handleDeleteEntry,
   },
   // Profile mutations
+  {
+    method: "POST",
+    pattern: /^\/profile$/,
+    handler: handleCreateProfile,
+  },
   {
     method: "PUT",
     pattern: /^\/profile$/,

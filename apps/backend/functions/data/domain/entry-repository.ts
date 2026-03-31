@@ -1,4 +1,5 @@
 // Entry repository - DynamoDB operations for food entries
+// Treats entries as key-value records - only id and date are required
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
@@ -8,12 +9,7 @@ import {
   QueryCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import type {
-  CreateFoodEntryRequest,
-  FoodEntry,
-  FoodEntryItem,
-  UpdateFoodEntryRequest,
-} from "../../shared/types";
+import type { DataRecord } from "../../shared/types";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -33,17 +29,11 @@ const createEntrySK = (date: string, entryId: string): string =>
 // Mappers
 // =============================================================================
 
-const toFoodEntry = (item: FoodEntryItem): FoodEntry => ({
-  id: item.id,
-  date: item.date,
-  name: item.name,
-  calories: item.calories,
-  protein: item.protein,
-  carbs: item.carbs,
-  fat: item.fat,
-  timestamp: item.timestamp,
-  rawInput: item.rawInput,
-});
+const toEntry = (item: DataRecord): DataRecord => {
+  // Remove DynamoDB keys, return the rest
+  const { PK, SK, ...entry } = item;
+  return entry;
+};
 
 // =============================================================================
 // Repository Functions
@@ -52,21 +42,17 @@ const toFoodEntry = (item: FoodEntryItem): FoodEntry => ({
 export const createEntry = async (
   userId: string,
   entryId: string,
-  request: CreateFoodEntryRequest,
-): Promise<FoodEntry> => {
+  data: DataRecord,
+): Promise<DataRecord> => {
   const timestamp = new Date().toISOString();
-  const date = request.date || timestamp.split("T")[0];
+  const date = (data.date as string) || timestamp.split("T")[0];
 
-  const item: FoodEntryItem = {
+  const item: DataRecord = {
+    ...data,
     PK: createPK(userId),
     SK: createEntrySK(date, entryId),
     id: entryId,
     date,
-    name: request.name,
-    calories: Math.round(request.calories),
-    protein: Math.round(request.protein),
-    carbs: Math.round(request.carbs),
-    fat: Math.round(request.fat),
     timestamp,
   };
 
@@ -77,44 +63,33 @@ export const createEntry = async (
     }),
   );
 
-  return toFoodEntry(item);
+  return toEntry(item);
 };
 
 export const updateEntry = async (
   userId: string,
   date: string,
   entryId: string,
-  updates: UpdateFoodEntryRequest,
-): Promise<FoodEntry | null> => {
-  // Build update expression dynamically
+  updates: DataRecord,
+): Promise<DataRecord | null> => {
+  // Build update expression dynamically from all provided fields
   const updateParts: string[] = [];
   const expressionValues: Record<string, unknown> = {};
   const expressionNames: Record<string, string> = {};
 
-  if (updates.name !== undefined) {
-    updateParts.push("#name = :name");
-    expressionNames["#name"] = "name";
-    expressionValues[":name"] = updates.name;
-  }
-  if (updates.calories !== undefined) {
-    updateParts.push("calories = :calories");
-    expressionValues[":calories"] = Math.round(updates.calories);
-  }
-  if (updates.protein !== undefined) {
-    updateParts.push("protein = :protein");
-    expressionValues[":protein"] = Math.round(updates.protein);
-  }
-  if (updates.carbs !== undefined) {
-    updateParts.push("carbs = :carbs");
-    expressionValues[":carbs"] = Math.round(updates.carbs);
-  }
-  if (updates.fat !== undefined) {
-    updateParts.push("fat = :fat");
-    expressionValues[":fat"] = Math.round(updates.fat);
+  for (const [key, value] of Object.entries(updates)) {
+    // Skip reserved/internal fields
+    if (["id", "date", "PK", "SK"].includes(key)) continue;
+
+    // Use expression attribute names to avoid reserved word conflicts
+    const nameKey = `#${key}`;
+    const valueKey = `:${key}`;
+    updateParts.push(`${nameKey} = ${valueKey}`);
+    expressionNames[nameKey] = key;
+    expressionValues[valueKey] = value;
   }
 
   if (updateParts.length === 0) {
-    // No updates to apply, fetch and return current item
     return null;
   }
 
@@ -127,9 +102,7 @@ export const updateEntry = async (
       },
       UpdateExpression: `SET ${updateParts.join(", ")}`,
       ExpressionAttributeValues: expressionValues,
-      ...(Object.keys(expressionNames).length > 0 && {
-        ExpressionAttributeNames: expressionNames,
-      }),
+      ExpressionAttributeNames: expressionNames,
       ReturnValues: "ALL_NEW",
     }),
   );
@@ -138,7 +111,7 @@ export const updateEntry = async (
     return null;
   }
 
-  return toFoodEntry(result.Attributes as FoodEntryItem);
+  return toEntry(result.Attributes as DataRecord);
 };
 
 export const deleteEntry = async (
@@ -160,7 +133,7 @@ export const deleteEntry = async (
 export const getEntriesByDate = async (
   userId: string,
   date: string,
-): Promise<FoodEntry[]> => {
+): Promise<DataRecord[]> => {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
@@ -172,15 +145,14 @@ export const getEntriesByDate = async (
     }),
   );
 
-  const items = (result.Items || []) as FoodEntryItem[];
-  return items.map(toFoodEntry);
+  return (result.Items || []).map(toEntry);
 };
 
 export const getEntriesByDateRange = async (
   userId: string,
   startDate: string,
   endDate: string,
-): Promise<FoodEntry[]> => {
+): Promise<DataRecord[]> => {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
@@ -193,6 +165,5 @@ export const getEntriesByDateRange = async (
     }),
   );
 
-  const items = (result.Items || []) as FoodEntryItem[];
-  return items.map(toFoodEntry);
+  return (result.Items || []).map(toEntry);
 };

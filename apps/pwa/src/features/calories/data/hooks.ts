@@ -8,17 +8,16 @@ import {
   updateEntry as apiUpdateEntry,
   fetchDashboard,
   fetchWeeklySummary,
-  type CreateEntryRequest,
-  type DailySummary,
-  type FoodEntry,
-  type UpdateEntryRequest,
-  type WeeklySummary,
 } from "../../../lib/api";
 import { dashboardKeys } from "../../profile/data/hooks";
+import type { DailySummary, WeeklySummary } from "../types";
 import { getCurrentWeek, getToday } from "../utils";
 
-// Re-export types for convenience
-export type { DailySummary, FoodEntry, WeeklySummary };
+// Response types (API returns generic records, we cast locally)
+interface DashboardResponse {
+  profile: Record<string, unknown> | null;
+  currentWeek: WeeklySummary;
+}
 
 // Query keys
 export const calorieKeys = {
@@ -41,7 +40,9 @@ export function useEntries(date?: string) {
   const weekQuery = useWeeklySummary(weekId);
 
   // Extract the specific day from the week data
-  const dayData = weekQuery.data?.days.find((d) => d.date === targetDate);
+  const dayData = weekQuery.data?.days.find(
+    (d: DailySummary) => d.date === targetDate,
+  );
 
   return {
     data: dayData,
@@ -58,13 +59,14 @@ export function useEntries(date?: string) {
 export function useTodaySummary() {
   const dashboard = useQuery({
     queryKey: dashboardKeys.all,
-    queryFn: fetchDashboard,
+    queryFn: async () =>
+      (await fetchDashboard()) as unknown as DashboardResponse,
     staleTime: 1000 * 60 * 5,
   });
 
   const today = getToday();
   const dayData = dashboard.data?.currentWeek.days.find(
-    (d) => d.date === today,
+    (d: DailySummary) => d.date === today,
   );
 
   return {
@@ -87,7 +89,8 @@ export function useWeeklySummary(weekId?: string) {
   // Dashboard query (for current week)
   const dashboardQuery = useQuery({
     queryKey: dashboardKeys.all,
-    queryFn: fetchDashboard,
+    queryFn: async () =>
+      (await fetchDashboard()) as unknown as DashboardResponse,
     staleTime: 1000 * 60 * 5,
     enabled: isCurrentWeek,
   });
@@ -95,7 +98,8 @@ export function useWeeklySummary(weekId?: string) {
   // Week query (for historical weeks)
   const weekQuery = useQuery({
     queryKey: calorieKeys.weeks(targetWeek),
-    queryFn: () => fetchWeeklySummary(targetWeek),
+    queryFn: async () =>
+      (await fetchWeeklySummary(targetWeek)) as unknown as WeeklySummary,
     staleTime: 1000 * 60 * 30, // 30 minutes for historical data
     enabled: !isCurrentWeek,
   });
@@ -143,12 +147,15 @@ export function useCreateEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateEntryRequest) => apiCreateEntry(data),
+    mutationFn: (data: Record<string, unknown>) => apiCreateEntry(data),
     onSuccess: (entry) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
-      const weekId = getWeekIdForDate(entry.date);
-      queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+      const date = entry.date as string;
+      if (date) {
+        const weekId = getWeekIdForDate(date);
+        queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+      }
     },
   });
 }
@@ -167,12 +174,15 @@ export function useUpdateEntry() {
     }: {
       date: string;
       id: string;
-      data: UpdateEntryRequest;
+      data: Record<string, unknown>;
     }) => apiUpdateEntry(date, id, data),
     onSuccess: (entry) => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
-      const weekId = getWeekIdForDate(entry.date);
-      queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+      const date = entry.date as string;
+      if (date) {
+        const weekId = getWeekIdForDate(date);
+        queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });
+      }
     },
   });
 }

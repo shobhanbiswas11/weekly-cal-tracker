@@ -1,27 +1,33 @@
 // API client for backend communication
+// Backend stores generic records - no strict types needed
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-const CHAT_URL = import.meta.env.VITE_CHAT_URL || "http://localhost:3000/chat";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const CHAT_URL = import.meta.env.VITE_CHAT_URL;
 
-// Get the current auth token
-// Uses Clerk's getToken() when available, falls back to localStorage
-async function getAuthToken(): Promise<string> {
-  // Try to get token from Clerk (if available in window context)
+if (!API_BASE_URL) {
+  throw new Error("Missing VITE_API_URL in environment");
+}
 
-  const clerk = (
-    window as unknown as {
-      __clerk_frontend_api?: { session?: { getToken?: () => Promise<string> } };
-    }
-  ).__clerk_frontend_api;
-  if (clerk?.session?.getToken) {
-    const token = await clerk.session.getToken();
-    if (token) return token;
+if (!CHAT_URL) {
+  throw new Error("Missing VITE_CHAT_URL in environment");
+}
+
+// Clerk types for window object
+declare global {
+  interface Window {
+    Clerk?: {
+      session?: {
+        getToken: () => Promise<string | null>;
+      };
+    };
   }
+}
 
-  // Fallback to localStorage (for development)
-  const token = localStorage.getItem("accessToken");
+// Get the current auth token from Clerk
+async function getAuthToken(): Promise<string> {
+  const token = await window.Clerk?.session?.getToken();
   if (!token) {
-    throw new Error("No authentication token available");
+    throw new Error("No authentication token available. Please sign in.");
   }
   return token;
 }
@@ -34,7 +40,7 @@ interface ApiResponse<T> {
 }
 
 // Generic fetch wrapper with auth
-async function apiFetch<T>(
+async function apiFetch<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
@@ -64,85 +70,22 @@ async function apiFetch<T>(
 }
 
 // =============================================================================
-// API Types (matching backend)
-// =============================================================================
-
-export interface FoodEntry {
-  id: string;
-  date: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  timestamp: string;
-  rawInput?: string;
-}
-
-export interface DailySummary {
-  date: string;
-  entries: FoodEntry[];
-  totalCalories: number;
-  totalProtein: number;
-  totalCarbs: number;
-  totalFat: number;
-}
-
-export interface WeeklySummary {
-  weekId: string;
-  startDate: string;
-  endDate: string;
-  days: DailySummary[];
-  weeklyTotalCalories: number;
-  weeklyTotalProtein: number;
-  weeklyTotalCarbs: number;
-  weeklyTotalFat: number;
-  averageDailyCalories: number;
-}
-
-export interface DashboardResponse {
-  profile: Record<string, unknown> | null;
-  currentWeek: WeeklySummary;
-}
-
-export interface CreateEntryRequest {
-  date?: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
-export interface UpdateEntryRequest {
-  name?: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-}
-
-// =============================================================================
-// API Functions
+// API Functions - All return generic records
 // =============================================================================
 
 // Dashboard (app init)
-export async function fetchDashboard(): Promise<DashboardResponse> {
-  return apiFetch<DashboardResponse>("/dashboard");
+export async function fetchDashboard(): Promise<Record<string, unknown>> {
+  return apiFetch<Record<string, unknown>>("/dashboard");
 }
 
 // Weekly summary
-export async function fetchWeeklySummary(
-  weekId: string,
-): Promise<WeeklySummary> {
-  return apiFetch<WeeklySummary>(`/weeks/${weekId}`);
+export async function fetchWeeklySummary(weekId: string) {
+  return apiFetch(`/weeks/${weekId}`);
 }
 
 // Entries
-export async function createEntry(
-  data: CreateEntryRequest,
-): Promise<FoodEntry> {
-  return apiFetch<FoodEntry>("/entries", {
+export async function createEntry(data: Record<string, unknown>) {
+  return apiFetch("/entries", {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -151,25 +94,23 @@ export async function createEntry(
 export async function updateEntry(
   date: string,
   id: string,
-  data: UpdateEntryRequest,
-): Promise<FoodEntry> {
-  return apiFetch<FoodEntry>(`/entries/${date}/${id}`, {
+  data: Record<string, unknown>,
+) {
+  return apiFetch(`/entries/${date}/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteEntry(date: string, id: string): Promise<void> {
-  await apiFetch<{ message: string }>(`/entries/${date}/${id}`, {
+export async function deleteEntry(date: string, id: string) {
+  await apiFetch(`/entries/${date}/${id}`, {
     method: "DELETE",
   });
 }
 
 // Profile
-export async function updateProfile(
-  data: Record<string, unknown>,
-): Promise<{ profile: Record<string, unknown> }> {
-  return apiFetch<{ profile: Record<string, unknown> }>("/profile", {
+export async function updateProfile(data: Record<string, unknown>) {
+  return apiFetch("/profile", {
     method: "PUT",
     body: JSON.stringify(data),
   });

@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { SignOutButton } from "@clerk/react";
 import {
   CalendarRange,
   Clock1,
   Flame,
-  LogOut,
   Menu,
   MessageSquare,
   X,
@@ -19,11 +19,6 @@ export function Header({ menuContent }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  function handleSignOut() {
-    localStorage.removeItem("accessToken");
-    navigate("/login", { replace: true });
-  }
 
   return (
     <>
@@ -113,14 +108,7 @@ export function Header({ menuContent }: HeaderProps) {
 
           {/* Sign Out - Bottom */}
           <div className="border-t border-gray-100 p-4">
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={handleSignOut}
-              aria-label="Sign out"
-            >
-              <LogOut className="size-5" />
-            </Button>
+            <SignOutButton />
           </div>
         </div>
       </div>
