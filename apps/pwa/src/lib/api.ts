@@ -1,5 +1,4 @@
 // API client for backend communication
-// Backend stores generic records - no strict types needed
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const CHAT_URL = import.meta.env.VITE_CHAT_URL;
@@ -23,6 +22,108 @@ declare global {
   }
 }
 
+// =============================================================================
+// API Types - Matching backend structure
+// =============================================================================
+
+// Generic record type (backend accepts flexible schema)
+type DataRecord = Record<string, unknown>;
+
+// API Response wrapper (from backend shared/http.ts)
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+// -----------------------------------------------------------------------------
+// Dashboard
+// -----------------------------------------------------------------------------
+
+/** GET /dashboard response */
+export interface DashboardResponse {
+  profile: ProfileData | null;
+  weekId: string; // Format: YYYY-Www (e.g., "2026-W13")
+  entries: EntryData[];
+}
+
+// -----------------------------------------------------------------------------
+// Profile
+// -----------------------------------------------------------------------------
+
+/** Profile data structure */
+export interface ProfileData extends DataRecord {
+  name?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  calorieGoal?: number;
+  proteinGoal?: number;
+  carbsGoal?: number;
+  fatsGoal?: number;
+}
+
+/** PUT /profile request body */
+export type ProfileUpdateRequest = Partial<ProfileData>;
+
+/** POST/PUT /profile response */
+export interface ProfileResponse {
+  profile: ProfileData;
+}
+
+// -----------------------------------------------------------------------------
+// Entries
+// -----------------------------------------------------------------------------
+
+/** Entry data structure (stored in DynamoDB) */
+export interface EntryData extends DataRecord {
+  id: string; // UUID
+  date: string; // YYYY-MM-DD
+  timestamp: string; // ISO 8601
+  name?: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+}
+
+/** POST /entries request body */
+export interface EntryCreateRequest extends DataRecord {
+  name?: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+  date?: string; // YYYY-MM-DD, defaults to today if not provided
+}
+
+/** PUT /entries/{date}/{id} request body */
+export type EntryUpdateRequest = Partial<Omit<EntryData, "id" | "date">>;
+
+/** GET /entries/{date} response */
+export interface EntriesByDateResponse {
+  entries: EntryData[];
+}
+
+/** DELETE /entries/{date}/{id} response */
+export interface EntryDeleteResponse {
+  message: string;
+}
+
+// -----------------------------------------------------------------------------
+// Weekly Summary
+// -----------------------------------------------------------------------------
+
+/** GET /weeks/{weekId} response */
+export interface WeeklySummaryResponse {
+  weekId: string; // Format: YYYY-Www
+  entries: EntryData[];
+}
+
+// =============================================================================
+// Auth
+// =============================================================================
+
 // Get the current auth token from Clerk
 async function getAuthToken(): Promise<string> {
   const token = await window.Clerk?.session?.getToken();
@@ -32,14 +133,10 @@ async function getAuthToken(): Promise<string> {
   return token;
 }
 
-// API Response wrapper
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+// =============================================================================
+// Generic Fetch Wrapper
+// =============================================================================
 
-// Generic fetch wrapper with auth
 async function apiFetch<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
@@ -70,47 +167,65 @@ async function apiFetch<T = unknown>(
 }
 
 // =============================================================================
-// API Functions - All return generic records
+// API Functions
 // =============================================================================
 
-// Dashboard (app init)
-export async function fetchDashboard(): Promise<Record<string, unknown>> {
-  return apiFetch<Record<string, unknown>>("/dashboard");
+/** GET /dashboard - Initialize app with current week's profile and entries */
+export async function fetchDashboard(): Promise<DashboardResponse> {
+  return apiFetch<DashboardResponse>("/dashboard");
 }
 
-// Weekly summary
-export async function fetchWeeklySummary(weekId: string) {
-  return apiFetch(`/weeks/${weekId}`);
+/** GET /weeks/{weekId} - Get summary for a specific week */
+export async function fetchWeeklySummary(
+  weekId: string,
+): Promise<WeeklySummaryResponse> {
+  return apiFetch<WeeklySummaryResponse>(`/weeks/${weekId}`);
 }
 
-// Entries
-export async function createEntry(data: Record<string, unknown>) {
-  return apiFetch("/entries", {
+/** GET /entries/{date} - Get all entries for a specific date */
+export async function fetchEntriesByDate(
+  date: string,
+): Promise<EntriesByDateResponse> {
+  return apiFetch<EntriesByDateResponse>(`/entries/${date}`);
+}
+
+/** POST /entries - Create a new food entry */
+export async function createEntry(
+  data: EntryCreateRequest,
+): Promise<EntryData> {
+  return apiFetch<EntryData>("/entries", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
+/** PUT /entries/{date}/{id} - Update an existing food entry */
 export async function updateEntry(
   date: string,
   id: string,
-  data: Record<string, unknown>,
-) {
-  return apiFetch(`/entries/${date}/${id}`, {
+  data: EntryUpdateRequest,
+): Promise<EntryData> {
+  return apiFetch<EntryData>(`/entries/${date}/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteEntry(date: string, id: string) {
-  await apiFetch(`/entries/${date}/${id}`, {
+/** DELETE /entries/{date}/{id} - Delete a food entry */
+export async function deleteEntry(
+  date: string,
+  id: string,
+): Promise<EntryDeleteResponse> {
+  return apiFetch<EntryDeleteResponse>(`/entries/${date}/${id}`, {
     method: "DELETE",
   });
 }
 
-// Profile
-export async function updateProfile(data: Record<string, unknown>) {
-  return apiFetch("/profile", {
+/** PUT /profile - Update user profile */
+export async function updateProfile(
+  data: ProfileUpdateRequest,
+): Promise<ProfileResponse> {
+  return apiFetch<ProfileResponse>("/profile", {
     method: "PUT",
     body: JSON.stringify(data),
   });

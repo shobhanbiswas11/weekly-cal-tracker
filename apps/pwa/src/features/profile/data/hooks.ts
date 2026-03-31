@@ -1,5 +1,7 @@
 // Data hooks for user profile using TanStack Query
 // Reads profile from /dashboard endpoint, writes via /profile
+//
+// These hooks are feature-level abstractions, not page-specific.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -7,13 +9,12 @@ import {
   updateProfile as apiUpdateProfile,
   fetchDashboard,
 } from "../../../lib/api";
+import { dashboardKeys } from "../../shared/query-keys";
+import { getProfileCompleteness, profileExists } from "../services";
 import type { ProfileUpdate, UserProfile } from "../types";
-import { isProfileComplete } from "../types";
 
-// Query keys
-export const dashboardKeys = {
-  all: ["dashboard"] as const,
-};
+// Re-export query keys for backwards compatibility
+export { dashboardKeys } from "../../shared/query-keys";
 
 // =============================================================================
 // Query Hooks
@@ -40,8 +41,7 @@ export function useProfile() {
 
   return {
     data: dashboard.data?.profile as UserProfile | undefined,
-    exists:
-      dashboard.data?.profile !== null && dashboard.data?.profile !== undefined,
+    exists: profileExists(dashboard.data?.profile),
     isLoading: dashboard.isLoading,
     error: dashboard.error,
     refetch: dashboard.refetch,
@@ -92,47 +92,7 @@ export function useProfileCompleteness(): {
 } {
   const { data: profile } = useProfile();
 
-  return useMemo(() => {
-    if (!profile) {
-      return {
-        isComplete: false,
-        missingFields: [
-          "dateOfBirth",
-          "biologicalSex",
-          "height",
-          "currentWeight",
-          "activityLevel",
-          "primaryGoal",
-        ],
-        completionPercentage: 0,
-      };
-    }
-
-    const requiredFields = [
-      "dateOfBirth",
-      "biologicalSex",
-      "height",
-      "currentWeight",
-      "activityLevel",
-      "primaryGoal",
-    ] as const;
-
-    const missingFields = requiredFields.filter(
-      (field) => profile[field] === undefined || profile[field] === null,
-    );
-
-    const totalFields = requiredFields.length;
-    const completedFields = totalFields - missingFields.length;
-    const completionPercentage = Math.round(
-      (completedFields / totalFields) * 100,
-    );
-
-    return {
-      isComplete: isProfileComplete(profile),
-      missingFields: missingFields as string[],
-      completionPercentage,
-    };
-  }, [profile]);
+  return useMemo(() => getProfileCompleteness(profile), [profile]);
 }
 
 /**

@@ -1,5 +1,8 @@
 // Data hooks for calorie tracking using TanStack Query
 // Fetches from /dashboard and /weeks/{weekId} endpoints
+//
+// These hooks are feature-level abstractions, not page-specific.
+// Pages compose these hooks to build their views.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,24 +12,78 @@ import {
   fetchDashboard,
   fetchWeeklySummary,
 } from "../../../lib/api";
-import { dashboardKeys } from "../../profile/data/hooks";
-import type { DailySummary, WeeklySummary } from "../types";
+import { calorieKeys, dashboardKeys } from "../../shared/query-keys";
+import {
+  calculateTotals,
+  DEFAULT_CALORIE_GOAL,
+  getPreviousWeek,
+  getWeekIdForDate,
+  toCalorieEntry,
+  transformToWeeklySummary,
+} from "../services";
+import type { CalorieEntry, DailySummary } from "../types";
 import { getCurrentWeek, getToday } from "../utils";
 
-// Response types (API returns generic records, we cast locally)
-interface DashboardResponse {
-  profile: Record<string, unknown> | null;
-  currentWeek: WeeklySummary;
-}
-
-// Query keys
-export const calorieKeys = {
-  weeks: (weekId: string) => ["weeks", weekId] as const,
-};
+// Re-export query keys for backwards compatibility
+export { calorieKeys } from "../../shared/query-keys";
 
 // =============================================================================
 // Query Hooks
 // =============================================================================
+
+/**
+ * Get dashboard data directly from the API
+ * Returns profile and current week's entries
+ */
+export function useDashboard() {
+  return useQuery({
+    queryKey: dashboardKeys.all,
+    queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/**
+ * Dashboard summary hook
+ * Returns processed calorie data with profile existence check.
+ * Combines profile + current week entries into a unified view.
+ */
+export function useDashboardSummary() {
+  const { data: dashboard, isLoading, error } = useDashboard();
+
+  if (isLoading || !dashboard) {
+    return { isLoading: true, hasProfile: false } as const;
+  }
+
+  // Check if profile exists
+  if (!dashboard.profile) {
+    return { isLoading: false, hasProfile: false } as const;
+  }
+
+  const today = getToday();
+  const calorieGoal = dashboard.profile.calorieGoal ?? DEFAULT_CALORIE_GOAL;
+
+  // Convert entries to CalorieEntry format
+  const allEntries: CalorieEntry[] = dashboard.entries.map(toCalorieEntry);
+  const todayEntries = allEntries.filter((e) => e.date === today);
+
+  // Calculate totals
+  const todayTotals = calculateTotals(todayEntries);
+  const weekTotals = calculateTotals(allEntries);
+  const weekGoal = calorieGoal * 7;
+
+  return {
+    isLoading: false,
+    hasProfile: true,
+    weekId: dashboard.weekId,
+    calorieGoal,
+    weekGoal,
+    todayEntries,
+    todayTotals,
+    weekTotals,
+    error,
+  } as const;
+}
 
 /**
  * Get entries and summary for a specific date
@@ -59,15 +116,24 @@ export function useEntries(date?: string) {
 export function useTodaySummary() {
   const dashboard = useQuery({
     queryKey: dashboardKeys.all,
-    queryFn: async () =>
-      (await fetchDashboard()) as unknown as DashboardResponse,
+    queryFn: fetchDashboard,
     staleTime: 1000 * 60 * 5,
   });
 
   const today = getToday();
-  const dayData = dashboard.data?.currentWeek.days.find(
-    (d: DailySummary) => d.date === today,
-  );
+  const calorieGoal =
+    (dashboard.data?.profile?.calorieGoal as number) || DEFAULT_CALORIE_GOAL;
+
+  // Transform API response to WeeklySummary, then extract today
+  const weekSummary = dashboard.data
+    ? transformToWeeklySummary(
+        dashboard.data.weekId,
+        dashboard.data.entries,
+        calorieGoal,
+      )
+    : undefined;
+
+  const dayData = weekSummary?.days.find((d) => d.date === today);
 
   return {
     data: dayData,
@@ -89,8 +155,7 @@ export function useWeeklySummary(weekId?: string) {
   // Dashboard query (for current week)
   const dashboardQuery = useQuery({
     queryKey: dashboardKeys.all,
-    queryFn: async () =>
-      (await fetchDashboard()) as unknown as DashboardResponse,
+    queryFn: fetchDashboard,
     staleTime: 1000 * 60 * 5,
     enabled: isCurrentWeek,
   });
@@ -98,23 +163,42 @@ export function useWeeklySummary(weekId?: string) {
   // Week query (for historical weeks)
   const weekQuery = useQuery({
     queryKey: calorieKeys.weeks(targetWeek),
-    queryFn: async () =>
-      (await fetchWeeklySummary(targetWeek)) as unknown as WeeklySummary,
+    queryFn: () => fetchWeeklySummary(targetWeek),
     staleTime: 1000 * 60 * 30, // 30 minutes for historical data
     enabled: !isCurrentWeek,
   });
 
   if (isCurrentWeek) {
+    const calorieGoal =
+      (dashboardQuery.data?.profile?.calorieGoal as number) ||
+      DEFAULT_CALORIE_GOAL;
+    const weekSummary = dashboardQuery.data
+      ? transformToWeeklySummary(
+          dashboardQuery.data.weekId,
+          dashboardQuery.data.entries,
+          calorieGoal,
+        )
+      : undefined;
+
     return {
-      data: dashboardQuery.data?.currentWeek,
+      data: weekSummary,
       isLoading: dashboardQuery.isLoading,
       error: dashboardQuery.error,
       refetch: dashboardQuery.refetch,
     };
   }
 
+  // Transform historical week data
+  const weekSummary = weekQuery.data
+    ? transformToWeeklySummary(
+        weekQuery.data.weekId,
+        weekQuery.data.entries,
+        DEFAULT_CALORIE_GOAL,
+      )
+    : undefined;
+
   return {
-    data: weekQuery.data,
+    data: weekSummary,
     isLoading: weekQuery.isLoading,
     error: weekQuery.error,
     refetch: weekQuery.refetch,
@@ -204,47 +288,12 @@ export function useDeleteEntry() {
   });
 }
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Get ISO week ID for a date
- */
-function getWeekIdForDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  date.setHours(0, 0, 0, 0);
-  // Thursday in current week decides the year
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  // January 4 is always in week 1
-  const week1 = new Date(date.getFullYear(), 0, 4);
-  // Calculate full weeks to Thursday
-  const weekNum =
-    1 +
-    Math.round(
-      ((date.getTime() - week1.getTime()) / 86400000 -
-        3 +
-        ((week1.getDay() + 6) % 7)) /
-        7,
-    );
-  return `${date.getFullYear()}-W${weekNum.toString().padStart(2, "0")}`;
-}
-
-/**
- * Get the previous week's ID
- */
-function getPreviousWeek(weekId: string): string {
-  const match = weekId.match(/^(\d{4})-W(\d{2})$/);
-  if (!match) return weekId;
-
-  let year = parseInt(match[1]);
-  let week = parseInt(match[2]) - 1;
-
-  if (week < 1) {
-    year--;
-    // Get last week of previous year (simplified - assumes 52 weeks)
-    week = 52;
-  }
-
-  return `${year}-W${week.toString().padStart(2, "0")}`;
-}
+// Re-export services for convenience
+export {
+  calculateTotals,
+  DEFAULT_CALORIE_GOAL,
+  getPreviousWeek,
+  getWeekIdForDate,
+  toCalorieEntry,
+  transformToWeeklySummary,
+} from "../services";

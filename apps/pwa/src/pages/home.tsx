@@ -4,23 +4,45 @@ import {
   CalorieKPI,
   EntryList,
   MacroGrid,
-  useLastWeekSummary,
-  useTodaySummary,
+  useDashboardSummary,
 } from "@/features/calories";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data: todaySummary } = useTodaySummary();
-  const { data: lastWeekSummary } = useLastWeekSummary();
+  const summary = useDashboardSummary();
 
-  if (!todaySummary || !lastWeekSummary) {
+  if (summary.isLoading) {
     return <div className="p-4">Loading...</div>;
   }
 
-  const weekConsumed = lastWeekSummary.weeklyTotals.calories;
-  const weekGoal = lastWeekSummary.weeklyCalorieGoal;
+  if (!summary.hasProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center min-h-[60vh]">
+        <UserCircle className="size-16 text-muted-foreground" />
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold">Set Up Your Profile</h1>
+          <p className="text-muted-foreground max-w-sm">
+            To start tracking your calories, please set up your profile with
+            your goals first.
+          </p>
+        </div>
+        <Button onClick={() => navigate("/profile")} size="lg">
+          Set Up Profile
+        </Button>
+      </div>
+    );
+  }
+
+  const {
+    weekId,
+    calorieGoal,
+    weekGoal,
+    todayEntries,
+    todayTotals,
+    weekTotals,
+  } = summary;
 
   return (
     <div className="flex flex-col gap-4 p-4 pb-32">
@@ -35,15 +57,15 @@ export default function HomePage() {
       {/* KPI Cards */}
       <div className="flex gap-3">
         <CalorieKPI
-          consumed={weekConsumed}
+          consumed={weekTotals.calories}
           goal={weekGoal}
-          label="Last Week"
-          sublabel="Mar 23 - 29"
+          label="This Week"
+          sublabel={weekId}
           size="md"
         />
         <CalorieKPI
-          consumed={todaySummary.totals.calories}
-          goal={todaySummary.calorieGoal}
+          consumed={todayTotals.calories}
+          goal={calorieGoal}
           label="Today"
           size="md"
         />
@@ -55,13 +77,13 @@ export default function HomePage() {
           <CardTitle className="text-base">Today's Macros</CardTitle>
         </CardHeader>
         <CardContent>
-          <MacroGrid totals={todaySummary.totals} showProgress size="md" />
+          <MacroGrid totals={todayTotals} showProgress size="md" />
         </CardContent>
       </Card>
 
       {/* Recent Entries */}
       <EntryList
-        entries={todaySummary.entries}
+        entries={todayEntries}
         limit={3}
         title="Recent Entries"
         emptyMessage="No entries today. Start logging your meals!"
