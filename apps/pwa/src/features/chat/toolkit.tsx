@@ -1,56 +1,26 @@
-import { type ToolHandlerContext, type Toolkit } from "@assistant-ui/react";
-import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
-  createEntry,
-  deleteEntry,
-  updateEntry,
-  updateProfile,
-} from "../../lib/api";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { type Toolkit } from "@assistant-ui/react";
+import { z } from "zod";
 
-// Schemas for tool parameters
-const createFoodEntrySchema = z.object({
-  date: z
+// Schema for the save_profile tool parameters
+const SaveProfileSchema = z.object({
+  name: z.string().describe("The user's name"),
+  dateOfBirth: z.string().describe("Date of birth in YYYY-MM-DD format"),
+  biologicalSex: z
+    .enum(["male", "female"])
+    .describe("Biological sex for metabolic calculations"),
+  height: z
     .string()
-    .optional()
-    .describe("Date in YYYY-MM-DD format, defaults to today"),
-  name: z.string().describe("Name of the food item"),
-  calories: z.number().describe("Estimated calories"),
-  protein: z.number().describe("Estimated grams of protein"),
-  carbs: z.number().describe("Estimated grams of carbohydrates"),
-  fat: z.number().describe("Estimated grams of fat"),
-});
-
-const updateFoodEntrySchema = z.object({
-  date: z.string().describe("Date of the entry (YYYY-MM-DD)"),
-  id: z.string().describe("ID of the entry to update"),
-  name: z.string().optional().describe("New name for the food item"),
-  calories: z.number().optional().describe("New calorie value"),
-  protein: z.number().optional().describe("New protein value in grams"),
-  carbs: z.number().optional().describe("New carbs value in grams"),
-  fat: z.number().optional().describe("New fat value in grams"),
-});
-
-const deleteFoodEntrySchema = z.object({
-  date: z.string().describe("Date of the entry (YYYY-MM-DD)"),
-  id: z.string().describe("ID of the entry to delete"),
-});
-
-const updateProfileSchema = z.object({
-  name: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  biologicalSex: z.enum(["male", "female"]).optional(),
-  height: z.number().optional(),
-  currentWeight: z.number().optional(),
-  targetWeight: z.number().optional(),
-  activityLevel: z
-    .enum([
-      "sedentary",
-      "lightly_active",
-      "moderately_active",
-      "very_active",
-      "extremely_active",
-    ])
-    .optional(),
+    .describe("Height value. Include the unit (e.g., 180 cm or 5 ft 11 in)"),
+  weight: z.string().describe("Current weight value"),
   primaryGoal: z
     .enum([
       "lose_weight",
@@ -59,110 +29,110 @@ const updateProfileSchema = z.object({
       "body_recomposition",
       "improve_health",
     ])
-    .optional(),
+    .default("maintain")
+    .describe("The user's primary fitness/health goal"),
+  additionalNotes: z
+    .string()
+    .optional()
+    .default("")
+    .describe(
+      "Additional notes like dietary restrictions, allergies, medical conditions, activity level",
+    ),
 });
 
 // Toolkit with frontend tools
 export const toolkit: Toolkit = {
-  // Create a new food entry
-  createFoodEntry: {
-    description: "Create a new food entry for calorie tracking",
-    parameters: createFoodEntrySchema,
-    execute: async (args, ctx: ToolHandlerContext) => {
-      try {
-        const entry = await createEntry({
-          date: args.date || new Date().toISOString().split("T")[0],
-          name: args.name,
-          calories: Math.round(args.calories),
-          protein: Math.round(args.protein),
-          carbs: Math.round(args.carbs),
-          fat: Math.round(args.fat),
-        });
+  save_profile: {
+    description:
+      "Save the user's profile information. Shows a confirmation card before saving.",
+    parameters: SaveProfileSchema,
+    execute: async (params, { human }) => {
+      const confirmed = await human({
+        type: "confirmation",
+        action: "save-profile",
+        details: params,
+      });
 
-        // Invalidate queries to refresh data
-        // Note: In a real app, you'd get the queryClient from context
-        // For now, we return success and let the UI refetch
-        return {
-          success: true,
-          message: `Added "${entry.name}" (${entry.calories} kcal)`,
-          entry,
-        };
-      } catch (error) {
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to create entry",
-        };
+      if (!confirmed) {
+        return { status: "cancelled" };
       }
+
+      // TODO: Save to backend later
+      console.log("Saving profile:", params);
+      return { status: "saved", profile: params };
     },
-  },
-
-  // Update an existing food entry
-  updateFoodEntry: {
-    description: "Update an existing food entry",
-    parameters: updateFoodEntrySchema,
-    execute: async (args) => {
-      try {
-        const { date, id, ...updates } = args;
-        const entry = await updateEntry(date, id, updates);
-
-        return {
-          success: true,
-          message: `Updated "${entry.name}"`,
-          entry,
+    render: ({ result, interrupt, resume }) => {
+      if (interrupt) {
+        const payload = interrupt.payload as {
+          details: z.infer<typeof SaveProfileSchema>;
         };
-      } catch (error) {
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to update entry",
-        };
+        const details = payload.details;
+        return (
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle>Confirm Profile</CardTitle>
+              <CardDescription>
+                Please review your profile details before saving.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm">
+              <p>
+                <span className="font-medium">Name:</span> {details.name}
+              </p>
+              <p>
+                <span className="font-medium">Date of Birth:</span>{" "}
+                {details.dateOfBirth}
+              </p>
+              <p>
+                <span className="font-medium">Biological Sex:</span>{" "}
+                {details.biologicalSex}
+              </p>
+              <p>
+                <span className="font-medium">Height:</span> {details.height}
+              </p>
+              <p>
+                <span className="font-medium">Weight:</span> {details.weight}
+              </p>
+              <p>
+                <span className="font-medium">Primary Goal:</span>{" "}
+                {details.primaryGoal?.replace(/_/g, " ")}
+              </p>
+              {details.additionalNotes && (
+                <p>
+                  <span className="font-medium">Notes:</span>{" "}
+                  {details.additionalNotes}
+                </p>
+              )}
+            </CardContent>
+            <CardFooter className="gap-2">
+              <Button onClick={() => resume(true)}>Confirm</Button>
+              <Button variant="outline" onClick={() => resume(false)}>
+                Cancel
+              </Button>
+            </CardFooter>
+          </Card>
+        );
       }
-    },
-  },
 
-  // Delete a food entry
-  deleteFoodEntry: {
-    description: "Delete a food entry",
-    parameters: deleteFoodEntrySchema,
-    execute: async (args) => {
-      try {
-        await deleteEntry(args.date, args.id);
-
-        return {
-          success: true,
-          message: "Entry deleted successfully",
-        };
-      } catch (error) {
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to delete entry",
-        };
+      if (result) {
+        return (
+          <Card size="sm">
+            <CardContent className="pt-4">
+              {result.status === "saved"
+                ? "✓ Profile saved successfully"
+                : "✗ Profile save cancelled"}
+            </CardContent>
+          </Card>
+        );
       }
-    },
-  },
 
-  // Update user profile
-  updateProfile: {
-    description: "Update user profile information",
-    parameters: updateProfileSchema,
-    execute: async (args) => {
-      try {
-        const result = await updateProfile(args);
-
-        return {
-          success: true,
-          message: "Profile updated successfully",
-          profile: result.profile,
-        };
-      } catch (error) {
-        return {
-          success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to update profile",
-        };
-      }
+      return (
+        <Card size="sm">
+          <CardContent className="pt-4 text-muted-foreground">
+            Preparing profile...
+          </CardContent>
+        </Card>
+      );
     },
   },
 };
