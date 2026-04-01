@@ -1,112 +1,25 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  CalorieKPI,
-  EntryList,
-  MacroGrid,
-  useDashboardSummary,
-} from "@/features/calories";
-import { MessageSquare, UserCircle } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useInitOnBoarding } from "@/features/chat";
+import ProfileSetupButton from "@/features/profile/components/profile-setup-button";
+import { useDashboard } from "@/hooks/dashboard";
+import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
-  const navigate = useNavigate();
-  const summary = useDashboardSummary();
+  const { data, isLoading } = useDashboard();
+  const { init: initiateOnboarding } = useInitOnBoarding();
 
-  if (summary.isLoading) {
-    return <div className="p-4">Loading...</div>;
-  }
+  const isProfileSetupComplete = !!data?.profile;
 
-  if (!summary.hasProfile) {
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center min-h-[60vh]">
-        <UserCircle className="size-16 text-muted-foreground" />
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold">Set Up Your Profile</h1>
-          <p className="text-muted-foreground max-w-sm">
-            To start tracking your calories, please set up your profile with
-            your goals first.
-          </p>
-        </div>
-        <Button onClick={() => navigate("/profile")} size="lg">
-          Set Up Profile
-        </Button>
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  const {
-    weekId,
-    calorieGoal,
-    weekGoal,
-    todayEntries,
-    todayTotals,
-    weekTotals,
-  } = summary;
+  if (!isProfileSetupComplete) {
+    return <ProfileSetupButton onClick={initiateOnboarding} />;
+  }
 
-  return (
-    <div className="flex flex-col gap-4 p-4 pb-32">
-      {/* Time-based greeting */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold">{getGreeting()}</h1>
-        <p className="text-sm text-muted-foreground">
-          Here's your calorie summary
-        </p>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="flex gap-3">
-        <CalorieKPI
-          consumed={weekTotals.calories}
-          goal={weekGoal}
-          label="This Week"
-          sublabel={weekId}
-          size="md"
-        />
-        <CalorieKPI
-          consumed={todayTotals.calories}
-          goal={calorieGoal}
-          label="Today"
-          size="md"
-        />
-      </div>
-
-      {/* Today's Macros */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Today's Macros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MacroGrid totals={todayTotals} showProgress size="md" />
-        </CardContent>
-      </Card>
-
-      {/* Recent Entries */}
-      <EntryList
-        entries={todayEntries}
-        limit={3}
-        title="Recent Entries"
-        emptyMessage="No entries today. Start logging your meals!"
-      />
-
-      {/* Chat Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
-        <Button
-          onClick={() => navigate("/chat")}
-          className="w-full h-12 gap-2 text-base shadow-lg"
-          size="lg"
-        >
-          <MessageSquare className="size-5" />
-          What did you eat?
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning!";
-  if (hour < 17) return "Good afternoon!";
-  return "Good evening!";
+  return <div>Profile Setup will go here</div>;
 }
