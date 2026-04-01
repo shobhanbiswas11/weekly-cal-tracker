@@ -1,5 +1,6 @@
-import { Show, SignInButton } from "@clerk/react";
+import { SignInButton } from "@clerk/react";
 import { Navigate, Route, Routes } from "react-router";
+import { ProtectedRoute, UnProtectedRoute } from "./components/auth";
 import { Header } from "./components/layout/Header";
 import ChatPage from "./pages/chat";
 import DailyPage from "./pages/daily";
@@ -9,10 +10,10 @@ import WeeklyPage from "./pages/weekly";
 function App() {
   return (
     <>
-      <Show when="signed-out">
+      <UnProtectedRoute>
         <SignInButton />
-      </Show>
-      <Show when="signed-in">
+      </UnProtectedRoute>
+      <ProtectedRoute>
         <div className="flex flex-col h-dvh">
           <Header />
           <div className="flex-1 min-h-0">
@@ -25,7 +26,7 @@ function App() {
             </Routes>
           </div>
         </div>
-      </Show>
+      </ProtectedRoute>
     </>
   );
 }
