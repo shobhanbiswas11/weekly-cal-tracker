@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
+import { useRedirectToChatWithSystemMessage } from "@/features/chat";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { PROFILE_SETUP_SYSTEM_PROMPT } from "../prompts";
 
-export default function ProfileSetupButton({
-  onClick,
-}: {
-  onClick: () => unknown;
-}) {
+export function ProfileSetupButton() {
+  const { redirect } = useRedirectToChatWithSystemMessage(
+    PROFILE_SETUP_SYSTEM_PROMPT,
+  );
+  function handleClick() {
+    redirect();
+  }
+
   return (
     <div className="flex h-full flex-col items-center justify-center p-6">
       <div className="flex max-w-sm flex-col items-center gap-6  p-8 text-center">
@@ -19,7 +24,7 @@ export default function ProfileSetupButton({
             health goals.
           </p>
         </div>
-        <Button size="lg" className="w-full gap-2" onClick={onClick}>
+        <Button size="lg" className="w-full gap-2" onClick={handleClick}>
           Get Started
           <ArrowRight className="size-4" />
         </Button>

@@ -1,13 +1,10 @@
-import { useInitOnBoarding } from "@/features/chat";
-import ProfileSetupButton from "@/features/profile/components/profile-setup-button";
+import { ProfileSetupButton, useIsProfileSetupDone } from "@/features/profile";
 import { useDashboard } from "@/hooks/dashboard";
 import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
-  const { data, isLoading } = useDashboard();
-  const { init: initiateOnboarding } = useInitOnBoarding();
-
-  const isProfileSetupComplete = !!data?.profile;
+  const { isLoading } = useDashboard();
+  const isProfileSetupDone = useIsProfileSetupDone();
 
   if (isLoading) {
     return (
@@ -17,8 +14,8 @@ export default function HomePage() {
     );
   }
 
-  if (!isProfileSetupComplete) {
-    return <ProfileSetupButton onClick={initiateOnboarding} />;
+  if (!isProfileSetupDone) {
+    return <ProfileSetupButton />;
   }
 
   return <div>Profile Setup will go here</div>;

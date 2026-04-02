@@ -165,10 +165,10 @@ export class BackendStack extends cdk.Stack {
       authorizer: jwtAuthorizer,
     });
 
-    // Profile - update
+    // Profile - create/update
     httpApi.addRoutes({
       path: "/profile",
-      methods: [apigatewayv2.HttpMethod.PUT],
+      methods: [apigatewayv2.HttpMethod.POST, apigatewayv2.HttpMethod.PUT],
       integration: dataIntegration,
       authorizer: jwtAuthorizer,
     });

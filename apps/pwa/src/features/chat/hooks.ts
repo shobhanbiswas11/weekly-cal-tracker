@@ -1,12 +1,11 @@
 import { useAui } from "@assistant-ui/react";
 import { useNavigate } from "react-router";
-import { ONBOARDING_SYSTEM_PROMPT } from "./prompts/onboarding";
 
-export function useInitOnBoarding() {
+export function useRedirectToChatWithSystemMessage(message: string) {
   const aui = useAui();
   const navigate = useNavigate();
 
-  const init = () => {
+  const redirect = () => {
     navigate("/chat");
 
     // TODO: Find a better way to do this after the thread is initialized instead of using a timeout
@@ -16,12 +15,12 @@ export function useInitOnBoarding() {
         content: [
           {
             type: "text",
-            text: ONBOARDING_SYSTEM_PROMPT,
+            text: message,
           },
         ],
       });
-    }, 500);
+    }, 100);
   };
 
-  return { init };
+  return { redirect };
 }

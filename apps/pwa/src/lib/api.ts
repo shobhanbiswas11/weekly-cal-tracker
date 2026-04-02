@@ -221,6 +221,16 @@ export async function deleteEntry(
   });
 }
 
+/** POST /profile - Create user profile */
+export async function createProfile(
+  data: ProfileUpdateRequest,
+): Promise<ProfileResponse> {
+  return apiFetch<ProfileResponse>("/profile", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 /** PUT /profile - Update user profile */
 export async function updateProfile(
   data: ProfileUpdateRequest,

@@ -2,12 +2,12 @@ import {
   ComposerAddAttachment,
   ComposerAttachments,
   UserMessageAttachments,
-} from '@/components/assistant-ui/attachment';
-import { MarkdownText } from '@/components/assistant-ui/markdown-text';
-import { ToolFallback } from '@/components/assistant-ui/tool-fallback';
-import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+} from "@/components/assistant-ui/attachment";
+import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   ActionBarMorePrimitive,
   ActionBarPrimitive,
@@ -18,7 +18,7 @@ import {
   MessagePrimitive,
   SuggestionPrimitive,
   ThreadPrimitive,
-} from '@assistant-ui/react';
+} from "@assistant-ui/react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -31,17 +31,17 @@ import {
   PencilIcon,
   RefreshCwIcon,
   SquareIcon,
-} from 'lucide-react';
-import type { FC } from 'react';
+} from "lucide-react";
+import type { FC } from "react";
 
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
       style={{
-        ['--thread-max-width' as string]: '44rem',
-        ['--composer-radius' as string]: '24px',
-        ['--composer-padding' as string]: '10px',
+        ["--thread-max-width" as string]: "44rem",
+        ["--composer-radius" as string]: "24px",
+        ["--composer-padding" as string]: "10px",
       }}
     >
       <ThreadPrimitive.Viewport
@@ -129,6 +129,7 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
+// TODO: on IOS the keyboard does not hide after sending message, need to investigate
 const Composer: FC = () => {
   return (
     <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
@@ -339,7 +340,7 @@ const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
     <BranchPickerPrimitive.Root
       hideWhenSingleBranch
       className={cn(
-        'aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-muted-foreground text-xs',
+        "aui-branch-picker-root mr-2 -ml-2 inline-flex items-center text-muted-foreground text-xs",
         className,
       )}
       {...rest}
