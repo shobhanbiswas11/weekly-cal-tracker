@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { PROFILE_SETUP_SYSTEM_PROMPT } from "../prompts";
 
 export function ProfileSetupButton() {
+  // TODO: rewrite this using useAssistantInstructions
   const { redirect } = useRedirectToChatWithSystemMessage(
     PROFILE_SETUP_SYSTEM_PROMPT,
   );
