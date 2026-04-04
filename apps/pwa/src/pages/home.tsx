@@ -159,18 +159,22 @@ export default function HomePage() {
 
         {/* KPI Cards - Today & Week */}
         <div className="grid grid-cols-2 gap-3">
-          <CalorieCard
-            consumed={todaySummary?.totals.calories ?? 0}
-            goal={todaySummary?.calorieGoal ?? 2000}
-            label="Today"
-            variant="today"
-          />
-          <CalorieCard
-            consumed={weeklySummary?.weeklyTotals.calories ?? 0}
-            goal={weeklySummary?.weeklyCalorieGoal ?? 14000}
-            label="This Week"
-            variant="week"
-          />
+          <Link to="/daily">
+            <CalorieCard
+              consumed={todaySummary?.totals.calories ?? 0}
+              goal={todaySummary?.calorieGoal ?? 2000}
+              label="Today"
+              variant="today"
+            />
+          </Link>
+          <Link to="/weekly">
+            <CalorieCard
+              consumed={weeklySummary?.weeklyTotals.calories ?? 0}
+              goal={weeklySummary?.weeklyCalorieGoal ?? 14000}
+              label="This Week"
+              variant="week"
+            />
+          </Link>
         </div>
 
         {/* Today's Macros */}
