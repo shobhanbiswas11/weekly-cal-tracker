@@ -8,15 +8,19 @@ export const calorieTools: Toolkit = {
     description: `Preview a meal with nutritional information for user confirmation. This tool displays the meal breakdown in a user-friendly card format with a "Log" button - the user performs the actual logging action.
 
 IMPORTANT WORKFLOW:
-1. When user describes what they ate, calculate the TOTAL nutrition for ALL items combined
-2. Present your estimation to the user in chat FIRST (e.g., "Here's my estimate for your breakfast: ~450 cal, 25g protein, 40g carbs, 20g fat. Does this look right?")
-3. Only call this tool AFTER the user confirms they're okay with the estimate
-4. Preview everything as ONE meal entry, not separate entries for each food item
+1. When user describes what they ate, immediately call this tool with your estimation
+2. Group identical food items together with a quantity field - do NOT list the same item multiple times (e.g., "6 eggs" becomes one item with name="Egg" and quantity=6)
+3. Each item's nutrition values should be the TOTAL for that quantity (e.g., 6 eggs = 6 × per-egg values)
+4. Sum up all items to get the total nutrition values (calories, protein, carbs, fat, fiber, sugar, sodium)
+5. The preview card will display both the itemized breakdown AND the totals, so the user can verify your calculations
+6. DO NOT ask "does this look right?" before calling - the preview UI handles confirmation
+7. If you need to ask clarifying questions (portion size, cooking method, etc.), ask BEFORE calling this tool
 
 Estimation approach:
 - Estimate on the MODERATELY higher side when uncertain
 - Consider portion sizes and cooking methods
 - Homemade food typically has fewer calories than restaurant/takeout
+- ALWAYS include fiber, sugar, and sodium estimates for each item
 
 Date handling:
 - Today's date is in the system context

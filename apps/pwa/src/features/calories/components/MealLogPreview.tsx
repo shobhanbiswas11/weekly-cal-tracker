@@ -7,10 +7,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useInvalidateDashboard } from "@/hooks/dashboard";
 import { createEntry } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
-import { Beef, Droplet, Flame, Leaf, Utensils, Wheat } from "lucide-react";
+import {
+  Beef,
+  ChevronDown,
+  ChevronUp,
+  Droplet,
+  Flame,
+  Leaf,
+  Utensils,
+  Wheat,
+} from "lucide-react";
 import { useState } from "react";
 import type { LogMealInput } from "../schemas";
 
@@ -37,6 +51,7 @@ function MacroItem({ icon, label, value, unit, className }: MacroItemProps) {
 
 export function MealLogPreview({ meal }: LogMealInput) {
   const [isCanceled, setIsCanceled] = useState(false);
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(true);
   const invalidateDashboard = useInvalidateDashboard();
 
   const mutation = useMutation({
@@ -49,11 +64,16 @@ export function MealLogPreview({ meal }: LogMealInput) {
   const handleConfirm = () => {
     mutation.mutate({
       name: meal.name,
+      description: meal.description,
       calories: meal.calories,
       protein: meal.protein,
       carbs: meal.carbs,
       fats: meal.fat,
-      date: meal.date,
+      ...(meal.fiber !== undefined && { fiber: meal.fiber }),
+      ...(meal.sugar !== undefined && { sugar: meal.sugar }),
+      ...(meal.sodium !== undefined && { sodium: meal.sodium }),
+      ...(meal.date && { date: meal.date }),
+      ...(meal.note && { note: meal.note }),
     });
   };
 
@@ -96,40 +116,94 @@ export function MealLogPreview({ meal }: LogMealInput) {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Primary macros */}
-        <div className="grid grid-cols-2 gap-2">
-          <MacroItem
-            icon={<Flame className="size-4" />}
-            label="Calories"
-            value={meal.calories}
-            unit="kcal"
-          />
-          <MacroItem
-            icon={<Beef className="size-4" />}
-            label="Protein"
-            value={meal.protein}
-            unit="g"
-          />
-          <MacroItem
-            icon={<Wheat className="size-4" />}
-            label="Carbs"
-            value={meal.carbs}
-            unit="g"
-          />
-          <MacroItem
-            icon={<Droplet className="size-4" />}
-            label="Fat"
-            value={meal.fat}
-            unit="g"
-          />
-        </div>
+        {/* Items breakdown - collapsible */}
+        {meal.items && meal.items.length > 0 && (
+          <Collapsible open={isBreakdownOpen} onOpenChange={setIsBreakdownOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full">
+              {isBreakdownOpen ? (
+                <ChevronUp className="size-4" />
+              ) : (
+                <ChevronDown className="size-4" />
+              )}
+              <span className="font-medium">
+                Calculation breakdown ({meal.items.length} items)
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div className="space-y-2 pl-2 border-l-2 border-muted">
+                {meal.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="text-sm bg-muted/50 rounded-md p-2"
+                  >
+                    <div className="font-medium text-foreground flex items-center gap-2">
+                      {item.quantity && item.quantity > 1 && (
+                        <span className="inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-semibold rounded-full px-2 py-0.5">
+                          ×{item.quantity}
+                        </span>
+                      )}
+                      {item.name}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
+                      <span>{item.calories} kcal</span>
+                      <span>{item.protein}g protein</span>
+                      <span>{item.carbs}g carbs</span>
+                      <span>{item.fat}g fat</span>
+                      {item.fiber !== undefined && (
+                        <span>{item.fiber}g fiber</span>
+                      )}
+                      {item.sugar !== undefined && (
+                        <span>{item.sugar}g sugar</span>
+                      )}
+                      {item.sodium !== undefined && (
+                        <span>{item.sodium}mg sodium</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
-        {/* Optional macros */}
-        {(meal.fiber !== undefined ||
-          meal.sugar !== undefined ||
-          meal.sodium !== undefined) && (
-          <div className="border-t pt-2">
-            <div className="grid grid-cols-2 gap-2 text-sm">
+        {/* Totals section */}
+        <div className="border-t pt-3">
+          <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+            Totals
+          </p>
+          {/* Primary macros */}
+          <div className="grid grid-cols-2 gap-2">
+            <MacroItem
+              icon={<Flame className="size-4" />}
+              label="Calories"
+              value={meal.calories}
+              unit="kcal"
+            />
+            <MacroItem
+              icon={<Beef className="size-4" />}
+              label="Protein"
+              value={meal.protein}
+              unit="g"
+            />
+            <MacroItem
+              icon={<Wheat className="size-4" />}
+              label="Carbs"
+              value={meal.carbs}
+              unit="g"
+            />
+            <MacroItem
+              icon={<Droplet className="size-4" />}
+              label="Fat"
+              value={meal.fat}
+              unit="g"
+            />
+          </div>
+
+          {/* Secondary macros - always show if present */}
+          {(meal.fiber !== undefined ||
+            meal.sugar !== undefined ||
+            meal.sodium !== undefined) && (
+            <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-dashed">
               {meal.fiber !== undefined && (
                 <MacroItem
                   icon={<Leaf className="size-3" />}
@@ -163,8 +237,8 @@ export function MealLogPreview({ meal }: LogMealInput) {
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Note if present */}
         {meal.note && (

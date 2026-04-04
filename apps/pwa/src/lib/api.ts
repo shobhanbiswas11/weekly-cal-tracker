@@ -52,16 +52,7 @@ export interface DashboardResponse {
 // -----------------------------------------------------------------------------
 
 /** Profile data structure */
-export interface ProfileData extends DataRecord {
-  name?: string;
-  age?: number;
-  height?: number;
-  weight?: number;
-  calorieGoal?: number;
-  proteinGoal?: number;
-  carbsGoal?: number;
-  fatsGoal?: number;
-}
+export type ProfileData = DataRecord;
 
 /** PUT /profile request body */
 export type ProfileUpdateRequest = Partial<ProfileData>;
@@ -76,29 +67,13 @@ export interface ProfileResponse {
 // -----------------------------------------------------------------------------
 
 /** Entry data structure (stored in DynamoDB) */
-export interface EntryData extends DataRecord {
-  id: string; // UUID
-  date: string; // YYYY-MM-DD
-  timestamp: string; // ISO 8601
-  name?: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-}
+export type EntryData = DataRecord;
 
 /** POST /entries request body */
-export interface EntryCreateRequest extends DataRecord {
-  name?: string;
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  date?: string; // YYYY-MM-DD, defaults to today if not provided
-}
+export type EntryCreateRequest = DataRecord;
 
 /** PUT /entries/{date}/{id} request body */
-export type EntryUpdateRequest = Partial<Omit<EntryData, "id" | "date">>;
+export type EntryUpdateRequest = EntryData;
 
 /** GET /entries/{date} response */
 export interface EntriesByDateResponse {

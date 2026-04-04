@@ -23,7 +23,5 @@ export default function HomePage() {
     return <ProfileSetupButton />;
   }
 
-  console.log(data);
-
   return <div></div>;
 }
