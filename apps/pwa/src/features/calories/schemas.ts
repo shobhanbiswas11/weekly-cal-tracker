@@ -75,6 +75,15 @@ const MealItemSchema = z.object({
     .describe("Estimated sodium in mg for ALL items of this type"),
 });
 
+// Result type for the meal log tool - persists user action in the message
+export const LogMealResultSchema = z.object({
+  action: z.enum(["logged", "canceled"]),
+  mealName: z.string(),
+  calories: z.number().optional(),
+});
+
+export type LogMealResult = z.infer<typeof LogMealResultSchema>;
+
 export const LogMealSchema = z.object({
   meal: z.object({
     name: z

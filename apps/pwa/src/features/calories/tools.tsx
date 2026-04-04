@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { Toolkit } from "@/features/chat";
+import { Utensils } from "lucide-react";
 import { MealLogPreview } from "./components";
-import { LogMealSchema } from "./schemas";
+import { LogMealSchema, type LogMealResult } from "./schemas";
 
 export const calorieTools: Toolkit = {
   preview_meal_log: {
@@ -27,11 +28,53 @@ Date handling:
 - Calculate relative dates ("yesterday", "last Monday", etc.) from today
 - Omit date field if no time reference (defaults to today)`,
     parameters: LogMealSchema,
-    render: ({ args }) => {
+    render: ({ args, result, addResult }) => {
       const parsedArgs = LogMealSchema.safeParse(args);
+      const typedResult = result as LogMealResult | undefined;
+
+      // Show receipt if action was already taken
+      if (typedResult?.action === "logged") {
+        return (
+          <Card size="sm">
+            <CardContent className="flex items-center gap-2 text-muted-foreground">
+              <Utensils className="size-4" />
+              <span>
+                Logged {typedResult.mealName} — {typedResult.calories} kcal
+              </span>
+            </CardContent>
+          </Card>
+        );
+      }
+
+      if (typedResult?.action === "canceled") {
+        return (
+          <Card size="sm">
+            <CardContent className="text-muted-foreground">
+              Meal entry canceled.
+            </CardContent>
+          </Card>
+        );
+      }
 
       if (parsedArgs.success) {
-        return <MealLogPreview meal={parsedArgs.data.meal} />;
+        return (
+          <MealLogPreview
+            meal={parsedArgs.data.meal}
+            onLogged={() =>
+              addResult({
+                action: "logged",
+                mealName: parsedArgs.data.meal.name,
+                calories: parsedArgs.data.meal.calories,
+              } satisfies LogMealResult)
+            }
+            onCanceled={() =>
+              addResult({
+                action: "canceled",
+                mealName: parsedArgs.data.meal.name,
+              } satisfies LogMealResult)
+            }
+          />
+        );
       }
 
       return (

@@ -23,6 +23,16 @@ const createPK = (userId: string): string => `USER#${userId}`;
 const PROFILE_SK = "PROFILE";
 
 // =============================================================================
+// Mappers
+// =============================================================================
+
+const toProfile = (item: DataRecord): DataRecord => {
+  // Remove DynamoDB keys, return the rest
+  const { PK, SK, ...profile } = item;
+  return profile;
+};
+
+// =============================================================================
 // Repository Functions
 // =============================================================================
 
@@ -43,7 +53,7 @@ export const getProfile = async (
     return null;
   }
 
-  return result.Item.data as DataRecord;
+  return toProfile(result.Item as DataRecord);
 };
 
 export const upsertProfile = async (
@@ -65,10 +75,10 @@ export const upsertProfile = async (
 
   const createdAt = existing.Item?.createdAt || now;
 
-  const item = {
+  const item: DataRecord = {
+    ...profileData,
     PK: createPK(userId),
     SK: PROFILE_SK,
-    data: profileData,
     createdAt,
     updatedAt: now,
   };
@@ -80,7 +90,7 @@ export const upsertProfile = async (
     }),
   );
 
-  return profileData;
+  return toProfile(item);
 };
 
 export const deleteProfile = async (userId: string): Promise<void> => {

@@ -10,20 +10,27 @@ import {
 import { useInvalidateDashboard } from "@/hooks/dashboard";
 import { createProfile } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import type z from "zod";
 import type { ProfileSchema } from "../schemas";
 
-export function ProfileSetupConfirmation({
+interface ProfileSetupPreviewProps extends z.infer<typeof ProfileSchema> {
+  onSaved?: () => void;
+  onCanceled?: () => void;
+}
+
+export function ProfileSetupPreview({
   profile,
-}: z.infer<typeof ProfileSchema>) {
-  const [isCanceled, setIsCanceled] = useState(false);
+  onSaved,
+  onCanceled,
+}: ProfileSetupPreviewProps) {
   const invalidateDashboard = useInvalidateDashboard();
 
   const mutation = useMutation({
     mutationFn: createProfile,
     onSuccess: () => {
       invalidateDashboard();
+      // Notify parent that profile was saved (persists in message state)
+      onSaved?.();
     },
   });
 
@@ -40,28 +47,9 @@ export function ProfileSetupConfirmation({
   };
 
   const handleCancel = () => {
-    setIsCanceled(true);
+    // Notify parent that profile setup was canceled (persists in message state)
+    onCanceled?.();
   };
-
-  if (mutation.isSuccess) {
-    return (
-      <Card size="sm">
-        <CardContent className="text-muted-foreground">
-          Profile saved successfully.
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isCanceled) {
-    return (
-      <Card size="sm">
-        <CardContent className="text-muted-foreground">
-          Profile setup canceled.
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card size="sm">

@@ -1,5 +1,12 @@
 import z from "zod";
 
+// Result type for the profile setup tool - persists user action in the message
+export const ProfileResultSchema = z.object({
+  action: z.enum(["saved", "canceled"]),
+});
+
+export type ProfileResult = z.infer<typeof ProfileResultSchema>;
+
 export const ProfileSchema = z.object({
   profile: z
     .array(

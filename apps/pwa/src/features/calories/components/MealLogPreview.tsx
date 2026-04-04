@@ -28,6 +28,11 @@ import {
 import { useState } from "react";
 import type { LogMealInput } from "../schemas";
 
+interface MealLogPreviewProps extends LogMealInput {
+  onLogged?: () => void;
+  onCanceled?: () => void;
+}
+
 interface MacroItemProps {
   icon: React.ReactNode;
   label: string;
@@ -49,8 +54,11 @@ function MacroItem({ icon, label, value, unit, className }: MacroItemProps) {
   );
 }
 
-export function MealLogPreview({ meal }: LogMealInput) {
-  const [isCanceled, setIsCanceled] = useState(false);
+export function MealLogPreview({
+  meal,
+  onLogged,
+  onCanceled,
+}: MealLogPreviewProps) {
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(true);
   const invalidateDashboard = useInvalidateDashboard();
 
@@ -58,6 +66,8 @@ export function MealLogPreview({ meal }: LogMealInput) {
     mutationFn: createEntry,
     onSuccess: () => {
       invalidateDashboard();
+      // Notify parent that meal was logged (persists in message state)
+      onLogged?.();
     },
   });
 
@@ -78,31 +88,9 @@ export function MealLogPreview({ meal }: LogMealInput) {
   };
 
   const handleCancel = () => {
-    setIsCanceled(true);
+    // Notify parent that meal was canceled (persists in message state)
+    onCanceled?.();
   };
-
-  if (mutation.isSuccess) {
-    return (
-      <Card size="sm">
-        <CardContent className="flex items-center gap-2 text-muted-foreground">
-          <Utensils className="size-4" />
-          <span>
-            Logged {meal.name} — {meal.calories} kcal
-          </span>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isCanceled) {
-    return (
-      <Card size="sm">
-        <CardContent className="text-muted-foreground">
-          Meal entry canceled.
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card size="sm">

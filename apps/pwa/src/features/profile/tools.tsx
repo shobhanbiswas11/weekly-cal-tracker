@@ -1,18 +1,50 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { Toolkit } from "@/features/chat";
-import { ProfileSetupConfirmation } from "./components/profile-setup-confirmation";
-import { ProfileSchema } from "./schemas";
+import { ProfileSetupPreview } from "./components/profile-setup-preview";
+import { ProfileSchema, type ProfileResult } from "./schemas";
 
 export const profileTools: Toolkit = {
-  save_profile: {
+  preview_profile_setup: {
     description:
-      "Save the user's profile information. Shows a confirmation card before saving.",
+      "Preview the user's profile information for confirmation before saving.",
     parameters: ProfileSchema,
-    render: ({ args }) => {
+    render: ({ args, result, addResult }) => {
       const parsedArgs = ProfileSchema.safeParse(args);
+      const typedResult = result as ProfileResult | undefined;
+
+      // Show receipt if action was already taken
+      if (typedResult?.action === "saved") {
+        return (
+          <Card size="sm">
+            <CardContent className="text-muted-foreground">
+              Profile saved successfully.
+            </CardContent>
+          </Card>
+        );
+      }
+
+      if (typedResult?.action === "canceled") {
+        return (
+          <Card size="sm">
+            <CardContent className="text-muted-foreground">
+              Profile setup canceled.
+            </CardContent>
+          </Card>
+        );
+      }
 
       if (parsedArgs.success) {
-        return <ProfileSetupConfirmation profile={parsedArgs.data.profile} />;
+        return (
+          <ProfileSetupPreview
+            profile={parsedArgs.data.profile}
+            onSaved={() =>
+              addResult({ action: "saved" } satisfies ProfileResult)
+            }
+            onCanceled={() =>
+              addResult({ action: "canceled" } satisfies ProfileResult)
+            }
+          />
+        );
       }
 
       return (

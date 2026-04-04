@@ -5,6 +5,7 @@
 // Types: Domain types (UserProfile, ProfileUpdate, etc.)
 
 export { ProfileSetupButton } from "./components/profile-setup-button";
+export { ProfileSetupPreview } from "./components/profile-setup-preview";
 export * from "./hooks";
 export * from "./prompts";
 export * from "./schemas";
