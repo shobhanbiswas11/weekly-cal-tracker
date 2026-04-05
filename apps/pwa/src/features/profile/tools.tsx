@@ -37,6 +37,7 @@ export const profileTools: Toolkit = {
         return (
           <ProfileSetupPreview
             profile={parsedArgs.data.profile}
+            calculatedValues={parsedArgs.data.calculatedValues}
             onSaved={() =>
               addResult({ action: "saved" } satisfies ProfileResult)
             }

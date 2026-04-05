@@ -7,19 +7,125 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useInvalidateDashboard } from "@/hooks/dashboard";
 import { createProfile } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import type z from "zod";
-import type { ProfileSchema } from "../schemas";
+import type { CalculatedValues, ProfileSchema } from "../schemas";
 
 interface ProfileSetupPreviewProps extends z.infer<typeof ProfileSchema> {
   onSaved?: () => void;
   onCanceled?: () => void;
 }
 
+const activityLevelLabels: Record<string, string> = {
+  sedentary: "Sedentary (little or no exercise)",
+  light: "Light (exercise 1-3 days/week)",
+  moderate: "Moderate (exercise 3-5 days/week)",
+  active: "Active (hard exercise 6-7 days/week)",
+  very_active: "Very Active (intense exercise & physical job)",
+};
+
+function formatNumber(num: number): string {
+  return Math.round(num).toLocaleString();
+}
+
+function CalorieTargetsSection({ values }: { values: CalculatedValues }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="font-medium text-sm">Daily Targets</h4>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <span className="text-muted-foreground">Calories:</span>
+        <span className="font-medium">
+          {formatNumber(values.dailyCalorieTarget)} kcal
+        </span>
+        <span className="text-muted-foreground">Protein:</span>
+        <span>{formatNumber(values.proteinTarget)}g</span>
+        <span className="text-muted-foreground">Carbs:</span>
+        <span>{formatNumber(values.carbsTarget)}g</span>
+        <span className="text-muted-foreground">Fat:</span>
+        <span>{formatNumber(values.fatTarget)}g</span>
+      </div>
+    </div>
+  );
+}
+
+function MetabolismSection({ values }: { values: CalculatedValues }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="font-medium text-sm">Metabolism</h4>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <span className="text-muted-foreground">Activity Level:</span>
+        <span>
+          {activityLevelLabels[values.activityLevel] || values.activityLevel}
+        </span>
+        <span className="text-muted-foreground">BMR:</span>
+        <span>{formatNumber(values.bmr)} kcal/day</span>
+        <span className="text-muted-foreground">TDEE:</span>
+        <span>{formatNumber(values.tdee)} kcal/day</span>
+        {values.dailyCalorieAdjustment !== 0 && (
+          <>
+            <span className="text-muted-foreground">Daily Adjustment:</span>
+            <span
+              className={
+                values.dailyCalorieAdjustment < 0
+                  ? "text-orange-600"
+                  : "text-green-600"
+              }
+            >
+              {values.dailyCalorieAdjustment > 0 ? "+" : ""}
+              {formatNumber(values.dailyCalorieAdjustment)} kcal
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GoalProjectionSection({ values }: { values: CalculatedValues }) {
+  if (
+    !values.targetWeight &&
+    !values.estimatedWeeklyWeightChange &&
+    !values.estimatedWeeksToGoal
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2">
+      <h4 className="font-medium text-sm">Goal Projection</h4>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        {values.targetWeight && (
+          <>
+            <span className="text-muted-foreground">Target Weight:</span>
+            <span>{values.targetWeight} kg</span>
+          </>
+        )}
+        {values.estimatedWeeklyWeightChange && (
+          <>
+            <span className="text-muted-foreground">Weekly Change:</span>
+            <span>
+              {values.estimatedWeeklyWeightChange > 0 ? "+" : ""}
+              {values.estimatedWeeklyWeightChange.toFixed(2)} kg
+            </span>
+          </>
+        )}
+        {values.estimatedWeeksToGoal && (
+          <>
+            <span className="text-muted-foreground">Est. Time to Goal:</span>
+            <span>{Math.round(values.estimatedWeeksToGoal)} weeks</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ProfileSetupPreview({
   profile,
+  calculatedValues,
   onSaved,
   onCanceled,
 }: ProfileSetupPreviewProps) {
@@ -35,13 +141,18 @@ export function ProfileSetupPreview({
   });
 
   const handleConfirm = () => {
-    const body = profile.reduce(
+    const profileData = profile.reduce(
       (acc, { property, value }) => {
         acc[property] = value;
         return acc;
       },
       {} as Record<string, string>,
     );
+
+    const body = {
+      ...profileData,
+      calculatedValues,
+    };
 
     mutation.mutate(body);
   };
@@ -56,15 +167,43 @@ export function ProfileSetupPreview({
       <CardHeader>
         <CardTitle>Confirm Profile</CardTitle>
         <CardDescription>
-          Please review your profile details before saving.
+          Please review your profile and nutrition targets before saving.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-1 text-sm">
-        {profile.map((info) => (
-          <p key={info.property}>
-            <span className="font-medium">{info.property}:</span> {info.value}
-          </p>
-        ))}
+      <CardContent className="space-y-4">
+        {/* Basic Profile Information */}
+        <div className="space-y-1 text-sm">
+          <h4 className="font-medium text-sm mb-2">Personal Information</h4>
+          {profile.map((info) => (
+            <p key={info.property}>
+              <span className="text-muted-foreground">{info.property}:</span>{" "}
+              <span className="font-medium">{info.value}</span>
+            </p>
+          ))}
+        </div>
+
+        <Separator />
+
+        {/* Calculated Nutrition Targets */}
+        <CalorieTargetsSection values={calculatedValues} />
+
+        <Separator />
+
+        <MetabolismSection values={calculatedValues} />
+
+        <GoalProjectionSection values={calculatedValues} />
+
+        {/* Weekly Summary */}
+        <div className="bg-muted/50 rounded-lg p-3 text-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">
+              Weekly Calorie Budget:
+            </span>
+            <span className="font-semibold text-base">
+              {formatNumber(calculatedValues.weeklyCalorieTarget)} kcal
+            </span>
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2">
         {mutation.isError && (
