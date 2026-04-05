@@ -1,20 +1,9 @@
 {
   "name": "@weekly-cal/core",
   "version": "0.1.0",
-  "description": "Framework-agnostic domain logic for calorie tracking - BMR, TDEE, macros, safety guardrails",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    ".": "./src/index.ts"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -27,12 +16,7 @@
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
   },
-  "keywords": [
-    "calorie",
-    "nutrition",
-    "bmr",
-    "tdee",
-    "macros"
-  ],
-  "license": "MIT"
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
 }
