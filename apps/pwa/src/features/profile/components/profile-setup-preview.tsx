@@ -11,10 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { useInvalidateDashboard } from "@/hooks/dashboard";
 import { createProfile } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
-import type z from "zod";
-import type { CalculatedValues, ProfileSchema } from "../schemas";
+import type { Profile } from "../schemas";
 
-interface ProfileSetupPreviewProps extends z.infer<typeof ProfileSchema> {
+interface ProfileSetupPreviewProps {
+  profile: Profile;
   onSaved?: () => void;
   onCanceled?: () => void;
 }
@@ -27,55 +27,62 @@ const activityLevelLabels: Record<string, string> = {
   very_active: "Very Active (intense exercise & physical job)",
 };
 
+const primaryGoalLabels: Record<string, string> = {
+  lose_weight: "Lose Weight",
+  maintain_weight: "Maintain Weight",
+  gain_muscle: "Gain Muscle",
+  improve_health: "Improve Health",
+};
+
 function formatNumber(num: number): string {
   return Math.round(num).toLocaleString();
 }
 
-function CalorieTargetsSection({ values }: { values: CalculatedValues }) {
+function CalorieTargetsSection({ profile }: { profile: Profile }) {
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm">Daily Targets</h4>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
         <span className="text-muted-foreground">Calories:</span>
         <span className="font-medium">
-          {formatNumber(values.dailyCalorieTarget)} kcal
+          {formatNumber(profile.dailyCalorieTarget)} kcal
         </span>
         <span className="text-muted-foreground">Protein:</span>
-        <span>{formatNumber(values.proteinTarget)}g</span>
+        <span>{formatNumber(profile.proteinTarget)}g</span>
         <span className="text-muted-foreground">Carbs:</span>
-        <span>{formatNumber(values.carbsTarget)}g</span>
+        <span>{formatNumber(profile.carbsTarget)}g</span>
         <span className="text-muted-foreground">Fat:</span>
-        <span>{formatNumber(values.fatTarget)}g</span>
+        <span>{formatNumber(profile.fatTarget)}g</span>
       </div>
     </div>
   );
 }
 
-function MetabolismSection({ values }: { values: CalculatedValues }) {
+function MetabolismSection({ profile }: { profile: Profile }) {
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm">Metabolism</h4>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
         <span className="text-muted-foreground">Activity Level:</span>
         <span>
-          {activityLevelLabels[values.activityLevel] || values.activityLevel}
+          {activityLevelLabels[profile.activityLevel] || profile.activityLevel}
         </span>
         <span className="text-muted-foreground">BMR:</span>
-        <span>{formatNumber(values.bmr)} kcal/day</span>
+        <span>{formatNumber(profile.bmr)} kcal/day</span>
         <span className="text-muted-foreground">TDEE:</span>
-        <span>{formatNumber(values.tdee)} kcal/day</span>
-        {values.dailyCalorieAdjustment !== 0 && (
+        <span>{formatNumber(profile.tdee)} kcal/day</span>
+        {profile.dailyCalorieAdjustment !== 0 && (
           <>
             <span className="text-muted-foreground">Daily Adjustment:</span>
             <span
               className={
-                values.dailyCalorieAdjustment < 0
+                profile.dailyCalorieAdjustment < 0
                   ? "text-orange-600"
                   : "text-green-600"
               }
             >
-              {values.dailyCalorieAdjustment > 0 ? "+" : ""}
-              {formatNumber(values.dailyCalorieAdjustment)} kcal
+              {profile.dailyCalorieAdjustment > 0 ? "+" : ""}
+              {formatNumber(profile.dailyCalorieAdjustment)} kcal
             </span>
           </>
         )}
@@ -84,11 +91,11 @@ function MetabolismSection({ values }: { values: CalculatedValues }) {
   );
 }
 
-function GoalProjectionSection({ values }: { values: CalculatedValues }) {
+function GoalProjectionSection({ profile }: { profile: Profile }) {
   if (
-    !values.targetWeight &&
-    !values.estimatedWeeklyWeightChange &&
-    !values.estimatedWeeksToGoal
+    !profile.targetWeight &&
+    !profile.estimatedWeeklyWeightChange &&
+    !profile.estimatedWeeksToGoal
   ) {
     return null;
   }
@@ -97,25 +104,25 @@ function GoalProjectionSection({ values }: { values: CalculatedValues }) {
     <div className="space-y-2">
       <h4 className="font-medium text-sm">Goal Projection</h4>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        {values.targetWeight && (
+        {profile.targetWeight && (
           <>
             <span className="text-muted-foreground">Target Weight:</span>
-            <span>{values.targetWeight} kg</span>
+            <span>{profile.targetWeight} kg</span>
           </>
         )}
-        {values.estimatedWeeklyWeightChange && (
+        {profile.estimatedWeeklyWeightChange && (
           <>
             <span className="text-muted-foreground">Weekly Change:</span>
             <span>
-              {values.estimatedWeeklyWeightChange > 0 ? "+" : ""}
-              {values.estimatedWeeklyWeightChange.toFixed(2)} kg
+              {profile.estimatedWeeklyWeightChange > 0 ? "+" : ""}
+              {profile.estimatedWeeklyWeightChange.toFixed(2)} kg
             </span>
           </>
         )}
-        {values.estimatedWeeksToGoal && (
+        {profile.estimatedWeeksToGoal && (
           <>
             <span className="text-muted-foreground">Est. Time to Goal:</span>
-            <span>{Math.round(values.estimatedWeeksToGoal)} weeks</span>
+            <span>{Math.round(profile.estimatedWeeksToGoal)} weeks</span>
           </>
         )}
       </div>
@@ -125,7 +132,6 @@ function GoalProjectionSection({ values }: { values: CalculatedValues }) {
 
 export function ProfileSetupPreview({
   profile,
-  calculatedValues,
   onSaved,
   onCanceled,
 }: ProfileSetupPreviewProps) {
@@ -141,20 +147,7 @@ export function ProfileSetupPreview({
   });
 
   const handleConfirm = () => {
-    const profileData = profile.reduce(
-      (acc, { property, value }) => {
-        acc[property] = value;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    const body = {
-      ...profileData,
-      calculatedValues,
-    };
-
-    mutation.mutate(body);
+    mutation.mutate(profile);
   };
 
   const handleCancel = () => {
@@ -174,24 +167,42 @@ export function ProfileSetupPreview({
         {/* Basic Profile Information */}
         <div className="space-y-1 text-sm">
           <h4 className="font-medium text-sm mb-2">Personal Information</h4>
-          {profile.map((info) => (
-            <p key={info.property}>
-              <span className="text-muted-foreground">{info.property}:</span>{" "}
-              <span className="font-medium">{info.value}</span>
-            </p>
-          ))}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <span className="text-muted-foreground">Name:</span>
+            <span className="font-medium">{profile.name}</span>
+            <span className="text-muted-foreground">Date of Birth:</span>
+            <span className="font-medium">{profile.dateOfBirth}</span>
+            <span className="text-muted-foreground">Biological Sex:</span>
+            <span className="font-medium capitalize">
+              {profile.biologicalSex}
+            </span>
+            <span className="text-muted-foreground">Height:</span>
+            <span className="font-medium">{profile.heightCm} cm</span>
+            <span className="text-muted-foreground">Weight:</span>
+            <span className="font-medium">{profile.weightKg} kg</span>
+            <span className="text-muted-foreground">Primary Goal:</span>
+            <span className="font-medium">
+              {primaryGoalLabels[profile.primaryGoal] || profile.primaryGoal}
+            </span>
+            {profile.additionalNotes && (
+              <>
+                <span className="text-muted-foreground">Notes:</span>
+                <span className="font-medium">{profile.additionalNotes}</span>
+              </>
+            )}
+          </div>
         </div>
 
         <Separator />
 
         {/* Calculated Nutrition Targets */}
-        <CalorieTargetsSection values={calculatedValues} />
+        <CalorieTargetsSection profile={profile} />
 
         <Separator />
 
-        <MetabolismSection values={calculatedValues} />
+        <MetabolismSection profile={profile} />
 
-        <GoalProjectionSection values={calculatedValues} />
+        <GoalProjectionSection profile={profile} />
 
         {/* Weekly Summary */}
         <div className="bg-muted/50 rounded-lg p-3 text-sm">
@@ -200,7 +211,7 @@ export function ProfileSetupPreview({
               Weekly Calorie Budget:
             </span>
             <span className="font-semibold text-base">
-              {formatNumber(calculatedValues.weeklyCalorieTarget)} kcal
+              {formatNumber(profile.weeklyCalorieTarget)} kcal
             </span>
           </div>
         </div>

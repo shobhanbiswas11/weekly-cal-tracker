@@ -9,6 +9,4 @@ export { ProfileSetupPreview } from "./components/profile-setup-preview";
 export * from "./hooks";
 export * from "./prompts";
 export * from "./schemas";
-export * from "./services";
 export { profileTools } from "./tools";
-export * from "./types";
