@@ -3,20 +3,15 @@
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import type { DailySummary } from "../types";
-import { DEFAULT_GOALS } from "../types";
 import { getDayName, isToday } from "../utils";
 
 interface WeeklyGraphProps {
   days: DailySummary[];
-  dailyGoal?: number;
+  dailyGoal: number;
   className?: string;
 }
 
-export function WeeklyGraph({
-  days,
-  dailyGoal = DEFAULT_GOALS.dailyCalorieGoal,
-  className,
-}: WeeklyGraphProps) {
+export function WeeklyGraph({ days, dailyGoal, className }: WeeklyGraphProps) {
   const navigate = useNavigate();
 
   // Find max value for scaling

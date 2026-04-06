@@ -8,5 +8,5 @@ export { ProfileSetupButton } from "./components/profile-setup-button";
 export { ProfileSetupPreview } from "./components/profile-setup-preview";
 export * from "./hooks";
 export * from "./prompts";
-export * from "./schemas";
 export { profileTools } from "./tools";
+export * from "./types";

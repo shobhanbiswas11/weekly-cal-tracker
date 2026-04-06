@@ -1,15 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { Toolkit } from "@/features/chat";
+import { schemaCreateProfile } from "@weekly-cal/core";
 import { ProfileSetupPreview } from "./components/profile-setup-preview";
-import { ProfileSchema, type ProfileResult } from "./schemas";
+import type { ProfileResult } from "./types";
 
 export const profileTools: Toolkit = {
   preview_profile_setup: {
     description:
       "Preview the user's profile information for confirmation before saving.",
-    parameters: ProfileSchema,
+    parameters: schemaCreateProfile,
     render: ({ args, result, addResult }) => {
-      const parsedArgs = ProfileSchema.safeParse(args);
+      const parsedArgs = schemaCreateProfile.safeParse(args);
       const typedResult = result as ProfileResult | undefined;
 
       // Show receipt if action was already taken

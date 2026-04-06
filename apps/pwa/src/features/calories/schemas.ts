@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 /**
  * FUTURE GROUNDING OPTIONS for accurate calorie/nutrition data:
@@ -27,7 +27,11 @@ import z from "zod";
  * to fetch actual nutrition data, then pass verified values to preview_meal_log.
  */
 
-const MealItemSchema = z.object({
+// ============================================================================
+// Meal Item Schema (AI preview only - not persisted)
+// ============================================================================
+
+export const MealItemSchema = z.object({
   name: z
     .string()
     .describe(
@@ -75,15 +79,23 @@ const MealItemSchema = z.object({
     .describe("Estimated sodium in mg for ALL items of this type"),
 });
 
-// Result type for the meal log tool - persists user action in the message
+export type MealItem = z.infer<typeof MealItemSchema>;
+
+// ============================================================================
+// Tool Result Schema (for AI tool responses)
+// ============================================================================
+
 export const LogMealResultSchema = z.object({
-  action: z.enum(["logged", "canceled"]),
-  mealName: z.string(),
-  calories: z.number().optional(),
+  action: z
+    .enum(["logged", "canceled"])
+    .describe("Whether the meal was logged or canceled by user"),
+  mealName: z.string().describe("Name of the meal that was logged/canceled"),
+  calories: z.number().optional().describe("Total calories if logged"),
 });
 
 export type LogMealResult = z.infer<typeof LogMealResultSchema>;
 
+// Tool-specific schema for AI meal logging (items required, wrapped in meal object)
 export const LogMealSchema = z.object({
   meal: z.object({
     name: z

@@ -6,7 +6,6 @@ import type {
   MacroTotals,
   WeeklySummary,
 } from "../types";
-import { DEFAULT_GOALS } from "../types";
 import { addDays, formatDateToISO, getWeekRange } from "../utils";
 
 // Helper to generate UUIDs
@@ -399,10 +398,12 @@ function calculateTotals(entries: CalorieEntry[]): MacroTotals {
 /**
  * Get daily summary for a specific date
  */
-export function getMockDailySummary(date: string): DailySummary {
+export function getMockDailySummary(
+  date: string,
+  calorieGoal: number,
+): DailySummary {
   const entries = mockEntries.filter((e) => e.date === date);
   const totals = calculateTotals(entries);
-  const calorieGoal = DEFAULT_GOALS.dailyCalorieGoal;
 
   return {
     date,
@@ -416,7 +417,10 @@ export function getMockDailySummary(date: string): DailySummary {
 /**
  * Get weekly summary for a specific ISO week
  */
-export function getMockWeeklySummary(weekId: string): WeeklySummary {
+export function getMockWeeklySummary(
+  weekId: string,
+  dailyCalorieGoal: number,
+): WeeklySummary {
   const { start, end } = getWeekRange(weekId);
   const startDate = formatDateToISO(start);
   const endDate = formatDateToISO(end);
@@ -427,7 +431,7 @@ export function getMockWeeklySummary(weekId: string): WeeklySummary {
 
   for (let i = 0; i < 7; i++) {
     const dateStr = formatDateToISO(currentDate);
-    days.push(getMockDailySummary(dateStr));
+    days.push(getMockDailySummary(dateStr, dailyCalorieGoal));
     currentDate = addDays(currentDate, 1);
   }
 
@@ -453,7 +457,7 @@ export function getMockWeeklySummary(weekId: string): WeeklySummary {
     },
   );
 
-  const weeklyCalorieGoal = DEFAULT_GOALS.dailyCalorieGoal * 7;
+  const weeklyCalorieGoal = dailyCalorieGoal * 7;
   const daysWithEntries = days.filter((d) => d.entries.length > 0);
   const averageDailyCalories =
     daysWithEntries.length > 0

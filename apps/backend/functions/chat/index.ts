@@ -1,10 +1,8 @@
 // Chat Lambda - AI conversation with streaming responses
 // Uses AI SDK with Lambda Response Streaming for assistant-ui
 
-import { openai } from "@ai-sdk/openai";
-import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import type { UIMessage } from "ai";
-import { convertToModelMessages, streamText } from "ai";
+import { streamChat } from "../../services/chat.service";
 
 interface ChatRequest {
   messages: UIMessage[];
@@ -13,7 +11,6 @@ interface ChatRequest {
 }
 
 // System prompt for the nutrition assistant
-const SYSTEM_PROMPT = `You are a friendly nutrition assistant for a calorie tracking app. Help users log their meals, answer nutrition questions, and provide encouragement.`;
 
 // CORS headers
 const corsHeaders = {
@@ -58,14 +55,7 @@ export const handler = awslambda.streamifyResponse(
     });
 
     // Create the AI stream with convertToModelMessages for AI SDK v6
-    const result = streamText({
-      model: openai("gpt-4o"),
-      system: body.system ?? SYSTEM_PROMPT,
-      tools: {
-        ...frontendTools(body.tools),
-      },
-      messages: await convertToModelMessages(body.messages),
-    });
+    const result = await streamChat(body.messages, body.tools);
 
     // Get the encoded UI message stream from the Response body
     const response = result.toUIMessageStreamResponse();

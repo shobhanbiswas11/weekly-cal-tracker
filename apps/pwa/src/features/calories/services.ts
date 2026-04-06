@@ -3,10 +3,12 @@
 
 import { format } from "date-fns";
 import type { EntryData } from "../../lib/api";
+import type { Profile } from "../profile/schemas";
 import type {
   CalorieEntry,
   DailySummary,
   MacroTotals,
+  UserGoals,
   WeeklySummary,
 } from "./types";
 import {
@@ -19,10 +21,21 @@ import {
 } from "./utils";
 
 // =============================================================================
-// Constants
+// Daily Goal Functions
 // =============================================================================
 
-export const DEFAULT_CALORIE_GOAL = 2000;
+/**
+ * Extract daily goals from profile.
+ * Profile is required - AI ensures all calculated fields are populated.
+ */
+export function getDailyGoalFromProfile(profile: Profile): UserGoals {
+  return {
+    dailyCalorieGoal: profile.dailyCalorieTarget,
+    proteinGoal: profile.proteinTarget,
+    carbsGoal: profile.carbsTarget,
+    fatGoal: profile.fatTarget,
+  };
+}
 
 // =============================================================================
 // Data Transformation Functions
@@ -67,7 +80,7 @@ export function calculateTotals(entries: CalorieEntry[]): MacroTotals {
 export function transformToWeeklySummary(
   weekId: string,
   entries: EntryData[],
-  dailyCalorieGoal: number = DEFAULT_CALORIE_GOAL,
+  dailyCalorieGoal: number,
 ): WeeklySummary {
   const { start, end } = getWeekRange(weekId);
   const calorieEntries = entries.map(toCalorieEntry);

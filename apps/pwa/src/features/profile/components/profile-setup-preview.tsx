@@ -11,10 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { useInvalidateDashboard } from "@/hooks/dashboard";
 import { createProfile } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
-import type { Profile } from "../schemas";
+import type { CreateProfile } from "../types";
 
 interface ProfileSetupPreviewProps {
-  profile: Profile;
+  profile: CreateProfile;
   onSaved?: () => void;
   onCanceled?: () => void;
 }
@@ -38,7 +38,7 @@ function formatNumber(num: number): string {
   return Math.round(num).toLocaleString();
 }
 
-function CalorieTargetsSection({ profile }: { profile: Profile }) {
+function CalorieTargetsSection({ profile }: { profile: CreateProfile }) {
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm">Daily Targets</h4>
@@ -58,7 +58,7 @@ function CalorieTargetsSection({ profile }: { profile: Profile }) {
   );
 }
 
-function MetabolismSection({ profile }: { profile: Profile }) {
+function MetabolismSection({ profile }: { profile: CreateProfile }) {
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm">Metabolism</h4>
@@ -91,7 +91,7 @@ function MetabolismSection({ profile }: { profile: Profile }) {
   );
 }
 
-function GoalProjectionSection({ profile }: { profile: Profile }) {
+function GoalProjectionSection({ profile }: { profile: CreateProfile }) {
   if (
     !profile.targetWeight &&
     !profile.estimatedWeeklyWeightChange &&

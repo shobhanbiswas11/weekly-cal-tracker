@@ -3,11 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   EntryList,
+  getDailyGoalFromProfile,
   getToday,
   MacroGrid,
   transformToWeeklySummary,
 } from "@/features/calories";
-import { ProfileSetupButton, useIsProfileSetupDone } from "@/features/profile";
+import {
+  ProfileSetupButton,
+  useIsProfileSetupDone,
+  type Profile,
+} from "@/features/profile";
 import { useDashboard } from "@/hooks/dashboard";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -113,8 +118,19 @@ export default function HomePage() {
 
   // Transform API data into structured weekly summary
   const weeklySummary = useMemo(() => {
-    if (!data) return null;
-    return transformToWeeklySummary(data.weekId, data.entries);
+    if (!data?.profile) return null;
+    const profile = data.profile as Profile;
+    return transformToWeeklySummary(
+      data.weekId,
+      data.entries,
+      profile.dailyCalorieTarget,
+    );
+  }, [data]);
+
+  // Get user's macro goals from profile
+  const goals = useMemo(() => {
+    if (!data?.profile) return null;
+    return getDailyGoalFromProfile(data.profile as Profile);
   }, [data]);
 
   // Get today's summary from the week
@@ -178,12 +194,17 @@ export default function HomePage() {
         </div>
 
         {/* Today's Macros */}
-        {todaySummary && (
+        {todaySummary && goals && (
           <div className="rounded-lg border bg-card p-4">
             <h2 className="text-sm font-medium text-muted-foreground mb-3">
               Today's Macros
             </h2>
-            <MacroGrid totals={todaySummary.totals} showProgress size="sm" />
+            <MacroGrid
+              totals={todaySummary.totals}
+              goals={goals}
+              showProgress
+              size="sm"
+            />
           </div>
         )}
 

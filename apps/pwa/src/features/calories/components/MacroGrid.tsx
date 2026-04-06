@@ -3,12 +3,11 @@
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { MacroTotals, UserGoals } from "../types";
-import { DEFAULT_GOALS } from "../types";
 import { MacroDisplay } from "./MacroDisplay";
 
 interface MacroGridProps {
   totals: MacroTotals;
-  goals?: Partial<UserGoals>;
+  goals: UserGoals;
   showProgress?: boolean;
   showExtended?: boolean;
   size?: "sm" | "md" | "lg";
@@ -23,7 +22,7 @@ const progressColors = {
 
 export function MacroGrid({
   totals,
-  goals = DEFAULT_GOALS,
+  goals,
   showProgress = false,
   showExtended = false,
   size = "md",

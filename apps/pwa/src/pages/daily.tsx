@@ -3,11 +3,11 @@ import { Progress } from "@/components/ui/progress";
 import {
   calculatePercentage,
   DailyCalendar,
-  DEFAULT_GOALS,
   EntryList,
   getToday,
   MacroGrid,
   Suggestions,
+  useDailyGoal,
   useEntries,
 } from "@/features/calories";
 import { Flame } from "lucide-react";
@@ -18,13 +18,22 @@ export default function DailyPage() {
   const date = searchParams.get("date") || getToday();
 
   const { data: summary, isLoading } = useEntries(date);
+  const goals = useDailyGoal();
 
   const handleDateChange = (newDate: string) => {
     setSearchParams({ date: newDate });
   };
 
-  if (isLoading || !summary) {
+  if (isLoading) {
     return <div className="p-4">Loading...</div>;
+  }
+
+  if (!goals || !summary) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        Set up your profile to view daily progress.
+      </div>
+    );
   }
 
   const { totals, calorieGoal, caloriesRemaining, entries } = summary;
@@ -88,7 +97,7 @@ export default function DailyPage() {
         <CardContent>
           <MacroGrid
             totals={totals}
-            goals={DEFAULT_GOALS}
+            goals={goals}
             showProgress
             showExtended
             size="md"
@@ -105,7 +114,7 @@ export default function DailyPage() {
       />
 
       {/* Suggestions */}
-      <Suggestions summary={summary} />
+      <Suggestions summary={summary} goals={goals} />
     </div>
   );
 }

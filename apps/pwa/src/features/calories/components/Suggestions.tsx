@@ -2,11 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lightbulb } from "lucide-react";
-import type { DailySummary } from "../types";
-import { DEFAULT_GOALS } from "../types";
+import type { DailySummary, UserGoals } from "../types";
 
 interface SuggestionsProps {
   summary: DailySummary;
+  goals: UserGoals;
   className?: string;
 }
 
@@ -16,10 +16,12 @@ interface Suggestion {
   foods?: string[];
 }
 
-function generateSuggestions(summary: DailySummary): Suggestion[] {
+function generateSuggestions(
+  summary: DailySummary,
+  goals: UserGoals,
+): Suggestion[] {
   const suggestions: Suggestion[] = [];
   const { totals, caloriesRemaining } = summary;
-  const goals = DEFAULT_GOALS;
 
   // Check protein
   const proteinRemaining = goals.proteinGoal - totals.protein;
@@ -92,8 +94,8 @@ function generateSuggestions(summary: DailySummary): Suggestion[] {
   return suggestions.slice(0, 2); // Max 2 suggestions
 }
 
-export function Suggestions({ summary, className }: SuggestionsProps) {
-  const suggestions = generateSuggestions(summary);
+export function Suggestions({ summary, goals, className }: SuggestionsProps) {
+  const suggestions = generateSuggestions(summary, goals);
 
   if (summary.entries.length === 0) {
     return (

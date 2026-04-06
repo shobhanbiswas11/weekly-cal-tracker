@@ -5,6 +5,7 @@
 // Pages compose these hooks to build their views.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import {
   createEntry as apiCreateEntry,
   deleteEntry as apiDeleteEntry,
@@ -12,16 +13,17 @@ import {
   fetchDashboard,
   fetchWeeklySummary,
 } from "../../../lib/api";
+import type { Profile } from "../../profile/schemas";
 import { calorieKeys, dashboardKeys } from "../../shared/query-keys";
 import {
   calculateTotals,
-  DEFAULT_CALORIE_GOAL,
+  getDailyGoalFromProfile,
   getPreviousWeek,
   getWeekIdForDate,
   toCalorieEntry,
   transformToWeeklySummary,
 } from "../services";
-import type { CalorieEntry, DailySummary } from "../types";
+import type { CalorieEntry, DailySummary, UserGoals } from "../types";
 import { getCurrentWeek, getToday } from "../utils";
 
 // Re-export query keys for backwards compatibility
@@ -44,6 +46,20 @@ export function useDashboard() {
 }
 
 /**
+ * Get daily goals from profile.
+ * Returns null if no profile exists.
+ */
+export function useDailyGoal(): UserGoals | null {
+  const { data } = useDashboard();
+
+  return useMemo(() => {
+    const profile = data?.profile as Profile | undefined;
+    if (!profile) return null;
+    return getDailyGoalFromProfile(profile);
+  }, [data]);
+}
+
+/**
  * Dashboard summary hook
  * Returns processed calorie data with profile existence check.
  * Combines profile + current week entries into a unified view.
@@ -60,8 +76,9 @@ export function useDashboardSummary() {
     return { isLoading: false, hasProfile: false } as const;
   }
 
+  const profile = dashboard.profile as Profile;
   const today = getToday();
-  const calorieGoal = dashboard.profile.calorieGoal ?? DEFAULT_CALORIE_GOAL;
+  const calorieGoal = profile.dailyCalorieTarget;
 
   // Convert entries to CalorieEntry format
   const allEntries: CalorieEntry[] = dashboard.entries.map(toCalorieEntry);
@@ -111,7 +128,8 @@ export function useEntries(date?: string) {
 
 /**
  * Get today's summary (convenience hook)
- * Uses dashboard data which includes current week
+ * Uses dashboard data which includes current week.
+ * Returns undefined if no profile exists.
  */
 export function useTodaySummary() {
   const dashboard = useQuery({
@@ -120,9 +138,17 @@ export function useTodaySummary() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const profile = dashboard.data?.profile as Profile | undefined;
+  if (!profile) {
+    return {
+      data: undefined,
+      isLoading: dashboard.isLoading,
+      error: dashboard.error,
+    };
+  }
+
   const today = getToday();
-  const calorieGoal =
-    (dashboard.data?.profile?.calorieGoal as number) || DEFAULT_CALORIE_GOAL;
+  const calorieGoal = profile.dailyCalorieTarget;
 
   // Transform API response to WeeklySummary, then extract today
   const weekSummary = dashboard.data
@@ -143,7 +169,8 @@ export function useTodaySummary() {
 }
 
 /**
- * Get weekly summary for a specific ISO week
+ * Get weekly summary for a specific ISO week.
+ * Uses profile's calorie goal - returns undefined data if no profile.
  */
 export function useWeeklySummary(weekId?: string) {
   const targetWeek = weekId || getCurrentWeek();
@@ -168,10 +195,20 @@ export function useWeeklySummary(weekId?: string) {
     enabled: !isCurrentWeek,
   });
 
+  // Get profile from dashboard (needed for calorie goal)
+  const profile = dashboardQuery.data?.profile as Profile | undefined;
+
   if (isCurrentWeek) {
-    const calorieGoal =
-      (dashboardQuery.data?.profile?.calorieGoal as number) ||
-      DEFAULT_CALORIE_GOAL;
+    if (!profile) {
+      return {
+        data: undefined,
+        isLoading: dashboardQuery.isLoading,
+        error: dashboardQuery.error,
+        refetch: dashboardQuery.refetch,
+      };
+    }
+
+    const calorieGoal = profile.dailyCalorieTarget;
     const weekSummary = dashboardQuery.data
       ? transformToWeeklySummary(
           dashboardQuery.data.weekId,
@@ -188,12 +225,23 @@ export function useWeeklySummary(weekId?: string) {
     };
   }
 
-  // Transform historical week data
+  // For historical weeks, we still need profile for the calorie goal
+  // If no profile, can't show meaningful data
+  if (!profile) {
+    return {
+      data: undefined,
+      isLoading: dashboardQuery.isLoading || weekQuery.isLoading,
+      error: weekQuery.error,
+      refetch: weekQuery.refetch,
+    };
+  }
+
+  // Transform historical week data using profile's goal
   const weekSummary = weekQuery.data
     ? transformToWeeklySummary(
         weekQuery.data.weekId,
         weekQuery.data.entries,
-        DEFAULT_CALORIE_GOAL,
+        profile.dailyCalorieTarget,
       )
     : undefined;
 
@@ -291,7 +339,6 @@ export function useDeleteEntry() {
 // Re-export services for convenience
 export {
   calculateTotals,
-  DEFAULT_CALORIE_GOAL,
   getPreviousWeek,
   getWeekIdForDate,
   toCalorieEntry,

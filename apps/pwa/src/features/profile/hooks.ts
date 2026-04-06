@@ -1,6 +1,6 @@
 import { useDashboard } from "@/hooks/dashboard";
 import { useMemo } from "react";
-import type { Profile } from "./schemas";
+import type { Profile } from "./types";
 
 export function useIsProfileSetupDone() {
   const { data } = useDashboard();

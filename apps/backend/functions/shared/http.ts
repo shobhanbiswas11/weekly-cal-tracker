@@ -88,12 +88,54 @@ export type RouteHandler = (
   userId: string,
 ) => Promise<APIGatewayProxyResultV2>;
 
+// Schema type that works with any Zod version
+type SafeParseSuccess = { success: true; data: unknown };
+type SafeParseError = { success: false; error: { message: string } };
+type SafeParseResult = SafeParseSuccess | SafeParseError;
+
+type AnyZodSchema = {
+  safeParse: (data: unknown) => SafeParseResult;
+};
+
+// Validated route handler - receives validated & typed body
+export type ValidatedRouteHandler<T> = (
+  event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
+  userId: string,
+  body: T,
+) => Promise<APIGatewayProxyResultV2>;
+
 // Route definition
 export interface Route {
   method: string;
   pattern: RegExp;
   handler: RouteHandler;
 }
+
+/**
+ * Higher-order function that wraps a route handler with Zod schema validation.
+ * Parses and validates the request body, returning a typed body to the handler.
+ */
+export const withValidation = <
+  TSchema extends AnyZodSchema,
+  TOutput = TSchema extends { _output: infer O } ? O : unknown,
+>(
+  schema: TSchema,
+  handler: ValidatedRouteHandler<TOutput>,
+): RouteHandler => {
+  return async (event, userId) => {
+    const rawBody = parseBody(event.body);
+    const result = schema.safeParse(rawBody);
+
+    if (!result.success) {
+      return createErrorResponse(
+        `Invalid request body: ${result.error.message}`,
+        400,
+      );
+    }
+
+    return handler(event, userId, result.data as TOutput);
+  };
+};
 
 // Simple router for Lambda
 export const createRouter = (routes: Route[]) => {

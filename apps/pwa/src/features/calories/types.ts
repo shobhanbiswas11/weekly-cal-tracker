@@ -50,14 +50,6 @@ export interface UserGoals {
   fatGoal: number;
 }
 
-// Default goals (can be overridden by user settings later)
-export const DEFAULT_GOALS: UserGoals = {
-  dailyCalorieGoal: 2000,
-  proteinGoal: 150,
-  carbsGoal: 250,
-  fatGoal: 65,
-};
-
 export type MacroType =
   | "calories"
   | "protein"

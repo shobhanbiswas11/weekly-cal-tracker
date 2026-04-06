@@ -1,10 +1,12 @@
 // Data Lambda routes - handles all data queries and mutations
 // Minimal validation - only check required fields (id, date)
 
-import type {
-  APIGatewayProxyHandlerV2WithJWTAuthorizer,
-  APIGatewayProxyResultV2,
-} from "aws-lambda";
+import {
+  schemaCreateMealEntry,
+  schemaCreateProfile,
+  schemaUpdateMealEntry,
+  schemaUpdateProfile,
+} from "@weekly-cal/core";
 import { v4 as uuidv4 } from "uuid";
 import {
   createErrorResponse,
@@ -12,10 +14,10 @@ import {
   getTodayDate,
   isValidDateFormat,
   isValidWeekFormat,
-  parseBody,
   type Route,
+  type RouteHandler,
+  withValidation,
 } from "../shared/http";
-import type { DataRecord } from "../shared/types";
 import * as dashboardService from "./domain/dashboard-service";
 import * as entryRepo from "./domain/entry-repository";
 import * as profileRepo from "./domain/profile-repository";
@@ -24,24 +26,14 @@ import * as profileRepo from "./domain/profile-repository";
 // Route Handlers
 // =============================================================================
 
-type ApiEvent = Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0];
-type ApiResult = Promise<APIGatewayProxyResultV2>;
-type RouteHandler = (event: ApiEvent, userId: string) => ApiResult;
-
 // GET /dashboard - App init data
-const handleGetDashboard: RouteHandler = async (
-  _event,
-  userId,
-): Promise<APIGatewayProxyResultV2> => {
+const handleGetDashboard: RouteHandler = async (_event, userId) => {
   const dashboard = await dashboardService.getDashboard(userId);
   return createResponse(dashboard);
 };
 
 // GET /weeks/{weekId} - Get specific week summary
-const handleGetWeek: RouteHandler = async (
-  event,
-  userId,
-): Promise<APIGatewayProxyResultV2> => {
+const handleGetWeek: RouteHandler = async (event, userId) => {
   const weekId = event.pathParameters?.weekId;
 
   if (!weekId) {
@@ -76,53 +68,43 @@ const handleGetEntriesByDate: RouteHandler = async (event, userId) => {
 };
 
 // POST /entries - Create new food entry
-const handleCreateEntry: RouteHandler = async (event, userId) => {
-  const body = parseBody<DataRecord>(event.body);
+const handleCreateEntry = withValidation(
+  schemaCreateMealEntry.omit({ createdAt: true, updatedAt: true }),
+  async (_event, userId, entryData) => {
+    const entryId = uuidv4();
 
-  if (!body) {
-    return createErrorResponse("Request body is required", 400);
-  }
+    const entry = await entryRepo.createEntry(userId, entryId, {
+      ...entryData,
+      date: entryData.date || getTodayDate(),
+    });
 
-  // Only validate date format if provided
-  if (body.date && !isValidDateFormat(body.date as string)) {
-    return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
-  }
-
-  const entryId = uuidv4();
-  const entry = await entryRepo.createEntry(userId, entryId, {
-    ...body,
-    date: (body.date as string) || getTodayDate(),
-  });
-
-  return createResponse(entry, 201);
-};
+    return createResponse(entry, 201);
+  },
+);
 
 // PUT /entries/{date}/{id} - Update food entry
-const handleUpdateEntry: RouteHandler = async (event, userId) => {
-  const { date, id } = event.pathParameters || {};
+const handleUpdateEntry = withValidation(
+  schemaUpdateMealEntry,
+  async (event, userId, body) => {
+    const { date, id } = event.pathParameters || {};
 
-  if (!date || !id) {
-    return createErrorResponse("Date and entry ID are required", 400);
-  }
+    if (!date || !id) {
+      return createErrorResponse("Date and entry ID are required", 400);
+    }
 
-  if (!isValidDateFormat(date)) {
-    return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
-  }
+    if (!isValidDateFormat(date)) {
+      return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
+    }
 
-  const body = parseBody<DataRecord>(event.body);
+    const entry = await entryRepo.updateEntry(userId, date, id, body);
 
-  if (!body) {
-    return createErrorResponse("Request body is required", 400);
-  }
+    if (!entry) {
+      return createErrorResponse("Entry not found or no updates provided", 404);
+    }
 
-  const entry = await entryRepo.updateEntry(userId, date, id, body);
-
-  if (!entry) {
-    return createErrorResponse("Entry not found or no updates provided", 404);
-  }
-
-  return createResponse(entry);
-};
+    return createResponse(entry);
+  },
+);
 
 // DELETE /entries/{date}/{id} - Delete food entry
 const handleDeleteEntry: RouteHandler = async (event, userId) => {
@@ -142,30 +124,22 @@ const handleDeleteEntry: RouteHandler = async (event, userId) => {
 };
 
 // PUT /profile - Update user profile
-const handleUpdateProfile: RouteHandler = async (event, userId) => {
-  const body = parseBody<DataRecord>(event.body);
-
-  if (!body || typeof body !== "object") {
-    return createErrorResponse("Request body is required", 400);
-  }
-
-  const profile = await profileRepo.upsertProfile(userId, body);
-
-  return createResponse({ profile });
-};
+const handleUpdateProfile = withValidation(
+  schemaUpdateProfile,
+  async (_event, userId, body) => {
+    const profile = await profileRepo.upsertProfile(userId, body);
+    return createResponse({ profile });
+  },
+);
 
 // POST /profile - Create user profile
-const handleCreateProfile: RouteHandler = async (event, userId) => {
-  const body = parseBody<DataRecord>(event.body);
-
-  if (!body || typeof body !== "object") {
-    return createErrorResponse("Request body is required", 400);
-  }
-
-  const profile = await profileRepo.upsertProfile(userId, body);
-
-  return createResponse({ profile }, 201);
-};
+const handleCreateProfile = withValidation(
+  schemaCreateProfile,
+  async (_event, userId, body) => {
+    const profile = await profileRepo.upsertProfile(userId, body);
+    return createResponse({ profile }, 201);
+  },
+);
 
 // =============================================================================
 // Route Definitions
