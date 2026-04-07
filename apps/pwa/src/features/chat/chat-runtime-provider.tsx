@@ -1,4 +1,5 @@
 import { useProfile } from "@/features/profile";
+import { useChat } from "@ai-sdk/react";
 import {
   AssistantRuntimeProvider,
   Tools,
@@ -7,10 +8,12 @@ import {
 } from "@assistant-ui/react";
 import {
   AssistantChatTransport,
-  useChatRuntime,
+  useAISDKRuntime,
 } from "@assistant-ui/react-ai-sdk";
-import { type ReactNode } from "react";
+import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
+import type { ReactNode } from "react";
 import { buildSystemPrompt } from "./prompts";
+import { ToolApprovalProvider } from "./tool-approval";
 import { toolkit } from "./toolkit";
 
 const transport = new AssistantChatTransport({
@@ -22,19 +25,26 @@ interface ChatRuntimeProviderProps {
 }
 
 export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
-  const runtime = useChatRuntime({
+  const chatHelpers = useChat({
     transport,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
+
+  const runtime = useAISDKRuntime(chatHelpers);
 
   const aui = useAui({
     tools: Tools({ toolkit }),
   });
 
   return (
-    <AssistantRuntimeProvider runtime={runtime} aui={aui}>
-      <SystemInstructions />
-      {children}
-    </AssistantRuntimeProvider>
+    <ToolApprovalProvider
+      addToolApprovalResponse={chatHelpers.addToolApprovalResponse}
+    >
+      <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+        <SystemInstructions />
+        {children}
+      </AssistantRuntimeProvider>
+    </ToolApprovalProvider>
   );
 }
 
