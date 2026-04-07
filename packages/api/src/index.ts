@@ -3,14 +3,14 @@
 // =============================================================================
 
 export type {
-  MealEntry,
   CreateMealEntry,
+  MealEntry,
   MealEntryRepo,
 } from "./repo/meal-entry.repo.interface";
 
 export type {
-  Profile,
   CreateProfile,
+  Profile,
   ProfileRepo,
 } from "./repo/profile.repo.interface";
 
@@ -28,13 +28,17 @@ export { DynamoDBProfileRepo } from "./repo/profile-dynamodb.repo";
 // =============================================================================
 
 export {
+  AUTH_CONTEXT,
   MEAL_ENTRY_REPO,
   PROFILE_REPO,
-  AUTH_CONTEXT,
   type AuthContext,
-} from "./services/tokens";
+} from "./container/tokens";
 
-export { rootContainer, createRequestContainer } from "./services/container";
+export {
+  createRequestContainer,
+  getRootContainer,
+  initContainer,
+} from "./container";
 
 // =============================================================================
 // Services

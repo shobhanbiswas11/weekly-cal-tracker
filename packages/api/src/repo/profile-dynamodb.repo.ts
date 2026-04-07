@@ -4,8 +4,9 @@ import {
   PutCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { injectable } from "@needle-di/core";
-import { createPK, docClient, SK_PREFIX, TABLE_NAME } from "./dynamodb";
+import { inject, injectable } from "@needle-di/core";
+import { APP_CONFIG } from "../container/tokens";
+import { createPK, docClient, SK_PREFIX } from "./dynamodb";
 import type {
   CreateProfile,
   Profile,
@@ -35,6 +36,8 @@ const toProfile = (item: DynamoDBProfile): Profile => {
 
 @injectable()
 export class DynamoDBProfileRepo implements ProfileRepo {
+  constructor(private config = inject(APP_CONFIG)) {}
+
   async create(userId: string, data: CreateProfile): Promise<Profile> {
     const now = new Date().toISOString();
 
@@ -49,7 +52,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
 
     await docClient.send(
       new PutCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Item: item,
         ConditionExpression:
           "attribute_not_exists(PK) AND attribute_not_exists(SK)",
@@ -81,7 +84,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
 
     const result = await docClient.send(
       new UpdateCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Key: {
           PK: createPK(userId),
           SK: PROFILE_SK,
@@ -103,7 +106,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
   async delete(userId: string): Promise<void> {
     await docClient.send(
       new DeleteCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Key: {
           PK: createPK(userId),
           SK: PROFILE_SK,
@@ -115,7 +118,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
   async getByUserId(userId: string): Promise<Profile | null> {
     const result = await docClient.send(
       new GetCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Key: {
           PK: createPK(userId),
           SK: PROFILE_SK,

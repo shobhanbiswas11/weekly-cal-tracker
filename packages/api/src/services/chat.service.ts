@@ -14,7 +14,11 @@ import {
   type StreamTextResult,
 } from "ai";
 import { z } from "zod";
-import { AUTH_CONTEXT, MEAL_ENTRY_REPO, PROFILE_REPO } from "./tokens";
+import {
+  AUTH_CONTEXT,
+  MEAL_ENTRY_REPO,
+  PROFILE_REPO,
+} from "../container/tokens";
 
 // =============================================================================
 // System Prompt
@@ -58,7 +62,9 @@ const schemaGetEntriesByDateRange = z.object({
   endDate: z
     .string()
     .optional()
-    .describe("End date in ISO format (YYYY-MM-DD). Defaults to startDate if omitted."),
+    .describe(
+      "End date in ISO format (YYYY-MM-DD). Defaults to startDate if omitted.",
+    ),
 });
 
 const schemaGetEntryById = z.object({
@@ -115,8 +121,14 @@ export class ChatService {
             return {
               date,
               entries,
-              totalCalories: entries.reduce((sum, e) => sum + (e.calories || 0), 0),
-              totalProtein: entries.reduce((sum, e) => sum + (e.protein || 0), 0),
+              totalCalories: entries.reduce(
+                (sum, e) => sum + (e.calories || 0),
+                0,
+              ),
+              totalProtein: entries.reduce(
+                (sum, e) => sum + (e.protein || 0),
+                0,
+              ),
               totalCarbs: entries.reduce((sum, e) => sum + (e.carbs || 0), 0),
               totalFats: entries.reduce((sum, e) => sum + (e.fats || 0), 0),
             };
@@ -137,8 +149,14 @@ export class ChatService {
               startDate,
               endDate: endDate ?? startDate,
               entries,
-              totalCalories: entries.reduce((sum, e) => sum + (e.calories || 0), 0),
-              totalProtein: entries.reduce((sum, e) => sum + (e.protein || 0), 0),
+              totalCalories: entries.reduce(
+                (sum, e) => sum + (e.calories || 0),
+                0,
+              ),
+              totalProtein: entries.reduce(
+                (sum, e) => sum + (e.protein || 0),
+                0,
+              ),
               totalCarbs: entries.reduce((sum, e) => sum + (e.carbs || 0), 0),
               totalFats: entries.reduce((sum, e) => sum + (e.fats || 0), 0),
             };
@@ -235,7 +253,8 @@ Estimate on the moderately higher side when uncertain.`,
             const profile = await this.profileRepo.getByUserId(userId);
             if (!profile) {
               return {
-                error: "No profile found. User needs to set up their profile first.",
+                error:
+                  "No profile found. User needs to set up their profile first.",
               };
             }
             return profile;

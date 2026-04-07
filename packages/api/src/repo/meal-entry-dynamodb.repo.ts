@@ -4,9 +4,10 @@ import {
   QueryCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { injectable } from "@needle-di/core";
+import { inject, injectable } from "@needle-di/core";
 import { v4 as uuidv4 } from "uuid";
-import { createPK, docClient, SK_PREFIX, TABLE_NAME } from "./dynamodb";
+import { APP_CONFIG } from "../container/tokens";
+import { createPK, docClient, SK_PREFIX } from "./dynamodb";
 import type {
   CreateMealEntry,
   MealEntry,
@@ -44,6 +45,8 @@ const toMealEntry = (item: DynamoDBMealEntry): MealEntry => {
 
 @injectable()
 export class DynamoDBMealEntryRepo implements MealEntryRepo {
+  constructor(private config = inject(APP_CONFIG)) {}
+
   async create(userId: string, data: CreateMealEntry): Promise<MealEntry> {
     const now = new Date().toISOString();
     const id = uuidv4();
@@ -61,7 +64,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
 
     await docClient.send(
       new PutCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Item: item,
       }),
     );
@@ -117,7 +120,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
 
     const result = await docClient.send(
       new UpdateCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Key: {
           PK: createPK(userId),
           SK: createSK(existing.date, id),
@@ -145,7 +148,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
 
     await docClient.send(
       new DeleteCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         Key: {
           PK: createPK(userId),
           SK: createSK(existing.date, id),
@@ -159,7 +162,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
     // Query all entries and filter by id (inefficient but necessary without GSI)
     const result = await docClient.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
         FilterExpression: "id = :id",
         ExpressionAttributeValues: {
@@ -180,7 +183,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
   async getByDate(userId: string, date: ISODate): Promise<MealEntry[]> {
     const result = await docClient.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
         ExpressionAttributeValues: {
           ":pk": createPK(userId),
@@ -208,7 +211,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
     // We want all entries where date is between startDate and endDate
     const result = await docClient.send(
       new QueryCommand({
-        TableName: TABLE_NAME,
+        TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND SK BETWEEN :skStart AND :skEnd",
         ExpressionAttributeValues: {
           ":pk": createPK(userId),

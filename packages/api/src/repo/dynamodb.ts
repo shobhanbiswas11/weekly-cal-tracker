@@ -7,8 +7,7 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 const client = new DynamoDBClient({});
 export const docClient = DynamoDBDocumentClient.from(client);
 
-// Table name from environment
-export const TABLE_NAME = process.env.TABLE_NAME!;
+// Note: TABLE_NAME is injected via DI container (see services/tokens.ts)
 
 // =============================================================================
 // Key Helpers

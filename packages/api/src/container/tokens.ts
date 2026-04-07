@@ -1,4 +1,5 @@
 import { InjectionToken } from "@needle-di/core";
+import { z } from "zod";
 import type { MealEntryRepo } from "../repo/meal-entry.repo.interface";
 import type { ProfileRepo } from "../repo/profile.repo.interface";
 
@@ -33,3 +34,35 @@ export interface AuthContext {
 }
 
 export const AUTH_CONTEXT = new InjectionToken<AuthContext>("AUTH_CONTEXT");
+
+// =============================================================================
+// Config Token
+// =============================================================================
+
+const appConfigSchema = z.object({
+  TABLE_NAME: z.string().min(1, "TABLE_NAME is required"),
+  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+});
+
+/**
+ * Application configuration.
+ * Allows easy mocking in tests without stubbing process.env.
+ */
+export interface AppConfig {
+  tableName: string;
+}
+
+/**
+ * Creates AppConfig from environment variables.
+ * @throws {ZodError} if required env vars are missing or invalid
+ */
+export function createAppConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): AppConfig {
+  const parsed = appConfigSchema.parse(env);
+  return {
+    tableName: parsed.TABLE_NAME,
+  };
+}
+
+export const APP_CONFIG = new InjectionToken<AppConfig>("APP_CONFIG");

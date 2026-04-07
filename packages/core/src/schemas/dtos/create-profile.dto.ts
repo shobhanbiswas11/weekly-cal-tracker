@@ -1,19 +1,5 @@
 import z from "zod";
 
-export const schemaActivityLevel = z
-  .enum(["sedentary", "light", "moderate", "active", "very_active"])
-  .describe("User's physical activity level for TDEE calculation");
-
-export const schemaBiologicalSex = z
-  .enum(["male", "female"])
-  .describe(
-    "Biological sex for accurate BMR calculation using Mifflin-St Jeor formula",
-  );
-
-export const schemaPrimaryGoal = z
-  .enum(["lose_weight", "maintain_weight", "gain_muscle", "improve_health"])
-  .describe("User's primary fitness/nutrition goal");
-
 export const schemaCreateProfile = z.object({
   // ---------------------------------------------------------------------------
   // Basic Profile Information (user-provided)
@@ -22,14 +8,16 @@ export const schemaCreateProfile = z.object({
   dateOfBirth: z
     .string()
     .describe("User's date of birth in ISO format (YYYY-MM-DD)"),
-  biologicalSex: schemaBiologicalSex.describe(
-    "Biological sex for accurate BMR calculation",
-  ),
-  heightCm: z.number().min(50).max(300).describe("Height in centimeters"),
-  weightKg: z.number().min(20).max(500).describe("Current weight in kilograms"),
-  primaryGoal: schemaPrimaryGoal.describe(
-    "User's primary fitness/nutrition goal",
-  ),
+  biologicalSex: z
+    .string()
+    .describe("Biological sex (Male or Female) for accurate BMR calculation"),
+  height: z.string().describe("Height in feet or centimeters (with unit)"),
+  weight: z.string().describe("Current weight in lbs or kg (with unit)"),
+  primaryGoal: z
+    .string()
+    .describe(
+      "User's primary fitness/nutrition goal. eg: Loose Weight, Maintain Weight, Gain Muscle, Improve Overall Health",
+    ),
   additionalNotes: z
     .string()
     .optional()
@@ -40,14 +28,11 @@ export const schemaCreateProfile = z.object({
   // ---------------------------------------------------------------------------
   // Calculated Values (LLM-computed based on profile)
   // ---------------------------------------------------------------------------
-  activityLevel: schemaActivityLevel.describe(
-    "User's activity level - ask if not provided, default to 'moderate'",
-  ),
-  activityMultiplier: z
-    .number()
-    .min(1.2)
-    .max(1.9)
-    .describe("TDEE multiplier based on activity level (1.2 - 1.9)"),
+  activityLevel: z
+    .string()
+    .describe(
+      "User's activity level (eg. Sedentary, Light, Moderate, Active, Very Active) - ask if not provided, default to 'Moderate'",
+    ),
   bmr: z
     .number()
     .min(500)
@@ -57,16 +42,16 @@ export const schemaCreateProfile = z.object({
     .number()
     .min(800)
     .max(8000)
-    .describe("Total Daily Energy Expenditure = BMR × activityMultiplier"),
+    .describe(
+      "Total Daily Energy Expenditure = calculate from BMR and activity level",
+    ),
 
   // Calorie Targets
   dailyCalorieTarget: z
     .number()
     .min(800)
     .max(8000)
-    .describe(
-      "Daily calorie goal based on user's objective (maintenance = TDEE, loss = TDEE - 500, gain = TDEE + 300)",
-    ),
+    .describe("Daily calorie goal based on user's objective"),
   weeklyCalorieTarget: z
     .number()
     .min(5600)
@@ -84,7 +69,7 @@ export const schemaCreateProfile = z.object({
     .min(30)
     .max(400)
     .describe(
-      "Daily protein target in grams (typically 0.8-1g per lb body weight)",
+      "Daily protein target in grams (Calculate based on other profile data)",
     ),
   carbsTarget: z
     .number()
@@ -95,7 +80,9 @@ export const schemaCreateProfile = z.object({
     .number()
     .min(20)
     .max(300)
-    .describe("Daily fat target in grams (typically 25-30% of calories)"),
+    .describe(
+      "Daily fat target in grams (Calculate based on other profile data)",
+    ),
 
   // Goal Projections (optional - for weight change goals)
   targetWeight: z
