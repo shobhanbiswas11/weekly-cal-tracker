@@ -1,11 +1,16 @@
+import { config } from "dotenv";
 import express from "express";
+import { streamChat } from "./services/chat.service";
+config();
 
 const app = express();
 app.use(express.json());
 
-app.post("/chat", async (req, res) => {
-  // Handle chat request
-  res.json({ message: "Hello from the backend!" });
+app.post("/api/chat", async (req, res) => {
+  const { messages, tools } = req.body;
+
+  const result = await streamChat(messages, tools);
+  return result.pipeUIMessageStreamToResponse(res);
 });
 
 const PORT = process.env.PORT || 3000;

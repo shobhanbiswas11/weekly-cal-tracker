@@ -19,7 +19,10 @@ export async function streamChat(
           "Create the user profile with given and calculated information",
         inputSchema: schemaCreateProfile,
         execute: async (data) => {
-          return profileRepo.create("test-user", data);
+          const profile = await profileRepo.create("test-user", data);
+          console.log(profile);
+
+          return profile;
         },
         needsApproval: true,
       }),

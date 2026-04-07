@@ -1,16 +1,14 @@
 // Chat Lambda - AI conversation with streaming responses
 // Uses AI SDK with Lambda Response Streaming for assistant-ui
 
+import { ChatService, createRequestContainer } from "@weekly-cal/api";
 import type { UIMessage } from "ai";
-import { streamChat } from "../../services/chat.service";
 
 interface ChatRequest {
   messages: UIMessage[];
   system?: string;
   tools?: any;
 }
-
-// System prompt for the nutrition assistant
 
 // CORS headers
 const corsHeaders = {
@@ -54,8 +52,16 @@ export const handler = awslambda.streamifyResponse(
       responseStream.setHeader?.(key, value);
     });
 
-    // Create the AI stream with convertToModelMessages for AI SDK v6
-    const result = await streamChat(body.messages, body.tools);
+    // Get user ID from auth context (TODO: integrate with actual auth)
+    // For now, use hardcoded test user
+    const userId = event.requestContext?.authorizer?.userId ?? "test-user";
+
+    // Create request-scoped container with auth context
+    const container = createRequestContainer(userId);
+    const chatService = container.get(ChatService);
+
+    // Create the AI stream
+    const result = await chatService.streamChat(body.messages, body.tools);
 
     // Get the encoded UI message stream from the Response body
     const response = result.toUIMessageStreamResponse();

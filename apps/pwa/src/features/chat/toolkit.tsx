@@ -1,9 +1,5 @@
 import { type Toolkit } from "@assistant-ui/react";
-import { calorieTools } from "../calories/tools";
-import { profileTools } from "../profile";
 
-// Toolkit with frontend tools
-export const toolkit: Toolkit = {
-  ...profileTools,
-  ...calorieTools,
-};
+// Frontend toolkit - empty since all tools are now backend-only
+// Backend tools are handled via approval cards and ToolFallback
+export const toolkit: Toolkit = {};

@@ -13,7 +13,7 @@ import {
   fetchDashboard,
   fetchWeeklySummary,
 } from "../../../lib/api";
-import type { Profile } from "../../profile/schemas";
+import type { Profile } from "../../profile/types";
 import { calorieKeys, dashboardKeys } from "../../shared/query-keys";
 import {
   calculateTotals,

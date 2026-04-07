@@ -5,13 +5,11 @@
 // Hooks: React Query wrappers (useDashboardSummary, useWeeklySummary, etc.)
 // Types: Domain types (CalorieEntry, DailySummary, etc.)
 // Utils: Date/time utilities (getToday, getCurrentWeek, etc.)
-// Tools: Assistant UI tools (preview_meal_log, etc.)
 // Schemas: Zod schemas for tool parameters
 
 export * from "./components";
 export * from "./data";
 export * from "./schemas";
 export * from "./services";
-export * from "./tools";
 export * from "./types";
 export * from "./utils";

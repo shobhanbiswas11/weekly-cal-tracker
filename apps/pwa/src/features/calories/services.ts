@@ -3,7 +3,7 @@
 
 import { format } from "date-fns";
 import type { EntryData } from "../../lib/api";
-import type { Profile } from "../profile/schemas";
+import type { Profile } from "../profile/types";
 import type {
   CalorieEntry,
   DailySummary,
