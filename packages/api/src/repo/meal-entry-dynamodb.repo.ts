@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
 import { v4 as uuidv4 } from "uuid";
-import { APP_CONFIG } from "../container/tokens";
+import { APP_CONFIG } from "../di/tokens";
 import { createPK, docClient, SK_PREFIX } from "./dynamodb";
 import type {
   CreateMealEntry,

@@ -8,6 +8,8 @@ import {
   MEAL_ENTRY_REPO,
   PROFILE_REPO,
 } from "./tokens";
+export { inject, injectable } from "@needle-di/core";
+export * from "./tokens";
 
 // =============================================================================
 // Root Container
