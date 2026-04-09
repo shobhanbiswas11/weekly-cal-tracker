@@ -33,34 +33,26 @@ export const schemaCreateMealEntry = z.object({
   fiber: z
     .number()
     .min(0)
-    .optional()
+    .nullable()
     .describe("Total fiber in grams for the meal"),
   sugar: z
     .number()
     .min(0)
-    .optional()
+    .nullable()
     .describe("Total sugar in grams for the meal"),
   sodium: z
     .number()
     .min(0)
-    .optional()
+    .nullable()
     .describe("Total sodium in milligrams for the meal"),
   note: z
     .string()
-    .optional()
+    .nullable()
     .describe("Optional note with additional context about the meal"),
-  createdAt: z.iso
-    .datetime()
-    .describe("ISO timestamp when the entry was created"),
-  updatedAt: z.iso
-    .datetime()
-    .describe("ISO timestamp when the entry was last updated"),
 });
 
 // Update schema - all fields optional except timestamps (handled server-side)
-export const schemaUpdateMealEntry = schemaCreateMealEntry
-  .omit({ createdAt: true, updatedAt: true })
-  .partial();
+export const schemaUpdateMealEntry = schemaCreateMealEntry.partial();
 
 export type CreateMealEntryDto = z.infer<typeof schemaCreateMealEntry>;
 export type UpdateMealEntryDto = z.infer<typeof schemaUpdateMealEntry>;
