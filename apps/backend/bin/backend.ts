@@ -6,11 +6,11 @@ import { BackendStack } from "../lib/backend-stack";
 const app = new cdk.App();
 
 // Get configuration from environment variables
-const clerkIssuer = process.env.CLERK_ISSUER;
+const jwtIssuer = process.env.JWT_ISSUER;
 const openaiApiKey = process.env.OPENAI_API_KEY;
 
-if (!clerkIssuer) {
-  throw new Error("CLERK_ISSUER environment variable is required");
+if (!jwtIssuer) {
+  throw new Error("JWT_ISSUER environment variable is required");
 }
 
 if (!openaiApiKey) {
@@ -25,7 +25,7 @@ new BackendStack(app, "CalorieTrackerStack", {
   },
 
   // Stack-specific configuration
-  clerkIssuer,
+  jwtIssuer,
   openaiApiKey,
 
   // Stack tags

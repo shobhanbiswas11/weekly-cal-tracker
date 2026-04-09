@@ -9,7 +9,7 @@ import { Construct } from "constructs";
 import * as path from "path";
 
 interface BackendStackProps extends cdk.StackProps {
-  clerkIssuer: string;
+  jwtIssuer: string;
   openaiApiKey: string;
 }
 
@@ -20,7 +20,7 @@ export class BackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    const { clerkIssuer, openaiApiKey } = props;
+    const { jwtIssuer, openaiApiKey } = props;
 
     // =====================
     // DynamoDB Table (Single Table Design)
@@ -82,8 +82,11 @@ export class BackendStack extends cdk.Stack {
       environment: {
         ...lambdaEnvironment,
         OPENAI_API_KEY: openaiApiKey,
+        JWT_ISSUER: jwtIssuer,
       },
     });
+
+    table.grantReadWriteData(chatFn);
 
     // Add Lambda Function URL with response streaming for chat
     const chatFnUrl = chatFn.addFunctionUrl({
@@ -116,8 +119,8 @@ export class BackendStack extends cdk.Stack {
     });
 
     const jwtAuthorizer = new apigatewayv2Authorizers.HttpJwtAuthorizer(
-      "ClerkJwtAuthorizer",
-      clerkIssuer,
+      "JwtAuthorizer",
+      jwtIssuer,
       {
         jwtAudience: ["*"],
         identitySource: ["$request.header.Authorization"],

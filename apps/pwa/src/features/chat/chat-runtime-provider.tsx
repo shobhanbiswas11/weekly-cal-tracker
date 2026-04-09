@@ -18,6 +18,13 @@ import { toolkit } from "./toolkit";
 
 const transport = new AssistantChatTransport({
   api: import.meta.env.VITE_CHAT_URL,
+  headers: async () => {
+    const token = await window.Clerk?.session?.getToken();
+    if (!token) {
+      throw new Error("No authentication token available. Please sign in.");
+    }
+    return { Authorization: `Bearer ${token}` };
+  },
 });
 
 interface ChatRuntimeProviderProps {

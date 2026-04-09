@@ -42,6 +42,11 @@ export const AUTH_CONTEXT = new InjectionToken<AuthContext>("AUTH_CONTEXT");
 const appConfigSchema = z.object({
   TABLE_NAME: z.string().min(1, "TABLE_NAME is required"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+  ENABLE_DEV_TOOLS: z
+    .string()
+    .transform((v) => v === "true")
+    .optional()
+    .default(false),
 });
 
 /**
@@ -50,6 +55,7 @@ const appConfigSchema = z.object({
  */
 export interface AppConfig {
   tableName: string;
+  enableDevTools: boolean;
 }
 
 /**
@@ -62,6 +68,7 @@ export function createAppConfig(
   const parsed = appConfigSchema.parse(env);
   return {
     tableName: parsed.TABLE_NAME,
+    enableDevTools: parsed.ENABLE_DEV_TOOLS,
   };
 }
 
