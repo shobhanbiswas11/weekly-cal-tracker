@@ -39,6 +39,7 @@ export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
   return (
     <ToolApprovalProvider
       addToolApprovalResponse={chatHelpers.addToolApprovalResponse}
+      messages={chatHelpers.messages}
     >
       <AssistantRuntimeProvider runtime={runtime} aui={aui}>
         <SystemInstructions />
