@@ -32,13 +32,9 @@ export {
   MEAL_ENTRY_REPO,
   PROFILE_REPO,
   type AuthContext,
-} from "./container/tokens";
+} from "./di/tokens";
 
-export {
-  createRequestContainer,
-  getRootContainer,
-  initContainer,
-} from "./container";
+export { createRequestContainer, getRootContainer, initContainer } from "./di";
 
 // =============================================================================
 // Services
