@@ -6,7 +6,9 @@
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["vitest/globals", "node"]
+    "types": ["vitest/globals", "node"],
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "include": ["src"]
 }

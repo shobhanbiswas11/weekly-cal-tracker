@@ -53,6 +53,10 @@ PWA (React 19 + Vite) → API Gateway → Lambda → OpenAI GPT-4 (tool calling)
 - **OpenAI**: SSM Parameter `/calorie-tracker/openai-api-key`
 - **Frontend API URL**: Set after `cdk deploy` outputs ApiUrl
 
+## Coding Style
+
+- **Minimal comments**: Only add comments where logic is non-obvious. Don't comment every line—let the code speak for itself.
+
 ## Current Status
 
 - [x] Backend CDK infrastructure
