@@ -41,3 +41,9 @@ export { createRequestContainer, getRootContainer, initContainer } from "./di";
 // =============================================================================
 
 export { ChatService } from "./services/chat.service";
+
+// =============================================================================
+// Tools
+// =============================================================================
+
+export { ToolRegistry } from "./tools";

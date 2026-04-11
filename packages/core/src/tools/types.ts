@@ -1,13 +1,6 @@
 import type { z } from "zod";
 
 /**
- * Approval configuration for tools that require user confirmation
- */
-export type ToolApproval =
-  | { require: false }
-  | { require: true; confirmLabel: string; cancelLabel: string };
-
-/**
  * Base tool definition structure
  */
 export interface ToolDefinition<
@@ -17,9 +10,10 @@ export interface ToolDefinition<
   name: string;
   title: string;
   description: string;
+  oneLineDescription?: string;
   inputSchema: TInputSchema;
-  outputSchema: TOutputSchema;
-  approval: ToolApproval;
+  outputSchema?: TOutputSchema;
+  approval?: { require: true; confirmLabel?: string; cancelLabel?: string };
 }
 
 /**

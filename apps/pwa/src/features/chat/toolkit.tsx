@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { type Toolkit } from "@assistant-ui/react";
 import {
-  toolRegistry,
+  toolDefinitionRegistry,
   type ToolDefinition as CoreToolDefinition,
   type ToolName,
 } from "@weekly-cal/core";
@@ -195,15 +195,17 @@ function ToolUIWrapper({ children }: { children: React.ReactNode }) {
 // =============================================================================
 
 const toolIcons: Record<ToolName, React.ReactNode> = {
-  get_entries_by_date: <Search className="size-5" />,
-  get_entries_by_date_range: <Search className="size-5" />,
-  get_entry_by_id: <Search className="size-5" />,
-  create_meal_entry: <Utensils className="size-5" />,
+  // Meal Entry Tools
+  log_meal: <Utensils className="size-5" />,
   update_meal_entry: <Edit className="size-5" />,
   delete_meal_entry: <Trash2 className="size-5" />,
-  get_profile: <User className="size-5" />,
+  get_meal_entry: <Search className="size-5" />,
+  entries_by_calendar_week: <Search className="size-5" />,
+  entries_by_date: <Search className="size-5" />,
+  // Profile Tools
   create_profile: <Plus className="size-5" />,
   update_profile: <Edit className="size-5" />,
+  get_profile: <User className="size-5" />,
   delete_profile: <Trash2 className="size-5" />,
 };
 
@@ -262,7 +264,7 @@ function makeDefaultToolRender(
     const aiSdkState = useToolApprovalState(toolCallId);
 
     // For approval tools, use the AI SDK state for accurate status
-    if (toolDef.approval.require && aiSdkState) {
+    if (toolDef.approval?.require && aiSdkState) {
       const { state, approvalId } = aiSdkState;
 
       // Waiting for user approval
@@ -287,8 +289,8 @@ function makeDefaultToolRender(
               description={toolDef.description}
               icon={toolIcons[toolName]}
               variant={getToolVariant(toolName)}
-              confirmLabel={toolDef.approval.confirmLabel}
-              cancelLabel={toolDef.approval.cancelLabel}
+              confirmLabel={toolDef.approval?.confirmLabel}
+              cancelLabel={toolDef.approval?.cancelLabel}
               status="pending"
               onConfirm={handleConfirm}
               onCancel={handleCancel}
@@ -428,7 +430,7 @@ function makeDefaultToolRender(
 function buildToolkit(): Toolkit {
   const toolkit: Toolkit = {};
 
-  for (const [name, toolDef] of Object.entries(toolRegistry)) {
+  for (const [name, toolDef] of Object.entries(toolDefinitionRegistry)) {
     const toolName = name as ToolName;
     const def = toolDef as CoreToolDefinition;
 
