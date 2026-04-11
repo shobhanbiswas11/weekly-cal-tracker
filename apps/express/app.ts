@@ -30,7 +30,7 @@ app.post("/api/chat", async (req, res) => {
   }
 
   // For dev, use a test user (integrate real auth later)
-  const userId = req.headers["x-user-id"]?.toString() ?? "test-user";
+  const userId = process.env.TEST_USER_ID || "test-user";
 
   const container = createRequestContainer(userId);
   const chatService = container.get(ChatService);

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "preview": "pnpm --filter web preview"
+    "dev": "concurrently \"pnpm --filter express dev\" \"pnpm --filter pwa dev\" \"pnpm --filter express start:aisdk-devtools\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   },
   "packageManager": "pnpm@10.26.1"
 }

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch --include=../../packages/**/src/**/* app.ts",
+    "start:aisdk-devtools": "pnpm dlx @ai-sdk/devtools",
     "start": "tsx app.ts"
   },
   "keywords": [],
