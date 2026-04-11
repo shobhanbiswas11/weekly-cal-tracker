@@ -36,4 +36,4 @@ coverage/
 # Temporary
 *.tmp
 *.temp
-apps/express/.devtools
+.devtools
