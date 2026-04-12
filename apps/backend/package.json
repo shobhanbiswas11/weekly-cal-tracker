@@ -10,7 +10,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "synth": "cdk synth"
+    "synth": "cdk synth",
+    "awsdeploy": "pnpx cdk deploy CalorieTrackerStack"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
