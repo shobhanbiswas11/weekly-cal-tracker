@@ -4,6 +4,7 @@ import {
   CalendarRange,
   Clock1,
   Flame,
+  LogOut,
   Menu,
   MessageSquare,
   X,
@@ -22,7 +23,7 @@ export function Header({ menuContent }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 h-14">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background border-b border-border h-14">
         {/* Logo - Left */}
         <div className="shrink-0">
           <Button variant="ghost" size="icon-lg" onClick={() => navigate("/")}>
@@ -79,20 +80,20 @@ export function Header({ menuContent }: HeaderProps) {
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+          className="fixed inset-0 bg-foreground/40 z-40 backdrop-blur-sm"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
 
       {/* Slide-in Menu */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-out ${
+        className={`fixed top-0 right-0 h-full w-72 bg-background z-50 shadow-2xl transform transition-transform duration-300 ease-out ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Menu Header */}
-          <div className="flex items-center justify-end px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-end px-4 py-3 border-b border-border">
             <Button
               variant="ghost"
               size="icon-lg"
@@ -107,8 +108,13 @@ export function Header({ menuContent }: HeaderProps) {
           <div className="flex-1 overflow-y-auto px-4 py-4">{menuContent}</div>
 
           {/* Sign Out - Bottom */}
-          <div className="border-t border-gray-100 p-4">
-            <SignOutButton />
+          <div className="border-t border-border p-4">
+            <SignOutButton>
+              <Button variant="outline" className="w-full justify-start gap-2">
+                <LogOut className="size-4" />
+                Sign out
+              </Button>
+            </SignOutButton>
           </div>
         </div>
       </div>

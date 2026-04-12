@@ -1,17 +1,25 @@
-import { SignInButton } from "@clerk/react";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { ProtectedRoute, UnProtectedRoute } from "./components/auth";
 import { Header } from "./components/layout/Header";
 import ChatPage from "./pages/chat";
 import DailyPage from "./pages/daily";
 import HomePage from "./pages/home";
+import SSOCallbackPage from "./pages/sso-callback";
 import WeeklyPage from "./pages/weekly";
+import WelcomePage from "./pages/welcome";
 
 function App() {
+  const location = useLocation();
+
+  // Handle SSO callback separately (outside auth guards)
+  if (location.pathname === "/sso-callback") {
+    return <SSOCallbackPage />;
+  }
+
   return (
     <>
       <UnProtectedRoute>
-        <SignInButton />
+        <WelcomePage />
       </UnProtectedRoute>
       <ProtectedRoute>
         <div className="flex flex-col h-dvh">
