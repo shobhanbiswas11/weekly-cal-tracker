@@ -1,5 +1,6 @@
 import {
   toolDefinitionRegistry,
+  ToolExecutorRegistry,
   type ToolDefinition,
   type ToolName,
 } from "@weekly-cal/core";
@@ -13,20 +14,6 @@ import {
   PROFILE_REPO,
 } from "../di";
 
-// =============================================================================
-// Types
-// =============================================================================
-
-type ToolOutput = { success: boolean; message?: string; data?: unknown };
-type ToolExecutor<TInput = unknown> = (input: TInput) => Promise<ToolOutput>;
-
-// =============================================================================
-// Utilities
-// =============================================================================
-
-/**
- * Get start and end dates for an ISO week string (e.g., "2026-W15")
- */
 function getWeekDateRange(weekStr: string): {
   startDate: string;
   endDate: string;
@@ -37,11 +24,6 @@ function getWeekDateRange(weekStr: string): {
     endDate: format(endOfISOWeek(date), "yyyy-MM-dd"),
   };
 }
-
-// =============================================================================
-// Tool Registry
-// =============================================================================
-
 @injectable()
 export class ToolRegistry {
   constructor(
@@ -50,18 +32,13 @@ export class ToolRegistry {
     private auth = inject(AUTH_CONTEXT),
   ) {}
 
-  /**
-   * Map of tool names to their execution functions.
-   * Each executor receives validated input and returns a result.
-   */
-  private get executors(): Record<ToolName, ToolExecutor> {
+  private get executorRegistry(): ToolExecutorRegistry {
     const userId = this.auth.userId;
-
     return {
       // -----------------------------------------------------------------------
       // Meal Entry Tools
       // -----------------------------------------------------------------------
-      log_meal: async (input: any) => {
+      log_meal: async (input) => {
         const entry = await this.mealEntryRepo.create(userId, input);
         return {
           success: true,
@@ -154,7 +131,7 @@ export class ToolRegistry {
   /**
    * Create an AI SDK tool from a definition with try-catch error handling.
    */
-  private createAiTool(definition: ToolDefinition, executor: ToolExecutor) {
+  private createAiTool(definition: ToolDefinition, executor: any) {
     return tool({
       description: definition.description,
       inputSchema: definition.inputSchema,
@@ -180,7 +157,7 @@ export class ToolRegistry {
    * Create AI SDK compatible tools for the given tool names.
    */
   createTools(names: ToolName[]): Record<string, any> {
-    const executors = this.executors;
+    const executors = this.executorRegistry;
     const tools: Record<string, any> = {};
 
     for (const name of names) {

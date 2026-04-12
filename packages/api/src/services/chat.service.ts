@@ -52,7 +52,12 @@ export class ChatService {
     const now = new Date();
     const today = format(now, "yyyy-MM-dd");
     const week = format(now, "RRRR-'W'II");
-    return `Nutrition assistant. Today: ${today}. Week: ${week}. Estimate nutrition on the moderately higher side. Mutations require approval. Be concise.`;
+    return `Nutrition assistant. 
+Today: ${today}. 
+Week: ${week}. 
+Estimate nutrition on the moderately higher side. Mutations require approval. Be concise.
+
+IMPORTANT: When you need user information (weight, goals, maintenance calories, protein/fat/carb targets, activity level, etc.), ALWAYS use the get_profile tool FIRST before asking the user. Only ask follow-up questions if the profile doesn't contain the needed data or doesn't exist.`;
   }
 
   /**
@@ -123,6 +128,8 @@ export class ChatService {
         schema: toolSelectionSchema,
       }),
       prompt: `Based on the conversation, select which tools the assistant might need. Only select tools that are relevant to what the user is asking for. If the request is general conversation, select no tools.
+
+IMPORTANT: If the user mentions anything related to their personal data (weight, goals, maintenance calories, macros, protein/fat/carb targets, activity level, fitness info), ALWAYS include get_profile. The assistant should fetch existing profile data before asking the user for information that may already be stored.
 
 Available tools:
 ${toolList}
