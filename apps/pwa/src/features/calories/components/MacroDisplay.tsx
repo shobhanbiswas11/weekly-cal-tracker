@@ -1,8 +1,8 @@
 // Macro display with icon
 
 import { cn } from "@/lib/utils";
+import type { MacroType } from "@weekly-cal/core";
 import { Candy, Droplet, Droplets, Dumbbell, Leaf, Wheat } from "lucide-react";
-import type { MacroType } from "../types";
 
 interface MacroDisplayProps {
   type: Exclude<MacroType, "calories">;

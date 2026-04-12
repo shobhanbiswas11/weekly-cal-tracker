@@ -5,6 +5,7 @@
 // Pages compose these hooks to build their views.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CalorieEntry, DailySummary, UserGoals } from "@weekly-cal/core";
 import { useMemo } from "react";
 import {
   createEntry as apiCreateEntry,
@@ -23,7 +24,6 @@ import {
   toCalorieEntry,
   transformToWeeklySummary,
 } from "../services";
-import type { CalorieEntry, DailySummary, UserGoals } from "../types";
 import { getCurrentWeek, getToday } from "../utils";
 
 // Re-export query keys for backwards compatibility
@@ -279,11 +279,11 @@ export function useCreateEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiCreateEntry(data),
+    mutationFn: apiCreateEntry,
     onSuccess: (entry) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
-      const date = entry.date as string;
+      const date = entry.date;
       if (date) {
         const weekId = getWeekIdForDate(date);
         queryClient.invalidateQueries({ queryKey: calorieKeys.weeks(weekId) });

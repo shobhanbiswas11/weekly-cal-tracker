@@ -1,12 +1,9 @@
-import type {
-  schemaCreateProfile,
-  schemaProfileEntity,
-} from "@weekly-cal/core";
-import type z from "zod";
+import type { CreateProfileDto, Profile } from "@weekly-cal/core";
 
 export type ProfileResult = {
   action: "saved" | "canceled";
 };
 
-export type Profile = z.infer<typeof schemaProfileEntity>;
-export type CreateProfile = z.infer<typeof schemaCreateProfile>;
+// Re-export from core for convenience
+export type { Profile };
+export type CreateProfile = CreateProfileDto;

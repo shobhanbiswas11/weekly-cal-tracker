@@ -1,8 +1,8 @@
 // Weekly bar graph showing daily calories
 
 import { cn } from "@/lib/utils";
+import type { DailySummary } from "@weekly-cal/core";
 import { useNavigate } from "react-router";
-import type { DailySummary } from "../types";
 import { getDayName, isToday } from "../utils";
 
 interface WeeklyGraphProps {

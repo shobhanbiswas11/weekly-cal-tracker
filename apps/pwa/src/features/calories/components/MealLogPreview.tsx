@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { LogMealInput } from "../schemas";
+import { getToday } from "../utils";
 
 interface MealLogPreviewProps extends LogMealInput {
   onLogged?: () => void;
@@ -79,11 +80,11 @@ export function MealLogPreview({
       protein: meal.protein,
       carbs: meal.carbs,
       fats: meal.fat,
-      ...(meal.fiber !== undefined && { fiber: meal.fiber }),
-      ...(meal.sugar !== undefined && { sugar: meal.sugar }),
-      ...(meal.sodium !== undefined && { sodium: meal.sodium }),
-      ...(meal.date && { date: meal.date }),
-      ...(meal.note && { note: meal.note }),
+      fiber: meal.fiber ?? null,
+      sugar: meal.sugar ?? null,
+      sodium: meal.sodium ?? null,
+      date: meal.date ?? getToday(),
+      note: meal.note ?? null,
     });
   };
 

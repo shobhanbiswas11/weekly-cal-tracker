@@ -1,16 +1,16 @@
 // Calorie tracking services - pure business logic functions
 // No React dependencies, can be used anywhere
 
-import { format } from "date-fns";
-import type { EntryData } from "../../lib/api";
-import type { Profile } from "../profile/types";
 import type {
   CalorieEntry,
   DailySummary,
   MacroTotals,
   UserGoals,
   WeeklySummary,
-} from "./types";
+} from "@weekly-cal/core";
+import { format } from "date-fns";
+import type { EntryData } from "../../lib/api";
+import type { Profile } from "../profile/types";
 import {
   addDays,
   formatDateToISO,
@@ -42,20 +42,23 @@ export function getDailyGoalFromProfile(profile: Profile): UserGoals {
 // =============================================================================
 
 /**
- * Convert API EntryData to CalorieEntry domain type
+ * Convert API EntryData (MealEntry) to CalorieEntry domain type
  */
 export function toCalorieEntry(entry: EntryData): CalorieEntry {
   return {
     id: entry.id,
     date: entry.date,
-    time: entry.timestamp
-      ? format(new Date(entry.timestamp), "HH:mm")
+    time: entry.createdAt
+      ? format(new Date(entry.createdAt), "HH:mm")
       : "12:00",
-    name: entry.name || "Unknown",
-    calories: entry.calories || 0,
-    protein: entry.protein || 0,
-    carbs: entry.carbs || 0,
-    fat: entry.fats || 0,
+    name: entry.name,
+    calories: entry.calories,
+    protein: entry.protein,
+    carbs: entry.carbs,
+    fat: entry.fats,
+    fiber: entry.fiber ?? undefined,
+    sugar: entry.sugar ?? undefined,
+    sodium: entry.sodium ?? undefined,
   };
 }
 

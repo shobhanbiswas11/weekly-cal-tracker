@@ -177,9 +177,9 @@ export function ProfileSetupPreview({
               {profile.biologicalSex}
             </span>
             <span className="text-muted-foreground">Height:</span>
-            <span className="font-medium">{profile.heightCm} cm</span>
+            <span className="font-medium">{profile.height}</span>
             <span className="text-muted-foreground">Weight:</span>
-            <span className="font-medium">{profile.weightKg} kg</span>
+            <span className="font-medium">{profile.weight}</span>
             <span className="text-muted-foreground">Primary Goal:</span>
             <span className="font-medium">
               {primaryGoalLabels[profile.primaryGoal] || profile.primaryGoal}

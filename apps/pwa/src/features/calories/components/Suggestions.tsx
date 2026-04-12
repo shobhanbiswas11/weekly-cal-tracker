@@ -1,8 +1,8 @@
 // Suggestions component based on daily summary
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { DailySummary, UserGoals } from "@weekly-cal/core";
 import { Lightbulb } from "lucide-react";
-import type { DailySummary, UserGoals } from "../types";
 
 interface SuggestionsProps {
   summary: DailySummary;

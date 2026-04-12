@@ -1,5 +1,7 @@
 // API client for backend communication
 
+import type { MealEntry } from "@weekly-cal/core";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const CHAT_URL = import.meta.env.VITE_CHAT_URL;
 
@@ -66,14 +68,17 @@ export interface ProfileResponse {
 // Entries
 // -----------------------------------------------------------------------------
 
-/** Entry data structure (stored in DynamoDB) */
-export type EntryData = DataRecord;
+/** Entry data structure - uses MealEntry schema from core */
+export type EntryData = MealEntry;
 
 /** POST /entries request body */
-export type EntryCreateRequest = DataRecord;
+export type EntryCreateRequest = Omit<
+  MealEntry,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 /** PUT /entries/{date}/{id} request body */
-export type EntryUpdateRequest = EntryData;
+export type EntryUpdateRequest = Partial<EntryCreateRequest>;
 
 /** GET /entries/{date} response */
 export interface EntriesByDateResponse {

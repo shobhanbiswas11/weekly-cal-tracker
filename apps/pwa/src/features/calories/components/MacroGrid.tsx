@@ -2,7 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import type { MacroTotals, UserGoals } from "../types";
+import type { MacroTotals, UserGoals } from "@weekly-cal/core";
 import { MacroDisplay } from "./MacroDisplay";
 
 interface MacroGridProps {

@@ -52,3 +52,5 @@ export const schemaMealEntryEntity = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
+
+export type MealEntry = z.infer<typeof schemaMealEntryEntity>;

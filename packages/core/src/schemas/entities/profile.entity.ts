@@ -104,3 +104,5 @@ export const schemaProfileEntity = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
+
+export type Profile = z.infer<typeof schemaProfileEntity>;

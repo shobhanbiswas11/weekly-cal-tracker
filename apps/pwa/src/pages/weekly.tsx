@@ -7,6 +7,7 @@ import {
   calculatePercentage,
   getCurrentWeek,
   getDayName,
+  useDailyGoal,
   useWeeklySummary,
 } from "@/features/calories";
 import { Calendar, Flame, TrendingDown, TrendingUp } from "lucide-react";
@@ -17,6 +18,7 @@ export default function WeeklyPage() {
   const weekId = searchParams.get("week") || getCurrentWeek();
 
   const { data: summary, isLoading } = useWeeklySummary(weekId);
+  const goals = useDailyGoal();
 
   const handleWeekChange = (newWeek: string) => {
     setSearchParams({ week: newWeek });
@@ -26,6 +28,14 @@ export default function WeeklyPage() {
     return <div className="p-4">Loading...</div>;
   }
 
+  if (!goals) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        Set up your profile to view weekly progress.
+      </div>
+    );
+  }
+
   const {
     weeklyTotals,
     weeklyCalorieGoal,
@@ -33,6 +43,7 @@ export default function WeeklyPage() {
     days,
     averageDailyCalories,
   } = summary;
+  const dailyGoal = weeklyCalorieGoal / 7;
   const percentage = calculatePercentage(
     weeklyTotals.calories,
     weeklyCalorieGoal,
@@ -96,7 +107,7 @@ export default function WeeklyPage() {
       </Card>
 
       {/* Daily Breakdown Graph */}
-      <WeeklyGraph days={days} />
+      <WeeklyGraph days={days} dailyGoal={dailyGoal} />
 
       {/* Weekly Stats */}
       <Card>
@@ -159,7 +170,12 @@ export default function WeeklyPage() {
           <CardTitle className="text-base">Weekly Totals</CardTitle>
         </CardHeader>
         <CardContent>
-          <MacroGrid totals={weeklyTotals} showExtended size="md" />
+          <MacroGrid
+            totals={weeklyTotals}
+            goals={goals}
+            showExtended
+            size="md"
+          />
         </CardContent>
       </Card>
     </div>

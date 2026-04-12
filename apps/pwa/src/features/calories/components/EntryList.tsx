@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { CalorieEntry } from "@weekly-cal/core";
 import { Clock, Flame } from "lucide-react";
-import type { CalorieEntry } from "../types";
 import { formatTime } from "../utils";
 import { MacroDisplay } from "./MacroDisplay";
 
