@@ -85,6 +85,12 @@ export function MealLogPreview({
       sodium: meal.sodium ?? null,
       date: meal.date ?? getToday(),
       note: meal.note ?? null,
+      foods: meal.items.map((item) => ({
+        emoji: "🍽️",
+        name: item.name,
+        quantity: item.quantity > 1 ? `${item.quantity}x` : "1 serving",
+        calories: item.calories,
+      })),
     });
   };
 
