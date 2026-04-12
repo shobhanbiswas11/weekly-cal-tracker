@@ -129,10 +129,17 @@ const ThreadSuggestionItem: FC = () => {
   );
 };
 
-// TODO: on IOS the keyboard does not hide after sending message, need to investigate
 const Composer: FC = () => {
   return (
-    <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+    <ComposerPrimitive.Root
+      className="aui-composer-root relative flex w-full flex-col"
+      onSubmit={() => {
+        // Dismiss keyboard on form submit (Enter key or button click)
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }}
+    >
       <ComposerPrimitive.AttachmentDropzone asChild>
         <div
           data-slot="composer-shell"
@@ -145,6 +152,7 @@ const Composer: FC = () => {
             rows={1}
             autoFocus
             aria-label="Message input"
+            unstable_focusOnRunStart={false}
           />
           <ComposerAction />
         </div>
@@ -162,7 +170,7 @@ const ComposerAction: FC = () => {
           <TooltipIconButton
             tooltip="Send message"
             side="bottom"
-            type="button"
+            type="submit"
             variant="default"
             size="icon"
             className="aui-composer-send size-8 rounded-full"
