@@ -1,5 +1,25 @@
 import z from "zod";
 
+// Individual food item for display purposes
+export const schemaFoodItem = z.object({
+  emoji: z
+    .string()
+    .describe("A single emoji representing this food (e.g., '🍕', '🥗', '🍳')"),
+  name: z.string().describe("Name of the food item (e.g., 'Pizza', 'Salad')"),
+  quantity: z
+    .string()
+    .describe(
+      "Human-readable quantity (e.g., '2 slices', '1 bowl', '200g', '1 cup')",
+    ),
+  calories: z
+    .number()
+    .min(0)
+    .optional()
+    .describe("Calories for this specific item (optional)"),
+});
+
+export type FoodItem = z.infer<typeof schemaFoodItem>;
+
 export const schemaMealEntryEntity = z.object({
   id: z.string(),
   date: z.iso
@@ -16,6 +36,11 @@ export const schemaMealEntryEntity = z.object({
     .string()
     .describe(
       "Brief description of what the meal contained (e.g., '2 eggs, toast with butter, orange juice')",
+    ),
+  foods: z
+    .array(schemaFoodItem)
+    .describe(
+      "Individual food items in this meal with emoji, name, and quantity for display. Extract each distinct food from the description.",
     ),
   calories: z
     .number()

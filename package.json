@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter express dev\" \"pnpm --filter pwa dev\" \"pnpm --filter express start:aisdk-devtools\""
+    "dev": "concurrently \"pnpm --filter express dev\" \"pnpm --filter pwa dev\" \"pnpm --filter express start:aisdk-devtools\"",
+    "awsdeploy:frontend": "pnpm --filter pwa awsdeploy",
+    "awsdeploy:backend": "pnpm --filter backend awsdeploy",
+    "awsdeploy": "pnpm awsdeploy:backend && pnpm awsdeploy:frontend"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

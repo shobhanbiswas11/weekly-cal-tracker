@@ -12,7 +12,7 @@ import {
   wrapLanguageModel,
   type StreamTextResult,
 } from "ai";
-import { format } from "date-fns";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import { z } from "zod";
 import { APP_CONFIG, inject, injectable, type AppConfig } from "../di";
 import { ToolRegistry } from "../tools";
@@ -52,12 +52,31 @@ export class ChatService {
     const now = new Date();
     const today = format(now, "yyyy-MM-dd");
     const week = format(now, "RRRR-'W'II");
-    return `Nutrition assistant. 
-Today: ${today}. 
-Week: ${week}. 
-Estimate nutrition on the moderately higher side. Mutations require approval. Be concise.
+    // Week boundaries: Monday to Sunday (ISO standard)
+    const weekStart = format(
+      startOfWeek(now, { weekStartsOn: 1 }),
+      "yyyy-MM-dd",
+    );
+    const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
 
-IMPORTANT: When you need user information (weight, goals, maintenance calories, protein/fat/carb targets, activity level, etc.), ALWAYS use the get_profile tool FIRST before asking the user. Only ask follow-up questions if the profile doesn't contain the needed data or doesn't exist.`;
+    return `You are a nutrition tracking assistant.
+
+## Context
+- Today: ${today}
+- Current week: ${week} (Monday ${weekStart} to Sunday ${weekEnd})
+
+## Behavior
+- Be concise. After tool execution or user approval/denial, respond briefly without restating details.
+- Estimate nutrition moderately high when foods are clearly described.
+- If food type or quantity is ambiguous (e.g., "I had some agoites"), ask ONE clarifying question before logging.
+- When user says "what did I eat today/this week", fetch entries first, then summarize.
+
+## Tool Workflows
+- **Delete/Update by name**: First call entries_by_date to find the entry, then use the actual ID.
+- **Profile data**: Only fetch profile when user asks about goals, progress, or before creating a profile. Don't fetch on every request.
+- **Partial updates**: When updating entries, only include fields that need to change.
+
+Mutations require approval.`;
   }
 
   /**
@@ -127,9 +146,19 @@ IMPORTANT: When you need user information (weight, goals, maintenance calories, 
       output: Output.object({
         schema: toolSelectionSchema,
       }),
-      prompt: `Based on the conversation, select which tools the assistant might need. Only select tools that are relevant to what the user is asking for. If the request is general conversation, select no tools.
+      prompt: `Select tools needed for the conversation. If general chat, select none.
 
-IMPORTANT: If the user mentions anything related to their personal data (weight, goals, maintenance calories, macros, protein/fat/carb targets, activity level, fitness info), ALWAYS include get_profile. The assistant should fetch existing profile data before asking the user for information that may already be stored.
+## Intent Examples
+- "what did I eat today/yesterday" → entries_by_date
+- "show this week's meals" → entries_by_calendar_week  
+- "delete the biryani I had" → entries_by_date (to find ID first), delete_meal_entry
+- "I had pizza for lunch" → log_meal
+- "update my weight/goals" → get_profile (if checking existing), update_profile
+- "how am I doing this week" → entries_by_calendar_week, get_profile (for goals context)
+
+## Rules
+- Only include get_profile if user asks about goals/progress or profile-related data
+- For delete/update by meal name, include entries_by_date to lookup first
 
 Available tools:
 ${toolList}

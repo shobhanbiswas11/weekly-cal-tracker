@@ -57,7 +57,8 @@ export const toolDefinitionRegistry = {
   update_meal_entry: defineTool({
     name: "update_meal_entry",
     title: "Update Meal Entry",
-    description: "Update an existing meal entry with new information",
+    description:
+      "Update an existing meal entry. Only include fields that need to change - omit unchanged fields. Requires the entry's ID (use entries_by_date first if you only know the meal name).",
     inputSchema: schemaUpdateMealEntry.extend({ id: z.string() }),
     outputSchema: schemaMealEntryOutput,
     approval: { require: true, confirmLabel: "Update", cancelLabel: "Cancel" },
@@ -66,7 +67,8 @@ export const toolDefinitionRegistry = {
   delete_meal_entry: defineTool({
     name: "delete_meal_entry",
     title: "Delete Meal Entry",
-    description: "Delete a meal entry by its ID",
+    description:
+      "Delete a meal entry by its ID. If user refers to a meal by name (e.g., 'delete the biryani'), first use entries_by_date to find the entry and get its actual ID.",
     inputSchema: schemaIdInput,
     outputSchema: schemaGenericOutput,
     approval: { require: true, confirmLabel: "Delete", cancelLabel: "Cancel" },
@@ -93,7 +95,7 @@ export const toolDefinitionRegistry = {
     name: "entries_by_date",
     title: "Get Entries by Date",
     description:
-      "Retrieve all meal entries for a specific date (e.g., 2026-04-11)",
+      "Retrieve all meal entries for a specific date. Use this when user asks 'what did I eat today' or before deleting/updating a meal by name.",
     inputSchema: schemaDateInput,
     outputSchema: schemaMealEntriesOutput,
   }),
@@ -123,7 +125,8 @@ export const toolDefinitionRegistry = {
   get_profile: defineTool({
     name: "get_profile",
     title: "Get Profile",
-    description: "Retrieve the current user's profile",
+    description:
+      "Retrieve the user's profile. Only use when user specifically asks about their goals, progress, or profile info.",
     inputSchema: z.object({}),
     outputSchema: schemaProfileOutput,
   }),

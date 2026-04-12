@@ -150,6 +150,170 @@ function ToolApprovalCard({
 }
 
 // =============================================================================
+// Log Meal Card Component (custom UI for log_meal)
+// =============================================================================
+
+interface FoodItem {
+  emoji: string;
+  name: string;
+  quantity: string;
+  calories?: number;
+}
+
+interface LogMealArgs {
+  name?: string;
+  description?: string;
+  foods?: FoodItem[];
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+  date?: string;
+}
+
+interface LogMealCardProps {
+  id: string;
+  args: LogMealArgs;
+  status: ApprovalStatus;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function LogMealCard({
+  id,
+  args,
+  status,
+  onConfirm,
+  onCancel,
+}: LogMealCardProps) {
+  const { name, foods, calories, protein, carbs, fats, date } = args;
+
+  // Receipt view for approved/denied
+  if (status !== "pending") {
+    const isApproved = status === "approved";
+    return (
+      <div
+        className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm"
+        data-tool-ui-id={id}
+      >
+        <span
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
+            isApproved ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          {isApproved ? <Check className="size-4" /> : <X className="size-4" />}
+        </span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">
+            {isApproved ? "Logged" : "Cancelled"}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {name || "Meal"}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Interactive approval view with food items
+  return (
+    <article
+      className="flex w-full max-w-md flex-col gap-3 text-foreground"
+      data-tool-ui-id={id}
+    >
+      <div className="flex w-full flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm">
+        {/* Header */}
+        <div className="flex items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Utensils className="size-5" />
+          </span>
+          <div className="flex flex-1 flex-col gap-0.5">
+            <h2 className="text-base font-semibold leading-tight">
+              {name || "Log Meal"}
+            </h2>
+            {date && (
+              <span className="text-xs text-muted-foreground">{date}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Food Items Grid */}
+        {foods && foods.length > 0 && (
+          <>
+            <div className="h-px bg-border" />
+            <div className="grid gap-2">
+              {foods.map((food, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2"
+                >
+                  <span className="text-xl">{food.emoji}</span>
+                  <div className="flex flex-1 flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">
+                      {food.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {food.quantity}
+                    </span>
+                  </div>
+                  {food.calories && (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {food.calories} kcal
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Macro Summary */}
+        <div className="h-px bg-border" />
+        <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold text-primary">
+              {calories ?? 0}
+            </span>
+            <span className="text-xs text-muted-foreground">kcal</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold">{protein ?? 0}g</span>
+            <span className="text-xs text-muted-foreground">protein</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold">{carbs ?? 0}g</span>
+            <span className="text-xs text-muted-foreground">carbs</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold">{fats ?? 0}g</span>
+            <span className="text-xs text-muted-foreground">fat</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Log
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// =============================================================================
 // Simple Tool Fallback (inline - for non-approval tools)
 // =============================================================================
 
@@ -243,8 +407,94 @@ type ToolRenderOverride = Partial<
 
 // Custom render overrides for specific tools (add your customizations here)
 const toolRenderOverrides: ToolRenderOverride = {
-  // Example: Override create_meal_entry with a custom UI
-  // create_meal_entry: ({ toolName, args, result, status }) => { ... }
+  log_meal: function LogMealRender({ toolCallId, args }) {
+    const { sendApprovalResponse } = useToolApproval();
+    const aiSdkState = useToolApprovalState(toolCallId);
+
+    if (!aiSdkState) {
+      return (
+        <ToolUIWrapper>
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <span>
+              Preparing <span className="font-medium">Log Meal</span>...
+            </span>
+          </div>
+        </ToolUIWrapper>
+      );
+    }
+
+    const { state, approvalId } = aiSdkState;
+
+    // Approval requested
+    if (state === "approval-requested" && approvalId) {
+      const handleConfirm = () => {
+        sendApprovalResponse({ id: approvalId, approved: true });
+      };
+      const handleCancel = () => {
+        sendApprovalResponse({
+          id: approvalId,
+          approved: false,
+          reason:
+            "[USER_DECLINED] The user declined to log this meal. Acknowledge and ask if they need anything else.",
+        });
+      };
+
+      return (
+        <ToolUIWrapper>
+          <LogMealCard
+            id={approvalId}
+            args={args as LogMealArgs}
+            status="pending"
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        </ToolUIWrapper>
+      );
+    }
+
+    // Approved
+    if (state === "output-available") {
+      return (
+        <ToolUIWrapper>
+          <LogMealCard
+            id={toolCallId}
+            args={args as LogMealArgs}
+            status="approved"
+            onConfirm={() => {}}
+            onCancel={() => {}}
+          />
+        </ToolUIWrapper>
+      );
+    }
+
+    // Denied
+    if (state === "output-denied") {
+      return (
+        <ToolUIWrapper>
+          <LogMealCard
+            id={toolCallId}
+            args={args as LogMealArgs}
+            status="denied"
+            onConfirm={() => {}}
+            onCancel={() => {}}
+          />
+        </ToolUIWrapper>
+      );
+    }
+
+    // Loading state
+    return (
+      <ToolUIWrapper>
+        <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <span>
+            Preparing <span className="font-medium">Log Meal</span>...
+          </span>
+        </div>
+      </ToolUIWrapper>
+    );
+  },
 };
 
 function makeDefaultToolRender(
