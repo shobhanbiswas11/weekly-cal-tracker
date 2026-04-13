@@ -154,7 +154,8 @@ Mutations require approval.`;
 - "delete the biryani I had" → entries_by_date (to find ID first), delete_meal_entry
 - "I had pizza for lunch" → log_meal
 - "update my weight/goals" → get_profile (if checking existing), update_profile
-- "how am I doing this week" → entries_by_calendar_week, get_profile (for goals context)
+- "How much calorie left for today?" → entries_by_date (to get today's entries), get_profile (to get calorie goal)
+- "how am I doing this week" → entries_by_calendar_week, get_profile (for goals context),
 
 ## Rules
 - Only include get_profile if user asks about goals/progress or profile-related data

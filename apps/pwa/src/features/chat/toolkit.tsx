@@ -4,6 +4,8 @@ import { type Toolkit } from "@assistant-ui/react";
 import {
   toolDefinitionRegistry,
   type ToolDefinition as CoreToolDefinition,
+  type FoodItem,
+  type LogMealInput,
   type ToolName,
 } from "@weekly-cal/core";
 import {
@@ -153,27 +155,85 @@ function ToolApprovalCard({
 // Log Meal Card Component (custom UI for log_meal)
 // =============================================================================
 
-interface FoodItem {
+interface GroupedFood {
   emoji: string;
   name: string;
-  quantity: string;
-  calories?: number;
+  quantities: string[];
+  count: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
 }
 
-interface LogMealArgs {
-  name?: string;
-  description?: string;
-  foods?: FoodItem[];
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  date?: string;
+/** Group foods by name, aggregate macros, and track quantities */
+function groupFoods(foods: FoodItem[]): GroupedFood[] {
+  const grouped = new Map<string, GroupedFood>();
+
+  for (const food of foods) {
+    const key = food.name.toLowerCase();
+    const existing = grouped.get(key);
+
+    if (existing) {
+      existing.count += 1;
+      existing.quantities.push(food.quantity);
+      existing.calories += food.calories;
+      existing.protein += food.protein;
+      existing.carbs += food.carbs;
+      existing.fats += food.fats;
+      existing.fiber += food.fiber ?? 0;
+      existing.sugar += food.sugar ?? 0;
+      existing.sodium += food.sodium ?? 0;
+    } else {
+      grouped.set(key, {
+        emoji: food.emoji,
+        name: food.name,
+        quantities: [food.quantity],
+        count: 1,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fats: food.fats,
+        fiber: food.fiber ?? 0,
+        sugar: food.sugar ?? 0,
+        sodium: food.sodium ?? 0,
+      });
+    }
+  }
+
+  return Array.from(grouped.values());
+}
+
+/** Calculate totals from foods array */
+function calculateTotals(foods: FoodItem[]) {
+  return foods.reduce(
+    (acc, food) => ({
+      calories: acc.calories + food.calories,
+      protein: acc.protein + food.protein,
+      carbs: acc.carbs + food.carbs,
+      fats: acc.fats + food.fats,
+      fiber: acc.fiber + (food.fiber ?? 0),
+      sugar: acc.sugar + (food.sugar ?? 0),
+      sodium: acc.sodium + (food.sodium ?? 0),
+    }),
+    {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+    },
+  );
 }
 
 interface LogMealCardProps {
   id: string;
-  args: LogMealArgs;
+  args: LogMealInput;
   status: ApprovalStatus;
   onConfirm: () => void;
   onCancel: () => void;
@@ -186,7 +246,9 @@ function LogMealCard({
   onConfirm,
   onCancel,
 }: LogMealCardProps) {
-  const { name, foods, calories, protein, carbs, fats, date } = args;
+  const { name, foodItems = [], date, note } = args;
+  const groupedFoods = groupFoods(foodItems);
+  const totals = calculateTotals(foodItems);
 
   // Receipt view for approved/denied
   if (status !== "pending") {
@@ -209,7 +271,7 @@ function LogMealCard({
             {isApproved ? "Logged" : "Cancelled"}
           </span>
           <span className="text-sm text-muted-foreground">
-            {name || "Meal"}
+            {name || "Meal"} — {totals.calories} kcal
           </span>
         </div>
       </div>
@@ -238,58 +300,155 @@ function LogMealCard({
           </div>
         </div>
 
-        {/* Food Items Grid */}
-        {foods && foods.length > 0 && (
+        {/* Food Items */}
+        {groupedFoods.length > 0 && (
           <>
             <div className="h-px bg-border" />
-            <div className="grid gap-2">
-              {foods.map((food, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2"
-                >
-                  <span className="text-xl">{food.emoji}</span>
-                  <div className="flex flex-1 flex-col min-w-0">
-                    <span className="text-sm font-medium truncate">
-                      {food.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {food.quantity}
-                    </span>
+            <div className="space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Items
+              </span>
+              <div className="space-y-2">
+                {groupedFoods.map((food, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border bg-muted/30 p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{food.emoji}</span>
+                      <span className="flex-1 text-sm font-medium">
+                        {food.name}
+                      </span>
+                      {food.count > 1 && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                          ×{food.count}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {food.quantities.join(", ")}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                      <span>
+                        <span className="font-medium">{food.calories}</span>{" "}
+                        <span className="text-muted-foreground">kcal</span>
+                      </span>
+                      <span className="text-muted-foreground">•</span>
+                      <span>
+                        <span className="font-medium">{food.protein}g</span>{" "}
+                        <span className="text-muted-foreground">P</span>
+                      </span>
+                      <span className="text-muted-foreground">•</span>
+                      <span>
+                        <span className="font-medium">{food.carbs}g</span>{" "}
+                        <span className="text-muted-foreground">C</span>
+                      </span>
+                      <span className="text-muted-foreground">•</span>
+                      <span>
+                        <span className="font-medium">{food.fats}g</span>{" "}
+                        <span className="text-muted-foreground">F</span>
+                      </span>
+                      {food.fiber > 0 && (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <span>
+                            <span className="font-medium">{food.fiber}g</span>{" "}
+                            <span className="text-muted-foreground">fiber</span>
+                          </span>
+                        </>
+                      )}
+                      {food.sugar > 0 && (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <span>
+                            <span className="font-medium">{food.sugar}g</span>{" "}
+                            <span className="text-muted-foreground">sugar</span>
+                          </span>
+                        </>
+                      )}
+                      {food.sodium > 0 && (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <span>
+                            <span className="font-medium">{food.sodium}mg</span>{" "}
+                            <span className="text-muted-foreground">Na</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  {food.calories && (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {food.calories} kcal
-                    </span>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </>
         )}
 
-        {/* Macro Summary */}
+        {/* Total Macros */}
         <div className="h-px bg-border" />
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold text-primary">
-              {calories ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">kcal</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold">{protein ?? 0}g</span>
-            <span className="text-xs text-muted-foreground">protein</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold">{carbs ?? 0}g</span>
-            <span className="text-xs text-muted-foreground">carbs</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold">{fats ?? 0}g</span>
-            <span className="text-xs text-muted-foreground">fat</span>
+        <div className="space-y-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Total
+          </span>
+          <div className="rounded-lg bg-primary/5 p-3">
+            {/* Main macros row */}
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-primary">
+                  {totals.calories}
+                </span>
+                <span className="text-xs text-muted-foreground">kcal</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold">{totals.protein}g</span>
+                <span className="text-xs text-muted-foreground">protein</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold">{totals.carbs}g</span>
+                <span className="text-xs text-muted-foreground">carbs</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold">{totals.fats}g</span>
+                <span className="text-xs text-muted-foreground">fat</span>
+              </div>
+            </div>
+            {/* Minor macros row */}
+            {(totals.fiber > 0 || totals.sugar > 0 || totals.sodium > 0) && (
+              <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border/50 pt-3 text-sm">
+                {totals.fiber > 0 && (
+                  <span>
+                    <span className="font-medium">{totals.fiber}g</span>{" "}
+                    <span className="text-muted-foreground">fiber</span>
+                  </span>
+                )}
+                {totals.sugar > 0 && (
+                  <span>
+                    <span className="font-medium">{totals.sugar}g</span>{" "}
+                    <span className="text-muted-foreground">sugar</span>
+                  </span>
+                )}
+                {totals.sodium > 0 && (
+                  <span>
+                    <span className="font-medium">{totals.sodium}mg</span>{" "}
+                    <span className="text-muted-foreground">sodium</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Note */}
+        {note && (
+          <>
+            <div className="h-px bg-border" />
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Note
+              </span>
+              <p className="text-sm text-foreground/80 italic">{note}</p>
+            </div>
+          </>
+        )}
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 pt-1">
@@ -444,7 +603,7 @@ const toolRenderOverrides: ToolRenderOverride = {
         <ToolUIWrapper>
           <LogMealCard
             id={approvalId}
-            args={args as LogMealArgs}
+            args={args as LogMealInput}
             status="pending"
             onConfirm={handleConfirm}
             onCancel={handleCancel}
@@ -459,7 +618,7 @@ const toolRenderOverrides: ToolRenderOverride = {
         <ToolUIWrapper>
           <LogMealCard
             id={toolCallId}
-            args={args as LogMealArgs}
+            args={args as LogMealInput}
             status="approved"
             onConfirm={() => {}}
             onCancel={() => {}}
@@ -468,13 +627,13 @@ const toolRenderOverrides: ToolRenderOverride = {
       );
     }
 
-    // Denied
-    if (state === "output-denied") {
+    // Denied or Error (user cancelled or tool failed)
+    if (state === "output-denied" || state === "output-error") {
       return (
         <ToolUIWrapper>
           <LogMealCard
             id={toolCallId}
-            args={args as LogMealArgs}
+            args={args as LogMealInput}
             status="denied"
             onConfirm={() => {}}
             onCancel={() => {}}
@@ -483,7 +642,21 @@ const toolRenderOverrides: ToolRenderOverride = {
       );
     }
 
-    // Loading state
+    // Input streaming/available - show loading
+    if (state === "input-streaming" || state === "input-available") {
+      return (
+        <ToolUIWrapper>
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <span>
+              Preparing <span className="font-medium">Log Meal</span>...
+            </span>
+          </div>
+        </ToolUIWrapper>
+      );
+    }
+
+    // Fallback loading state (should not normally reach here)
     return (
       <ToolUIWrapper>
         <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">

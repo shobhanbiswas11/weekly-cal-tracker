@@ -17,3 +17,5 @@ export * from "./summaries";
 
 // Goals (user configuration)
 export * from "./goals";
+
+export * from "./food-item";

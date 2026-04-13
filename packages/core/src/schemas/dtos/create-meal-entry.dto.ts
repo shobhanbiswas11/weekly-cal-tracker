@@ -1,6 +1,7 @@
 import z from "zod";
 import { schemaMealEntryEntity } from "../entities/meal-entry.entity";
 
+// Tool input schema for log_meal (AI passes this)
 export const schemaCreateMealEntry = schemaMealEntryEntity.omit({
   id: true,
   createdAt: true,

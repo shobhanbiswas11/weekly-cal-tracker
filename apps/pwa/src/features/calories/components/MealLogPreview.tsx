@@ -72,10 +72,22 @@ export function MealLogPreview({
     },
   });
 
+  // Generate note from items and optional user note
+  const generateNote = () => {
+    const itemDescriptions = meal.items
+      .map(
+        (item) =>
+          `${item.name} (${item.quantity > 1 ? `${item.quantity}x` : "1 serving"})`,
+      )
+      .join(", ");
+    const parts = [itemDescriptions];
+    if (meal.note) parts.push(meal.note);
+    return parts.join("\n\n");
+  };
+
   const handleConfirm = () => {
     mutation.mutate({
       name: meal.name,
-      description: meal.description,
       calories: meal.calories,
       protein: meal.protein,
       carbs: meal.carbs,
@@ -84,13 +96,7 @@ export function MealLogPreview({
       sugar: meal.sugar ?? null,
       sodium: meal.sodium ?? null,
       date: meal.date ?? getToday(),
-      note: meal.note ?? null,
-      foods: meal.items.map((item) => ({
-        emoji: "🍽️",
-        name: item.name,
-        quantity: item.quantity > 1 ? `${item.quantity}x` : "1 serving",
-        calories: item.calories,
-      })),
+      note: generateNote(),
     });
   };
 

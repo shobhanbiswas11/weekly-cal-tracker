@@ -1,6 +1,8 @@
 import {
   toolDefinitionRegistry,
   ToolExecutorRegistry,
+  type FoodItem,
+  type LogMealInput,
   type ToolDefinition,
   type ToolName,
 } from "@weekly-cal/core";
@@ -24,6 +26,40 @@ function getWeekDateRange(weekStr: string): {
     endDate: format(endOfISOWeek(date), "yyyy-MM-dd"),
   };
 }
+
+/** Calculate total macros from food items */
+function calculateTotals(foods: FoodItem[]) {
+  return foods.reduce(
+    (acc, food) => ({
+      calories: acc.calories + food.calories,
+      protein: acc.protein + food.protein,
+      carbs: acc.carbs + food.carbs,
+      fats: acc.fats + food.fats,
+      fiber: food.fiber != null ? (acc.fiber ?? 0) + food.fiber : acc.fiber,
+      sugar: food.sugar != null ? (acc.sugar ?? 0) + food.sugar : acc.sugar,
+      sodium:
+        food.sodium != null ? (acc.sodium ?? 0) + food.sodium : acc.sodium,
+    }),
+    {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: null as number | null,
+      sugar: null as number | null,
+      sodium: null as number | null,
+    },
+  );
+}
+
+/** Generate note from food items and optional user note */
+function generateNote(foods: FoodItem[], userNote?: string | null): string {
+  const foodDescriptions = foods
+    .map((f) => `${f.emoji} ${f.name} (${f.quantity})`)
+    .join(", ");
+  return userNote ? `${foodDescriptions}\n\n${userNote}` : foodDescriptions;
+}
+
 @injectable()
 export class ToolRegistry {
   constructor(
@@ -38,8 +74,19 @@ export class ToolRegistry {
       // -----------------------------------------------------------------------
       // Meal Entry Tools
       // -----------------------------------------------------------------------
-      log_meal: async (input) => {
-        const entry = await this.mealEntryRepo.create(userId, input);
+      log_meal: async (input: LogMealInput) => {
+        const { name, foodItems, date, note: userNote } = input;
+        const totals = calculateTotals(foodItems);
+        const note = generateNote(foodItems, userNote);
+
+        const entryData = {
+          date: date ?? format(new Date(), "yyyy-MM-dd"),
+          name,
+          ...totals,
+          note,
+        };
+
+        const entry = await this.mealEntryRepo.create(userId, entryData);
         return {
           success: true,
           message: `Logged ${entry.name} (${entry.calories} kcal)`,

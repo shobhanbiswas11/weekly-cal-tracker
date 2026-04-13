@@ -2,6 +2,7 @@ import z from "zod";
 import {
   schemaCreateMealEntry,
   schemaCreateProfile,
+  schemaFoodItem,
   schemaMealEntryEntity,
   schemaProfileEntity,
   schemaUpdateMealEntry,
@@ -22,6 +23,12 @@ export const schemaDateInput = z.object({
 export const schemaCalendarWeekInput = z.object({
   week: z.string().describe("Calendar week in ISO format (e.g., 2026-W15)"),
 });
+
+export const schemaLogMealInput = z.object({
+  foodItems: z.array(schemaFoodItem),
+  ...schemaCreateMealEntry.pick({ date: true, name: true, note: true }).shape,
+});
+export type LogMealInput = z.infer<typeof schemaLogMealInput>;
 
 // Common output schemas
 export const schemaGenericOutput = z.object({
@@ -48,8 +55,9 @@ export const toolDefinitionRegistry = {
   log_meal: defineTool({
     name: "log_meal",
     title: "Log Meal",
-    description: "Log a meal with its nutritional information",
-    inputSchema: schemaCreateMealEntry,
+    description:
+      "Log a meal with food items and nutritional information. tool will add-up calories and macros based on the food items provided.",
+    inputSchema: schemaLogMealInput,
     outputSchema: schemaMealEntryOutput,
     approval: { require: true, confirmLabel: "Log", cancelLabel: "Cancel" },
   }),
