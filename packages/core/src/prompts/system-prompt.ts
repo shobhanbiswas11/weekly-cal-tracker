@@ -1,5 +1,5 @@
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import { MealEntry, Profile } from "../schemas";
+import type { MealEntry, Profile } from "../schemas";
 
 export interface SystemPromptProps {
   userProfile?: Partial<Profile>;
