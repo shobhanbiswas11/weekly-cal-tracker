@@ -1,870 +1,476 @@
+import { deleteEntry, updateEntry, updateProfile } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { type Toolkit } from "@assistant-ui/react";
-import {
-  toolDefinitionRegistry,
-  type ToolDefinition as CoreToolDefinition,
-  type FoodItem,
-  type LogMealInput,
-  type ToolName,
-} from "@weekly-cal/core";
+import type { ToolDefinition } from "@assistant-ui/react";
+import { toolDefinitionRegistry, type ToolName } from "@weekly-cal/core";
 import {
   AlertCircle,
   Check,
   Edit,
   Loader2,
-  Plus,
   Search,
   Trash2,
   User,
   Utensils,
   X,
 } from "lucide-react";
-import { useToolApproval, useToolApprovalState } from "./tool-approval";
+import type { ReactNode } from "react";
+import type z from "zod";
+import { MealPreview } from "../calories";
 
 // =============================================================================
-// Approval Card Component (inline)
+// Types
 // =============================================================================
 
-type ApprovalStatus = "pending" | "approved" | "denied";
+type ModifyEntityInput = z.infer<
+  (typeof toolDefinitionRegistry)["modify_entity"]["inputSchema"]
+>;
 
-interface ToolApprovalCardProps {
-  id: string;
-  title: string;
-  description?: string;
-  icon?: React.ReactNode;
-  variant?: "default" | "destructive";
-  confirmLabel?: string;
-  cancelLabel?: string;
-  status: ApprovalStatus;
-  onConfirm: () => void;
-  onCancel: () => void;
-  metadata?: Array<{ key: string; value: string }>;
+// =============================================================================
+// Helper Components
+// =============================================================================
+
+function ToolUIWrapper({ children }: { children: ReactNode }) {
+  return <div className="my-3">{children}</div>;
 }
 
-function ToolApprovalCard({
-  id,
-  title,
-  description,
+function LoadingState({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
+      <Loader2 className="size-4 animate-spin text-muted-foreground" />
+      <span>{title}...</span>
+    </div>
+  );
+}
+
+function ReceiptCard({
   icon,
-  variant = "default",
-  confirmLabel = "Approve",
-  cancelLabel = "Deny",
-  status,
-  onConfirm,
-  onCancel,
-  metadata,
-}: ToolApprovalCardProps) {
-  const isDestructive = variant === "destructive";
-
-  // Receipt view for approved/denied
-  if (status !== "pending") {
-    const isApproved = status === "approved";
-    return (
-      <div
-        className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm"
-        data-tool-ui-id={id}
-      >
-        <span
-          className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
-            isApproved ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {isApproved ? <Check className="size-4" /> : <X className="size-4" />}
-        </span>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">
-            {isApproved ? "Approved" : "Denied"}
-          </span>
-          <span className="text-sm text-muted-foreground">{title}</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Interactive approval view
-  return (
-    <article
-      className="flex w-full max-w-md flex-col gap-3 text-foreground"
-      data-tool-ui-id={id}
-    >
-      <div className="flex w-full flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          {icon && (
-            <span
-              className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                isDestructive
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-primary/10 text-primary",
-              )}
-            >
-              {icon}
-            </span>
-          )}
-          <div className="flex flex-1 flex-col gap-1">
-            <h2 className="text-base font-semibold leading-tight">{title}</h2>
-            {description && (
-              <p className="text-sm text-muted-foreground">{description}</p>
-            )}
-          </div>
-        </div>
-
-        {metadata && metadata.length > 0 && (
-          <>
-            <div className="h-px bg-border" />
-            <dl className="flex flex-col gap-2 text-sm">
-              {metadata.map((item, index) => (
-                <div key={index} className="flex justify-between gap-4">
-                  <dt className="shrink-0 text-muted-foreground">{item.key}</dt>
-                  <dd className="min-w-0 truncate">{item.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </>
-        )}
-
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className={cn(
-              "inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-primary-foreground transition-colors",
-              isDestructive
-                ? "bg-destructive hover:bg-destructive/90"
-                : "bg-primary hover:bg-primary/90",
-            )}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-// =============================================================================
-// Log Meal Card Component (custom UI for log_meal)
-// =============================================================================
-
-interface GroupedFood {
-  emoji: string;
-  name: string;
-  quantities: string[];
-  count: number;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-}
-
-/** Group foods by name, aggregate macros, and track quantities */
-function groupFoods(foods: FoodItem[]): GroupedFood[] {
-  const grouped = new Map<string, GroupedFood>();
-
-  for (const food of foods) {
-    const key = food.name.toLowerCase();
-    const existing = grouped.get(key);
-
-    if (existing) {
-      existing.count += 1;
-      existing.quantities.push(food.quantity);
-      existing.calories += food.calories;
-      existing.protein += food.protein;
-      existing.carbs += food.carbs;
-      existing.fats += food.fats;
-      existing.fiber += food.fiber ?? 0;
-      existing.sugar += food.sugar ?? 0;
-      existing.sodium += food.sodium ?? 0;
-    } else {
-      grouped.set(key, {
-        emoji: food.emoji,
-        name: food.name,
-        quantities: [food.quantity],
-        count: 1,
-        calories: food.calories,
-        protein: food.protein,
-        carbs: food.carbs,
-        fats: food.fats,
-        fiber: food.fiber ?? 0,
-        sugar: food.sugar ?? 0,
-        sodium: food.sodium ?? 0,
-      });
-    }
-  }
-
-  return Array.from(grouped.values());
-}
-
-/** Calculate totals from foods array */
-function calculateTotals(foods: FoodItem[]) {
-  return foods.reduce(
-    (acc, food) => ({
-      calories: acc.calories + food.calories,
-      protein: acc.protein + food.protein,
-      carbs: acc.carbs + food.carbs,
-      fats: acc.fats + food.fats,
-      fiber: acc.fiber + (food.fiber ?? 0),
-      sugar: acc.sugar + (food.sugar ?? 0),
-      sodium: acc.sodium + (food.sodium ?? 0),
-    }),
-    {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      fiber: 0,
-      sugar: 0,
-      sodium: 0,
-    },
-  );
-}
-
-interface LogMealCardProps {
-  id: string;
-  args: LogMealInput;
-  status: ApprovalStatus;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-
-function LogMealCard({
-  id,
-  args,
-  status,
-  onConfirm,
-  onCancel,
-}: LogMealCardProps) {
-  const { name, foodItems = [], date, note } = args;
-  const groupedFoods = groupFoods(foodItems);
-  const totals = calculateTotals(foodItems);
-
-  // Receipt view for approved/denied
-  if (status !== "pending") {
-    const isApproved = status === "approved";
-    return (
-      <div
-        className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm"
-        data-tool-ui-id={id}
-      >
-        <span
-          className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
-            isApproved ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {isApproved ? <Check className="size-4" /> : <X className="size-4" />}
-        </span>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">
-            {isApproved ? "Logged" : "Cancelled"}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {name || "Meal"} — {totals.calories} kcal
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Interactive approval view with food items
-  return (
-    <article
-      className="flex w-full max-w-md flex-col gap-3 text-foreground"
-      data-tool-ui-id={id}
-    >
-      <div className="flex w-full flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm">
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Utensils className="size-5" />
-          </span>
-          <div className="flex flex-1 flex-col gap-0.5">
-            <h2 className="text-base font-semibold leading-tight">
-              {name || "Log Meal"}
-            </h2>
-            {date && (
-              <span className="text-xs text-muted-foreground">{date}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Food Items */}
-        {groupedFoods.length > 0 && (
-          <>
-            <div className="h-px bg-border" />
-            <div className="space-y-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Items
-              </span>
-              <div className="space-y-2">
-                {groupedFoods.map((food, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border bg-muted/30 p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{food.emoji}</span>
-                      <span className="flex-1 text-sm font-medium">
-                        {food.name}
-                      </span>
-                      {food.count > 1 && (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                          ×{food.count}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {food.quantities.join(", ")}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                      <span>
-                        <span className="font-medium">{food.calories}</span>{" "}
-                        <span className="text-muted-foreground">kcal</span>
-                      </span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>
-                        <span className="font-medium">{food.protein}g</span>{" "}
-                        <span className="text-muted-foreground">P</span>
-                      </span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>
-                        <span className="font-medium">{food.carbs}g</span>{" "}
-                        <span className="text-muted-foreground">C</span>
-                      </span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>
-                        <span className="font-medium">{food.fats}g</span>{" "}
-                        <span className="text-muted-foreground">F</span>
-                      </span>
-                      {food.fiber > 0 && (
-                        <>
-                          <span className="text-muted-foreground">•</span>
-                          <span>
-                            <span className="font-medium">{food.fiber}g</span>{" "}
-                            <span className="text-muted-foreground">fiber</span>
-                          </span>
-                        </>
-                      )}
-                      {food.sugar > 0 && (
-                        <>
-                          <span className="text-muted-foreground">•</span>
-                          <span>
-                            <span className="font-medium">{food.sugar}g</span>{" "}
-                            <span className="text-muted-foreground">sugar</span>
-                          </span>
-                        </>
-                      )}
-                      {food.sodium > 0 && (
-                        <>
-                          <span className="text-muted-foreground">•</span>
-                          <span>
-                            <span className="font-medium">{food.sodium}mg</span>{" "}
-                            <span className="text-muted-foreground">Na</span>
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Total Macros */}
-        <div className="h-px bg-border" />
-        <div className="space-y-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Total
-          </span>
-          <div className="rounded-lg bg-primary/5 p-3">
-            {/* Main macros row */}
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="flex flex-col">
-                <span className="text-lg font-bold text-primary">
-                  {totals.calories}
-                </span>
-                <span className="text-xs text-muted-foreground">kcal</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold">{totals.protein}g</span>
-                <span className="text-xs text-muted-foreground">protein</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold">{totals.carbs}g</span>
-                <span className="text-xs text-muted-foreground">carbs</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold">{totals.fats}g</span>
-                <span className="text-xs text-muted-foreground">fat</span>
-              </div>
-            </div>
-            {/* Minor macros row */}
-            {(totals.fiber > 0 || totals.sugar > 0 || totals.sodium > 0) && (
-              <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border/50 pt-3 text-sm">
-                {totals.fiber > 0 && (
-                  <span>
-                    <span className="font-medium">{totals.fiber}g</span>{" "}
-                    <span className="text-muted-foreground">fiber</span>
-                  </span>
-                )}
-                {totals.sugar > 0 && (
-                  <span>
-                    <span className="font-medium">{totals.sugar}g</span>{" "}
-                    <span className="text-muted-foreground">sugar</span>
-                  </span>
-                )}
-                {totals.sodium > 0 && (
-                  <span>
-                    <span className="font-medium">{totals.sodium}mg</span>{" "}
-                    <span className="text-muted-foreground">sodium</span>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Note */}
-        {note && (
-          <>
-            <div className="h-px bg-border" />
-            <div className="space-y-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Note
-              </span>
-              <p className="text-sm text-foreground/80 italic">{note}</p>
-            </div>
-          </>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Log
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-// =============================================================================
-// Simple Tool Fallback (inline - for non-approval tools)
-// =============================================================================
-
-interface SimpleToolFallbackProps {
+  title,
+  subtitle,
+  variant = "success",
+}: {
+  icon?: ReactNode;
   title: string;
-  argsText?: string;
-  result?: unknown;
-  isComplete?: boolean;
-}
+  subtitle?: string;
+  variant?: "success" | "error" | "cancelled";
+}) {
+  const variantStyles = {
+    success: "text-primary",
+    error: "text-destructive",
+    cancelled: "text-muted-foreground",
+  };
 
-function SimpleToolFallback({ title, isComplete }: SimpleToolFallbackProps) {
-  if (!isComplete) {
-    return (
-      <span className="text-sm text-muted-foreground">
-        Tool called: {title}
-      </span>
-    );
-  }
+  const variantIcons = {
+    success: <Check className="size-4" />,
+    error: <AlertCircle className="size-4" />,
+    cancelled: <X className="size-4" />,
+  };
 
   return (
     <div className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Check className="size-4" />
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
+          variantStyles[variant],
+        )}
+      >
+        {icon ?? variantIcons[variant]}
       </span>
       <div className="flex flex-col">
-        <span className="text-sm font-medium">Completed</span>
-        <span className="text-sm text-muted-foreground">{title}</span>
+        <span className="text-sm font-medium">{title}</span>
+        {subtitle && (
+          <span className="text-sm text-muted-foreground">{subtitle}</span>
+        )}
       </div>
     </div>
   );
 }
 
 // =============================================================================
-// Tool UI Wrapper (adds spacing)
+// Meal Preview Helpers
 // =============================================================================
 
-function ToolUIWrapper({ children }: { children: React.ReactNode }) {
-  return <div className="my-3">{children}</div>;
-}
-
 // =============================================================================
-// Tool Icon Mapping
+// Preview Meal Tool (Human tool - requires user confirmation)
+// Uses type: "human" with addResult for confirmation flow
 // =============================================================================
 
-const toolIcons: Record<ToolName, React.ReactNode> = {
-  // Meal Entry Tools
-  log_meal: <Utensils className="size-5" />,
-  update_meal_entry: <Edit className="size-5" />,
-  delete_meal_entry: <Trash2 className="size-5" />,
-  get_meal_entry: <Search className="size-5" />,
-  entries_by_calendar_week: <Search className="size-5" />,
-  entries_by_date: <Search className="size-5" />,
-  // Profile Tools
-  create_profile: <Plus className="size-5" />,
-  update_profile: <Edit className="size-5" />,
-  get_profile: <User className="size-5" />,
-  delete_profile: <Trash2 className="size-5" />,
-};
-
 // =============================================================================
-// Get variant based on tool name
+// Modify Entity Tool (Human tool - requires user confirmation)
+// Uses type: "human" with addResult for confirmation flow
 // =============================================================================
 
-function getToolVariant(toolName: ToolName): "default" | "destructive" {
-  if (toolName.startsWith("delete_")) return "destructive";
-  return "default";
-}
+const modifyEntityTool = {
+  type: "human" as const,
+  description: toolDefinitionRegistry.modify_entity.description,
+  parameters: toolDefinitionRegistry.modify_entity.inputSchema,
+  render: ({
+    args,
+    result,
+    status,
+    addResult,
+  }: {
+    args: ModifyEntityInput;
+    result?: { success: boolean; message: string };
+    status: {
+      readonly type: "running" | "complete" | "incomplete" | "requires-action";
+      readonly reason?: string;
+    };
+    addResult: (result: { success: boolean; message: string }) => void;
+  }) => {
+    const { entity, action, id, data } = args;
 
-// =============================================================================
-// Format args as metadata for approval card
-// =============================================================================
+    const getEntityIcon = () => {
+      switch (entity) {
+        case "meal":
+          return <Utensils className="size-5" />;
+        case "profile":
+          return <User className="size-5" />;
+        default:
+          return <Edit className="size-5" />;
+      }
+    };
 
-function formatArgsAsMetadata(
-  args: Record<string, unknown>,
-): Array<{ key: string; value: string }> {
-  return Object.entries(args)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => ({
-      key: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-      value: typeof value === "object" ? JSON.stringify(value) : String(value),
-    }));
-}
+    const getActionIcon = () => {
+      switch (action) {
+        case "delete":
+          return <Trash2 className="size-4" />;
+        case "update":
+          return <Edit className="size-4" />;
+        default:
+          return <Edit className="size-4" />;
+      }
+    };
 
-// =============================================================================
-// Make Tool Render Component
-// =============================================================================
+    const getTitle = () => {
+      const entityName = entity.charAt(0).toUpperCase() + entity.slice(1);
+      const actionName = action.charAt(0).toUpperCase() + action.slice(1);
+      return `${actionName} ${entityName}`;
+    };
 
-type ToolRenderOverride = Partial<
-  Record<ToolName, ToolCallMessagePartComponent>
->;
+    const isDestructive = action === "delete";
 
-// Custom render overrides for specific tools (add your customizations here)
-const toolRenderOverrides: ToolRenderOverride = {
-  log_meal: function LogMealRender({ toolCallId, args }) {
-    const { sendApprovalResponse } = useToolApproval();
-    const aiSdkState = useToolApprovalState(toolCallId);
-
-    if (!aiSdkState) {
+    // Show receipt after completion
+    if (result || status.type === "complete") {
+      const isSuccess = result?.success ?? true;
       return (
         <ToolUIWrapper>
-          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            <span>
-              Preparing <span className="font-medium">Log Meal</span>...
-            </span>
-          </div>
+          <ReceiptCard
+            icon={getActionIcon()}
+            title={isSuccess ? getTitle() : "Cancelled"}
+            subtitle={
+              result?.message ??
+              (isSuccess ? "Completed" : "Operation cancelled")
+            }
+            variant={isSuccess ? "success" : "cancelled"}
+          />
         </ToolUIWrapper>
       );
     }
 
-    const { state, approvalId } = aiSdkState;
+    // Show error state
+    if (status.type === "incomplete" && status.reason === "error") {
+      return (
+        <ToolUIWrapper>
+          <ReceiptCard
+            icon={<AlertCircle className="size-4" />}
+            title="Error"
+            subtitle="Operation failed"
+            variant="error"
+          />
+        </ToolUIWrapper>
+      );
+    }
 
-    // Approval requested
-    if (state === "approval-requested" && approvalId) {
-      const handleConfirm = () => {
-        sendApprovalResponse({ id: approvalId, approved: true });
-      };
-      const handleCancel = () => {
-        sendApprovalResponse({
-          id: approvalId,
-          approved: false,
-          reason:
-            "[USER_DECLINED] The user declined to log this meal. Acknowledge and ask if they need anything else.",
+    // Show loading during API call
+    if (status.type === "running") {
+      return (
+        <ToolUIWrapper>
+          <LoadingState title={getTitle()} />
+        </ToolUIWrapper>
+      );
+    }
+
+    // Handle confirm - call appropriate API
+    const handleConfirm = async () => {
+      try {
+        if (entity === "meal") {
+          if (!id) {
+            addResult({ success: false, message: "Meal ID is required" });
+            return;
+          }
+          const date = (data as { date?: string })?.date;
+          if (!date) {
+            addResult({
+              success: false,
+              message: "Date is required for meal operations",
+            });
+            return;
+          }
+
+          if (action === "delete") {
+            await deleteEntry(date, id);
+            addResult({ success: true, message: "Meal deleted successfully" });
+          } else if (action === "update" && data) {
+            await updateEntry(date, id, data);
+            addResult({ success: true, message: "Meal updated successfully" });
+          }
+        } else if (entity === "profile") {
+          if (action === "update" && data) {
+            await updateProfile(data);
+            addResult({
+              success: true,
+              message: "Profile updated successfully",
+            });
+          } else if (action === "delete") {
+            addResult({
+              success: false,
+              message: "Profile deletion is not supported",
+            });
+          }
+        }
+      } catch (error) {
+        addResult({
+          success: false,
+          message: error instanceof Error ? error.message : "Operation failed",
         });
-      };
+      }
+    };
 
-      return (
-        <ToolUIWrapper>
-          <LogMealCard
-            id={approvalId}
-            args={args as LogMealInput}
-            status="pending"
-            onConfirm={handleConfirm}
-            onCancel={handleCancel}
-          />
-        </ToolUIWrapper>
-      );
-    }
+    // Handle cancel
+    const handleCancel = () => {
+      addResult({ success: false, message: "User cancelled" });
+    };
 
-    // Approved
-    if (state === "output-available") {
-      return (
-        <ToolUIWrapper>
-          <LogMealCard
-            id={toolCallId}
-            args={args as LogMealInput}
-            status="approved"
-            onConfirm={() => {}}
-            onCancel={() => {}}
-          />
-        </ToolUIWrapper>
-      );
-    }
+    // Format data for display
+    const formatData = (data: Record<string, unknown> | null) => {
+      if (!data) return [];
+      return Object.entries(data)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => ({
+          key: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          value:
+            typeof value === "object" ? JSON.stringify(value) : String(value),
+        }));
+    };
 
-    // Denied or Error (user cancelled or tool failed)
-    if (state === "output-denied" || state === "output-error") {
-      return (
-        <ToolUIWrapper>
-          <LogMealCard
-            id={toolCallId}
-            args={args as LogMealInput}
-            status="denied"
-            onConfirm={() => {}}
-            onCancel={() => {}}
-          />
-        </ToolUIWrapper>
-      );
-    }
+    const metadata = formatData(data);
 
-    // Input streaming/available - show loading
-    if (state === "input-streaming" || state === "input-available") {
-      return (
-        <ToolUIWrapper>
-          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            <span>
-              Preparing <span className="font-medium">Log Meal</span>...
-            </span>
-          </div>
-        </ToolUIWrapper>
-      );
-    }
-
-    // Fallback loading state (should not normally reach here)
+    // Interactive view
     return (
       <ToolUIWrapper>
-        <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-          <span>
-            Preparing <span className="font-medium">Log Meal</span>...
-          </span>
-        </div>
+        <article className="flex w-full max-w-md flex-col gap-3 text-foreground">
+          <div
+            className={cn(
+              "flex w-full flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm",
+              isDestructive && "border-destructive/30",
+            )}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <span
+                className={cn(
+                  "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                  isDestructive
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-primary/10 text-primary",
+                )}
+              >
+                {getEntityIcon()}
+              </span>
+              <div className="flex flex-1 flex-col gap-0.5">
+                <h2 className="text-base font-semibold leading-tight">
+                  {getTitle()}
+                </h2>
+                {id && (
+                  <span className="text-xs text-muted-foreground">
+                    ID: {id}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Data Preview */}
+            {metadata.length > 0 && (
+              <>
+                <div className="h-px bg-border" />
+                <div className="space-y-2">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {action === "delete" ? "Will be deleted" : "Changes"}
+                  </span>
+                  <div className="space-y-1.5">
+                    {metadata.map(({ key, value }) => (
+                      <div
+                        key={key}
+                        className="flex items-start justify-between gap-2 text-sm"
+                      >
+                        <span className="text-muted-foreground">{key}</span>
+                        <span className="text-right font-medium">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Warning for delete */}
+            {isDestructive && (
+              <>
+                <div className="h-px bg-border" />
+                <div className="flex items-start gap-2 rounded-lg bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                  <span>This action cannot be undone.</span>
+                </div>
+              </>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className={cn(
+                  "inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors",
+                  isDestructive
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90",
+                )}
+              >
+                {action === "delete" ? "Delete" : "Update"}
+              </button>
+            </div>
+          </div>
+        </article>
       </ToolUIWrapper>
     );
   },
 };
 
-function makeDefaultToolRender(
-  toolName: ToolName,
-  toolDef: CoreToolDefinition,
-): ToolCallMessagePartComponent {
-  return function ToolRender({
-    toolName: name,
-    toolCallId,
-    argsText,
-    args,
-    result,
+// =============================================================================
+// Backend Tool Config
+// =============================================================================
+
+const backendToolConfig: Record<
+  string,
+  { title: string; icon: ReactNode; loadingText: string }
+> = {
+  get_meal_entries_by_date: {
+    title: "Entries by Date",
+    icon: <Search className="size-4" />,
+    loadingText: "Fetching meals for date",
+  },
+  get_meal_entries_by_week: {
+    title: "Entries by Week",
+    icon: <Search className="size-4" />,
+    loadingText: "Fetching meals for week",
+  },
+};
+
+// =============================================================================
+// Backend Tool Render Helper
+// =============================================================================
+
+type BackendToolStatus = {
+  readonly type: "running" | "complete" | "incomplete" | "requires-action";
+  readonly reason?: string;
+};
+
+function createBackendToolRender(toolName: string) {
+  const config = backendToolConfig[toolName] ?? {
+    title: toolName,
+    icon: <Search className="size-4" />,
+    loadingText: `Running ${toolName}`,
+  };
+
+  return ({
     status,
-  }) {
-    const { sendApprovalResponse } = useToolApproval();
-    // Get the actual AI SDK state for this tool call
-    const aiSdkState = useToolApprovalState(toolCallId);
-
-    // For approval tools, use the AI SDK state for accurate status
-    if (toolDef.approval?.require && aiSdkState) {
-      const { state, approvalId } = aiSdkState;
-
-      // Waiting for user approval
-      if (state === "approval-requested" && approvalId) {
-        const handleConfirm = () => {
-          sendApprovalResponse({ id: approvalId, approved: true });
-        };
-
-        const handleCancel = () => {
-          sendApprovalResponse({
-            id: approvalId,
-            approved: false,
-            reason: `[USER_DECLINED] The user intentionally declined to ${toolDef.title.toLowerCase()}. This is NOT an error. Acknowledge their choice and ask if they need anything else.`,
-          });
-        };
-
-        return (
-          <ToolUIWrapper>
-            <ToolApprovalCard
-              id={approvalId}
-              title={toolDef.title}
-              description={toolDef.description}
-              icon={toolIcons[toolName]}
-              variant={getToolVariant(toolName)}
-              confirmLabel={toolDef.approval?.confirmLabel}
-              cancelLabel={toolDef.approval?.cancelLabel}
-              status="pending"
-              onConfirm={handleConfirm}
-              onCancel={handleCancel}
-              metadata={
-                args
-                  ? formatArgsAsMetadata(args as Record<string, unknown>)
-                  : undefined
-              }
-            />
-          </ToolUIWrapper>
-        );
-      }
-
-      // Tool executed successfully (user approved)
-      if (state === "output-available") {
-        return (
-          <ToolUIWrapper>
-            <ToolApprovalCard
-              id={name}
-              title={toolDef.title}
-              icon={toolIcons[toolName]}
-              status="approved"
-              onConfirm={() => {}}
-              onCancel={() => {}}
-            />
-          </ToolUIWrapper>
-        );
-      }
-
-      // Tool was denied by user
-      if (state === "output-denied") {
-        return (
-          <ToolUIWrapper>
-            <ToolApprovalCard
-              id={name}
-              title={toolDef.title}
-              icon={toolIcons[toolName]}
-              status="denied"
-              onConfirm={() => {}}
-              onCancel={() => {}}
-            />
-          </ToolUIWrapper>
-        );
-      }
-
-      // Tool errored
-      if (state === "output-error") {
-        return (
-          <ToolUIWrapper>
-            <ToolApprovalCard
-              id={name}
-              title={toolDef.title}
-              icon={toolIcons[toolName]}
-              status="denied"
-              onConfirm={() => {}}
-              onCancel={() => {}}
-            />
-          </ToolUIWrapper>
-        );
-      }
-
-      // Input streaming or available (waiting for execute)
-      if (state === "input-streaming" || state === "input-available") {
-        return (
-          <ToolUIWrapper>
-            <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              <span>
-                Preparing <span className="font-medium">{toolDef.title}</span>
-                ...
-              </span>
-            </div>
-          </ToolUIWrapper>
-        );
-      }
-    }
-
-    // Fallback to assistant-ui status for non-approval tools or when AI SDK state is not available
-
-    // Running state
-    if (status?.type === "running") {
+    result,
+  }: {
+    status: BackendToolStatus;
+    result?: unknown;
+  }) => {
+    // Loading state
+    if (status.type === "running") {
       return (
         <ToolUIWrapper>
-          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            <span>
-              Running <span className="font-medium">{toolDef.title}</span>...
-            </span>
-          </div>
+          <LoadingState title={config.loadingText} />
         </ToolUIWrapper>
       );
     }
 
-    // Incomplete/error state (for non-approval tools or fallback)
-    if (status?.type === "incomplete") {
+    // Error state
+    if (status.type === "incomplete") {
       return (
         <ToolUIWrapper>
-          <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
-            <AlertCircle className="size-4 text-destructive" />
-            <span className="text-destructive">{toolDef.title} failed</span>
-          </div>
-        </ToolUIWrapper>
-      );
-    }
-
-    // Complete state - show fallback for non-approval tools
-    if (status?.type === "complete") {
-      return (
-        <ToolUIWrapper>
-          <SimpleToolFallback
-            title={toolDef.title}
-            argsText={argsText}
-            result={result}
-            isComplete
+          <ReceiptCard
+            icon={config.icon}
+            title={config.title}
+            subtitle={status.reason === "error" ? "Failed" : "Incomplete"}
+            variant="error"
           />
         </ToolUIWrapper>
       );
     }
 
-    // Default fallback
-    return (
-      <ToolUIWrapper>
-        <SimpleToolFallback
-          title={toolDef.title}
-          argsText={argsText}
-          result={result}
-        />
-      </ToolUIWrapper>
-    );
+    // Complete state - success receipt
+    if (status.type === "complete") {
+      const dataCount =
+        result && typeof result === "object" && "data" in result
+          ? Array.isArray((result as { data?: unknown[] }).data)
+            ? (result as { data: unknown[] }).data.length
+            : 1
+          : 0;
+
+      return (
+        <ToolUIWrapper>
+          <ReceiptCard
+            icon={config.icon}
+            title={config.title}
+            subtitle={
+              dataCount > 0 ? `Found ${dataCount} item(s)` : "No data found"
+            }
+            variant="success"
+          />
+        </ToolUIWrapper>
+      );
+    }
+
+    return null;
   };
 }
 
 // =============================================================================
-// Build Toolkit from Registry
+// Centralized Toolkit using the recommended Tools() API
+// All tools are defined in one place and registered via useAui({ tools: Tools({ toolkit }) })
 // =============================================================================
 
-function buildToolkit(): Toolkit {
-  const toolkit: Toolkit = {};
-
-  for (const [name, toolDef] of Object.entries(toolDefinitionRegistry)) {
-    const toolName = name as ToolName;
-    const def = toolDef as CoreToolDefinition;
-
-    toolkit[name] = {
-      type: "backend",
-      render:
-        toolRenderOverrides[toolName] ?? makeDefaultToolRender(toolName, def),
-    };
-  }
-
-  return toolkit;
-}
-
-export const toolkit = buildToolkit();
+export const toolkit: { [key in ToolName]?: ToolDefinition<any, any> } = {
+  preview_meal: {
+    type: "human" as const,
+    description: toolDefinitionRegistry.preview_meal.description,
+    parameters: toolDefinitionRegistry.preview_meal.inputSchema,
+    render: ({ addResult, args, result }) => {
+      return <MealPreview addResult={addResult} input={args} result={result} />;
+    },
+  },
+  modify_entity: {
+    type: "human" as const,
+    description: toolDefinitionRegistry.modify_entity.description,
+    parameters: toolDefinitionRegistry.modify_entity.inputSchema,
+    render: () => {},
+  },
+  get_meal_entries_by_date: {
+    type: "backend",
+    render: createBackendToolRender("get_meal_entries_by_date"),
+  },
+  get_meal_entries_by_week: {
+    type: "backend",
+    render: createBackendToolRender("get_meal_entries_by_week"),
+  },
+};

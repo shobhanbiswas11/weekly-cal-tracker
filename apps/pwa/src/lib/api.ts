@@ -1,6 +1,11 @@
 // API client for backend communication
 
-import type { MealEntry } from "@weekly-cal/core";
+import type {
+  CreateProfileDto,
+  MealEntry,
+  Profile,
+  UpdateProfileDto,
+} from "@weekly-cal/core";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const CHAT_URL = import.meta.env.VITE_CHAT_URL;
@@ -24,13 +29,6 @@ declare global {
   }
 }
 
-// =============================================================================
-// API Types - Matching backend structure
-// =============================================================================
-
-// Generic record type (backend accepts flexible schema)
-type DataRecord = Record<string, unknown>;
-
 // API Response wrapper (from backend shared/http.ts)
 interface ApiResponse<T> {
   success: boolean;
@@ -44,29 +42,10 @@ interface ApiResponse<T> {
 
 /** GET /dashboard response */
 export interface DashboardResponse {
-  profile: ProfileData | null;
+  profile: Profile | null;
   weekId: string; // Format: YYYY-Www (e.g., "2026-W13")
-  entries: EntryData[];
+  entries: MealEntry[];
 }
-
-// -----------------------------------------------------------------------------
-// Profile
-// -----------------------------------------------------------------------------
-
-/** Profile data structure */
-export type ProfileData = DataRecord;
-
-/** PUT /profile request body */
-export type ProfileUpdateRequest = Partial<ProfileData>;
-
-/** POST/PUT /profile response */
-export interface ProfileResponse {
-  profile: ProfileData;
-}
-
-// -----------------------------------------------------------------------------
-// Entries
-// -----------------------------------------------------------------------------
 
 /** Entry data structure - uses MealEntry schema from core */
 export type EntryData = MealEntry;
@@ -202,20 +181,16 @@ export async function deleteEntry(
 }
 
 /** POST /profile - Create user profile */
-export async function createProfile(
-  data: ProfileUpdateRequest,
-): Promise<ProfileResponse> {
-  return apiFetch<ProfileResponse>("/profile", {
+export async function createProfile(data: CreateProfileDto): Promise<Profile> {
+  return apiFetch("/profile", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 /** PUT /profile - Update user profile */
-export async function updateProfile(
-  data: ProfileUpdateRequest,
-): Promise<ProfileResponse> {
-  return apiFetch<ProfileResponse>("/profile", {
+export async function updateProfile(data: UpdateProfileDto): Promise<Profile> {
+  return apiFetch("/profile", {
     method: "PUT",
     body: JSON.stringify(data),
   });

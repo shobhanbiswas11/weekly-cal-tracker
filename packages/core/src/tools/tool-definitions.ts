@@ -1,11 +1,9 @@
 import z from "zod";
 import {
   schemaCreateMealEntry,
-  schemaCreateProfile,
   schemaFoodItem,
   schemaMealEntryEntity,
   schemaProfileEntity,
-  schemaUpdateMealEntry,
   schemaUpdateProfile,
 } from "../schemas";
 import { defineTool } from "./types";
@@ -48,104 +46,65 @@ export const schemaProfileOutput = schemaGenericOutput.extend({
   data: schemaProfileEntity.optional(),
 });
 
+// Token-optimized schema for meal entries
+// Keys: id, n=name, nt=note, d=date, cal=calories, P=protein, C=carbs, F=fats
+export const schemaMealEntryCompact = z.object({
+  id: z.string(),
+  n: z.string().describe("Meal name"),
+  nt: z.string().nullable().describe("Note"),
+  d: z.string().describe("Date YYYY-MM-DD"),
+  cal: z.number().describe("Calories kcal"),
+  P: z.number().describe("Protein g"),
+  C: z.number().describe("Carbs g"),
+  F: z.number().describe("Fats g"),
+});
+
+export const schemaMealEntriesCompactOutput = schemaGenericOutput.extend({
+  data: z.array(schemaMealEntryCompact).optional(),
+});
+
 export const toolDefinitionRegistry = {
-  // ---------------------------------------------------------------------------
-  // Meal Entry Tools
-  // ---------------------------------------------------------------------------
-  log_meal: defineTool({
-    name: "log_meal",
-    title: "Log Meal",
+  // Backend Query Tools
+  get_meal_entries_by_date: defineTool({
+    name: "get_meal_entries_by_date",
+    title: "Get Meal Entries by Date",
     description:
-      "Log a meal with food items and nutritional information. tool will add-up calories and macros based on the food items provided.",
-    inputSchema: schemaLogMealInput,
-    outputSchema: schemaMealEntryOutput,
-    approval: { require: true, confirmLabel: "Log", cancelLabel: "Cancel" },
-  }),
-
-  update_meal_entry: defineTool({
-    name: "update_meal_entry",
-    title: "Update Meal Entry",
-    description:
-      "Update an existing meal entry. Only include fields that need to change - omit unchanged fields. Requires the entry's ID (use entries_by_date first if you only know the meal name).",
-    inputSchema: schemaUpdateMealEntry.extend({ id: z.string() }),
-    outputSchema: schemaMealEntryOutput,
-    approval: { require: true, confirmLabel: "Update", cancelLabel: "Cancel" },
-  }),
-
-  delete_meal_entry: defineTool({
-    name: "delete_meal_entry",
-    title: "Delete Meal Entry",
-    description:
-      "Delete a meal entry by its ID. If user refers to a meal by name (e.g., 'delete the biryani'), first use entries_by_date to find the entry and get its actual ID.",
-    inputSchema: schemaIdInput,
-    outputSchema: schemaGenericOutput,
-    approval: { require: true, confirmLabel: "Delete", cancelLabel: "Cancel" },
-  }),
-
-  get_meal_entry: defineTool({
-    name: "get_meal_entry",
-    title: "Get Meal Entry",
-    description: "Retrieve a specific meal entry by its ID",
-    inputSchema: schemaIdInput,
-    outputSchema: schemaMealEntryOutput,
-  }),
-
-  entries_by_calendar_week: defineTool({
-    name: "entries_by_calendar_week",
-    title: "Get Entries by Week",
-    description:
-      "Retrieve all meal entries for a specific calendar week (e.g., 2026-W15)",
-    inputSchema: schemaCalendarWeekInput,
-    outputSchema: schemaMealEntriesOutput,
-  }),
-
-  entries_by_date: defineTool({
-    name: "entries_by_date",
-    title: "Get Entries by Date",
-    description:
-      "Retrieve all meal entries for a specific date. Use this when user asks 'what did I eat today' or before deleting/updating a meal by name.",
+      "Get all meals for a date. Returns compact data: id, n(name), nt(note), d(date), cal(kcal), P(protein g), C(carbs g), F(fats g).",
     inputSchema: schemaDateInput,
-    outputSchema: schemaMealEntriesOutput,
+    outputSchema: schemaMealEntriesCompactOutput,
   }),
-
-  // ---------------------------------------------------------------------------
-  // Profile Tools
-  // ---------------------------------------------------------------------------
-  create_profile: defineTool({
-    name: "create_profile",
-    title: "Create Profile",
+  get_meal_entries_by_week: defineTool({
+    name: "get_meal_entries_by_week",
+    title: "Get Meal Entries by Week",
     description:
-      "Create a new user profile with personal and fitness information",
-    inputSchema: schemaCreateProfile,
-    outputSchema: schemaGenericOutput,
-    approval: { require: true, confirmLabel: "Create", cancelLabel: "Cancel" },
+      "Get all meals for a calendar week (ISO format like 2026-W15). Returns compact data: id, n(name), nt(note), d(date), cal(kcal), P(protein g), C(carbs g), F(fats g).",
+    inputSchema: schemaCalendarWeekInput,
+    outputSchema: schemaMealEntriesCompactOutput,
   }),
 
-  update_profile: defineTool({
-    name: "update_profile",
-    title: "Update Profile",
-    description: "Update an existing user profile",
-    inputSchema: schemaUpdateProfile,
-    outputSchema: schemaGenericOutput,
-    approval: { require: true, confirmLabel: "Update", cancelLabel: "Cancel" },
-  }),
-
-  get_profile: defineTool({
-    name: "get_profile",
-    title: "Get Profile",
+  // Frontend-only tools
+  preview_meal: defineTool({
+    type: "frontend",
+    name: "preview_meal",
+    title: "Preview Meal",
     description:
-      "Retrieve the user's profile. Only use when user specifically asks about their goals, progress, or profile info.",
-    inputSchema: z.object({}),
-    outputSchema: schemaProfileOutput,
+      "Frontend-only tool to render a visual meal preview card. Use before log_meal to show user what will be logged",
+    inputSchema: schemaLogMealInput,
   }),
-
-  delete_profile: defineTool({
-    name: "delete_profile",
-    title: "Delete Profile",
-    description: "Delete the current user's profile",
-    inputSchema: z.object({}),
-    outputSchema: schemaGenericOutput,
-    approval: { require: true, confirmLabel: "Delete", cancelLabel: "Cancel" },
+  modify_entity: defineTool({
+    type: "frontend",
+    name: "modify_entity",
+    title: "Modify Entity",
+    description: `Modify an existing entity.
+Entities requiring ID: meal
+Entities without ID: profile
+Fields by entity - Profile: ${Object.keys(schemaUpdateProfile.shape).join(", ")} | Meal: ${Object.keys(schemaCreateMealEntry.shape).join(", ")}`,
+    inputSchema: z.object({
+      entity: z.enum(["meal", "profile"]),
+      action: z.enum(["update", "delete"]),
+      id: z.string().nullable(),
+      data: z.record(z.string(), z.any()).nullable(),
+    }),
   }),
 } as const;
 
@@ -172,4 +131,8 @@ export function defineExecutor<K extends ToolName>(
   ) => Promise<z.infer<ToolOutputSchema<K>>>,
 ) {
   return executor;
+}
+
+export function getToolName(name: ToolName): ToolName {
+  return name;
 }

@@ -3,7 +3,6 @@ import {
   createRequestContainer,
   initContainer,
 } from "@weekly-cal/api";
-import type { UIMessage } from "ai";
 import { config } from "dotenv";
 import express from "express";
 config();
@@ -20,10 +19,7 @@ app.get("/", (req, res) => {
 
 // Chat endpoint with streaming
 app.post("/api/chat", async (req, res) => {
-  const { messages, tools } = req.body as {
-    messages: UIMessage[];
-    tools?: any;
-  };
+  const { messages, tools, system } = req.body as any;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Messages array required" });
@@ -35,7 +31,7 @@ app.post("/api/chat", async (req, res) => {
   const container = createRequestContainer(userId);
   const chatService = container.get(ChatService);
 
-  const result = await chatService.streamChat(messages, tools);
+  const result = await chatService.streamChat(messages, tools, system);
   return result.pipeUIMessageStreamToResponse(res);
 });
 

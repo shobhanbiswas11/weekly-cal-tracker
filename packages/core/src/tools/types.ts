@@ -7,6 +7,7 @@ export interface ToolDefinition<
   TInputSchema extends z.ZodTypeAny = z.ZodTypeAny,
   TOutputSchema extends z.ZodTypeAny = z.ZodTypeAny,
 > {
+  type?: "frontend";
   name: string;
   title: string;
   description: string;

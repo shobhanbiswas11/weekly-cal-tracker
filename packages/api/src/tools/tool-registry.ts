@@ -1,20 +1,13 @@
 import {
   toolDefinitionRegistry,
   ToolExecutorRegistry,
-  type FoodItem,
-  type LogMealInput,
   type ToolDefinition,
   type ToolName,
 } from "@weekly-cal/core";
 import { tool } from "ai";
 import { endOfISOWeek, format, parse, startOfISOWeek } from "date-fns";
-import {
-  AUTH_CONTEXT,
-  inject,
-  injectable,
-  MEAL_ENTRY_REPO,
-  PROFILE_REPO,
-} from "../di";
+import { AUTH_CONTEXT, inject, injectable, MEAL_ENTRY_REPO } from "../di";
+import type { MealEntry } from "../repo/meal-entry.repo.interface";
 
 function getWeekDateRange(weekStr: string): {
   startDate: string;
@@ -27,150 +20,41 @@ function getWeekDateRange(weekStr: string): {
   };
 }
 
-/** Calculate total macros from food items */
-function calculateTotals(foods: FoodItem[]) {
-  return foods.reduce(
-    (acc, food) => ({
-      calories: acc.calories + food.calories,
-      protein: acc.protein + food.protein,
-      carbs: acc.carbs + food.carbs,
-      fats: acc.fats + food.fats,
-      fiber: food.fiber != null ? (acc.fiber ?? 0) + food.fiber : acc.fiber,
-      sugar: food.sugar != null ? (acc.sugar ?? 0) + food.sugar : acc.sugar,
-      sodium:
-        food.sodium != null ? (acc.sodium ?? 0) + food.sodium : acc.sodium,
-    }),
-    {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
-      fiber: null as number | null,
-      sugar: null as number | null,
-      sodium: null as number | null,
-    },
-  );
-}
-
-/** Generate note from food items and optional user note */
-function generateNote(foods: FoodItem[], userNote?: string | null): string {
-  const foodDescriptions = foods
-    .map((f) => `${f.emoji} ${f.name} (${f.quantity})`)
-    .join(", ");
-  return userNote ? `${foodDescriptions}\n\n${userNote}` : foodDescriptions;
-}
-
 @injectable()
 export class ToolRegistry {
   constructor(
     private mealEntryRepo = inject(MEAL_ENTRY_REPO),
-    private profileRepo = inject(PROFILE_REPO),
     private auth = inject(AUTH_CONTEXT),
   ) {}
 
   private get executorRegistry(): ToolExecutorRegistry {
     const userId = this.auth.userId;
+
+    const toCompact = (entries: MealEntry[]) =>
+      entries.map((e) => ({
+        id: e.id,
+        n: e.name,
+        nt: e.note ?? null,
+        d: e.date,
+        cal: e.calories,
+        P: e.protein,
+        C: e.carbs,
+        F: e.fats,
+      }));
+
     return {
-      // -----------------------------------------------------------------------
-      // Meal Entry Tools
-      // -----------------------------------------------------------------------
-      log_meal: async (input: LogMealInput) => {
-        const { name, foodItems, date, note: userNote } = input;
-        const totals = calculateTotals(foodItems);
-        const note = generateNote(foodItems, userNote);
-
-        const entryData = {
-          date: date ?? format(new Date(), "yyyy-MM-dd"),
-          name,
-          ...totals,
-          note,
-        };
-
-        const entry = await this.mealEntryRepo.create(userId, entryData);
-        return {
-          success: true,
-          message: `Logged ${entry.name} (${entry.calories} kcal)`,
-          data: entry,
-        };
-      },
-
-      update_meal_entry: async ({ id, ...data }: any) => {
-        const entry = await this.mealEntryRepo.update(userId, id, data);
-        return {
-          success: true,
-          message: `Updated ${entry.name}`,
-          data: entry,
-        };
-      },
-
-      delete_meal_entry: async ({ id }: any) => {
-        const entry = await this.mealEntryRepo.getById(userId, id);
-        if (!entry) {
-          return { success: false, message: `Entry not found: ${id}` };
-        }
-        await this.mealEntryRepo.delete(userId, id);
-        return {
-          success: true,
-          message: `Deleted ${entry.name}`,
-          data: entry,
-        };
-      },
-
-      get_meal_entry: async ({ id }: any) => {
-        const entry = await this.mealEntryRepo.getById(userId, id);
-        if (!entry) {
-          return { success: false, message: `Entry not found: ${id}` };
-        }
-        return { success: true, data: entry };
-      },
-
-      entries_by_date: async ({ date }: any) => {
+      get_meal_entries_by_date: async ({ date }) => {
         const entries = await this.mealEntryRepo.getByDate(userId, date);
-        return { success: true, data: entries };
+        return { success: true, data: toCompact(entries) };
       },
-
-      entries_by_calendar_week: async ({ week }: any) => {
+      get_meal_entries_by_week: async ({ week }) => {
         const { startDate, endDate } = getWeekDateRange(week);
         const entries = await this.mealEntryRepo.getByDateRange(
           userId,
           startDate,
           endDate,
         );
-        return { success: true, data: entries };
-      },
-
-      // -----------------------------------------------------------------------
-      // Profile Tools
-      // -----------------------------------------------------------------------
-      create_profile: async (input: any) => {
-        const profile = await this.profileRepo.create(userId, input);
-        return {
-          success: true,
-          message: "Profile created",
-          data: profile,
-        };
-      },
-
-      update_profile: async (input: any) => {
-        const profile = await this.profileRepo.update(userId, input);
-        return {
-          success: true,
-          message: "Profile updated",
-          data: profile,
-        };
-      },
-
-      get_profile: async () => {
-        const profile = await this.profileRepo.getByUserId(userId);
-        if (!profile) {
-          return { success: false, message: "No profile found" };
-        }
-        return { success: true, data: profile };
-      },
-
-      delete_profile: async () => {
-        await this.profileRepo.delete(userId);
-        return { success: true, message: "Profile deleted" };
+        return { success: true, data: toCompact(entries) };
       },
     };
   }

@@ -24,3 +24,7 @@ export function useRedirectToChatWithSystemMessage(message: string) {
 
   return { redirect };
 }
+
+export function useClearChat() {
+  return () => {};
+}

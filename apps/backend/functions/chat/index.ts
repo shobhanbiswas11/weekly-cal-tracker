@@ -110,7 +110,11 @@ export const handler = awslambda.streamifyResponse(
     const chatService = container.get(ChatService);
 
     // Create the AI stream
-    const result = await chatService.streamChat(body.messages, body.tools);
+    const result = await chatService.streamChat(
+      body.messages,
+      body.tools,
+      body.system,
+    );
 
     // Get the encoded UI message stream from the Response body
     const response = result.toUIMessageStreamResponse();
