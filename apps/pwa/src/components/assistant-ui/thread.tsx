@@ -3,6 +3,7 @@ import {
   ComposerAttachments,
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
+import { ClearChatButton } from "@/components/assistant-ui/clear-chat-button";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
@@ -44,6 +45,9 @@ export const Thread: FC = () => {
         ["--composer-padding" as string]: "10px",
       }}
     >
+      <div className="flex items-center justify-end px-4 py-2">
+        <ClearChatButton />
+      </div>
       <ThreadPrimitive.Viewport
         turnAnchor="top"
         className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth px-4 pt-4"

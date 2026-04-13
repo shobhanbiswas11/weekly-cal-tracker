@@ -11,10 +11,24 @@ import {
   useAISDKRuntime,
 } from "@assistant-ui/react-ai-sdk";
 import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useCallback, useContext } from "react";
 import { buildSystemPrompt } from "./prompts";
 import { ToolApprovalProvider } from "./tool-approval";
 import { toolkit } from "./toolkit";
+
+interface ClearChatContextValue {
+  clearChat: () => void;
+}
+
+const ClearChatContext = createContext<ClearChatContextValue | null>(null);
+
+export function useClearChat() {
+  const context = useContext(ClearChatContext);
+  if (!context) {
+    throw new Error("useClearChat must be used within a ChatRuntimeProvider");
+  }
+  return context;
+}
 
 const transport = new AssistantChatTransport({
   api: import.meta.env.VITE_CHAT_URL,
@@ -43,16 +57,22 @@ export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
     tools: Tools({ toolkit }),
   });
 
+  const clearChat = useCallback(() => {
+    chatHelpers.setMessages([]);
+  }, [chatHelpers]);
+
   return (
-    <ToolApprovalProvider
-      addToolApprovalResponse={chatHelpers.addToolApprovalResponse}
-      messages={chatHelpers.messages}
-    >
-      <AssistantRuntimeProvider runtime={runtime} aui={aui}>
-        <SystemInstructions />
-        {children}
-      </AssistantRuntimeProvider>
-    </ToolApprovalProvider>
+    <ClearChatContext.Provider value={{ clearChat }}>
+      <ToolApprovalProvider
+        addToolApprovalResponse={chatHelpers.addToolApprovalResponse}
+        messages={chatHelpers.messages}
+      >
+        <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+          <SystemInstructions />
+          {children}
+        </AssistantRuntimeProvider>
+      </ToolApprovalProvider>
+    </ClearChatContext.Provider>
   );
 }
 
