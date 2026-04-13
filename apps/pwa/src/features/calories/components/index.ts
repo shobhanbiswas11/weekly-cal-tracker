@@ -4,7 +4,6 @@ export { DailyCalendar } from "./DailyCalendar";
 export { EntryList } from "./EntryList";
 export { MacroDisplay } from "./MacroDisplay";
 export { MacroGrid } from "./MacroGrid";
-export { MealLogPreview } from "./MealLogPreview";
 export { ProgressRing } from "./ProgressRing";
 export { Suggestions } from "./Suggestions";
 export { WeeklyGraph } from "./WeeklyGraph";
