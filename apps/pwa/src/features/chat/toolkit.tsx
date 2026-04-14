@@ -3,7 +3,6 @@ import { toolDefinitionRegistry, type ToolName } from "@weekly-cal/core";
 import {
   renderGetMealEntriesByDate,
   renderGetMealEntriesByWeek,
-  renderModifyEntity,
   renderPreviewMeal,
 } from "./tool-renders";
 
@@ -18,12 +17,6 @@ export const toolkit: { [key in ToolName]?: ToolDefinition<any, any> } = {
     description: toolDefinitionRegistry.preview_meal.description,
     parameters: toolDefinitionRegistry.preview_meal.inputSchema,
     render: renderPreviewMeal,
-  },
-  modify_entity: {
-    type: "human" as const,
-    description: toolDefinitionRegistry.modify_entity.description,
-    parameters: toolDefinitionRegistry.modify_entity.inputSchema,
-    render: renderModifyEntity,
   },
   get_meal_entries_by_date: {
     type: "backend",

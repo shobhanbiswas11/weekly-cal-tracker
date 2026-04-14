@@ -4,7 +4,6 @@ import {
   schemaFoodItem,
   schemaMealEntryEntity,
   schemaProfileEntity,
-  schemaUpdateProfile,
 } from "../schemas";
 import { defineTool } from "./types";
 export * from "./types";
@@ -90,21 +89,6 @@ export const toolDefinitionRegistry = {
     description:
       "Frontend-only tool to render a visual meal preview card. Use before log_meal to show user what will be logged",
     inputSchema: schemaLogMealInput,
-  }),
-  modify_entity: defineTool({
-    type: "frontend",
-    name: "modify_entity",
-    title: "Modify Entity",
-    description: `Modify an existing entity.
-Entities requiring ID: meal
-Entities without ID: profile
-Fields by entity - Profile: ${Object.keys(schemaUpdateProfile.shape).join(", ")} | Meal: ${Object.keys(schemaCreateMealEntry.shape).join(", ")}`,
-    inputSchema: z.object({
-      entity: z.enum(["meal", "profile"]),
-      action: z.enum(["update", "delete"]),
-      id: z.string().nullable(),
-      data: z.record(z.string(), z.any()).nullable(),
-    }),
   }),
 } as const;
 
