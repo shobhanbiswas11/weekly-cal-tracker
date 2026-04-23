@@ -1,18 +1,22 @@
 import { openai } from "@ai-sdk/openai";
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
 
-import { schemaUpdateProfile } from "@weekly-cal/core";
+import {
+  agentProfileHandler,
+  InferToolOutput,
+  toolGetProfile,
+  toolRequestProfileUpdate,
+} from "@weekly-cal/core";
 import {
   convertToModelMessages,
-  generateText,
   stepCountIs,
   streamText,
   tool,
+  ToolLoopAgent,
   UIMessage,
   wrapLanguageModel,
   type StreamTextResult,
 } from "ai";
-import z from "zod";
 import {
   APP_CONFIG,
   AUTH_CONTEXT,
@@ -68,45 +72,50 @@ export class ChatService {
 
     const tools: Record<string, any> = {
       ...frontendTools(frontendToolDefs),
-      ...this.toolRegistry.createTools([
-        "get_meal_entries_by_date",
-        "get_meal_entries_by_week",
-      ]),
     };
 
     return streamText({
       model: this.primaryModel!,
-      system,
+      system: system,
       tools: {
         ...tools,
-        profileAgent: tool({
-          description:
-            "Agent for managing (query, mutate) user profile information like age, weight, dietary preferences, etc.",
-          inputSchema: z.object({
-            task: z
-              .string()
-              .describe(
-                "The task to perform, e.g. 'Update my weight', 'What's my daily calorie target?', etc.",
-              ),
-          }),
-          execute: ({ task }) => {
-            return generateText({
+        [agentProfileHandler.name]: tool({
+          description: agentProfileHandler.description,
+          inputSchema: agentProfileHandler.inputSchema,
+          execute: async ({ task }, { abortSignal }) => {
+            const agent = new ToolLoopAgent({
               model: this.primaryModel!,
-              system: `You're a sub agent in a bigger system. Your job is to help the system to answer anything related to user profile. If you need any additional data to perform the task or to call a specific tool. you can ask the main system`,
+              instructions: agentProfileHandler.instructions,
               tools: {
-                // getProfile
-                // updateProfile
-                updateProfile: tool({
-                  description: "Tool to update user profile information",
-                  inputSchema: schemaUpdateProfile,
-                  execute: (data) => {
-                    return this.profileRepo.update(this.auth.userId, data);
+                [toolGetProfile.name]: tool({
+                  inputSchema: toolGetProfile.inputSchema,
+                  description: toolGetProfile.description,
+                  execute: () => this.profileRepo.getByUserId(this.auth.userId),
+                }),
+                [toolRequestProfileUpdate.name]: tool({
+                  inputSchema: toolRequestProfileUpdate.inputSchema,
+                  description: toolRequestProfileUpdate.description,
+                  execute: async (data) => {
+                    return {
+                      action: "UPDATE_PROFILE",
+                      pendingChanges: data,
+                      message: `Profile updated successfully. Your new weight is ${data.weight}kg.`,
+                    } satisfies InferToolOutput<
+                      typeof toolRequestProfileUpdate
+                    >;
                   },
                 }),
-                // removeProfile
               },
-              prompt: `Task: ${task}`,
+              stopWhen: stepCountIs(1),
             });
+
+            const result = await agent.generate({
+              prompt: task,
+              abortSignal,
+            });
+
+            const lastToolResult = result.toolResults?.at(-1)?.output;
+            return lastToolResult ?? { message: result.text };
           },
         }),
       },

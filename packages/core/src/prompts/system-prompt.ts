@@ -75,14 +75,7 @@ export const getSystemPrompt = ({
 - Be Concise in you answer.
 - If food type or quantity is ambiguous (e.g., "I had some agoites"), ask clarifying question to understand the food item, quantity or meal context, but not too many questions. One question is ideal.
 
-## User Profile
-${
-  userProfile
-    ? Object.entries(userProfile)
-        .map(([key, value]) => `- ${key}: ${value}`)
-        .join("\n")
-    : "User profile is not setup yet. You may ask for profile details if needed. And also encourage user to set up profile for better experience."
-}
+
 
 ## Week Summary
 ${renderWeeklySummary(currentWeekEntries ?? [])}

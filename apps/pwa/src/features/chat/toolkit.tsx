@@ -1,10 +1,5 @@
 import type { ToolDefinition } from "@assistant-ui/react";
-import { toolDefinitionRegistry, type ToolName } from "@weekly-cal/core";
-import {
-  renderGetMealEntriesByDate,
-  renderGetMealEntriesByWeek,
-  renderPreviewMeal,
-} from "./tool-renders";
+import { type ToolName } from "@weekly-cal/core";
 
 // =============================================================================
 // Centralized Toolkit using the recommended Tools() API
@@ -12,18 +7,18 @@ import {
 // =============================================================================
 
 export const toolkit: { [key in ToolName]?: ToolDefinition<any, any> } = {
-  preview_meal: {
-    type: "human" as const,
-    description: toolDefinitionRegistry.preview_meal.description,
-    parameters: toolDefinitionRegistry.preview_meal.inputSchema,
-    render: renderPreviewMeal,
-  },
-  get_meal_entries_by_date: {
-    type: "backend",
-    render: renderGetMealEntriesByDate,
-  },
-  get_meal_entries_by_week: {
-    type: "backend",
-    render: renderGetMealEntriesByWeek,
-  },
+  // preview_meal: {
+  //   type: "human" as const,
+  //   description: toolDefinitionRegistry.preview_meal.description,
+  //   parameters: toolDefinitionRegistry.preview_meal.inputSchema,
+  //   render: renderPreviewMeal,
+  // },
+  // get_meal_entries_by_date: {
+  //   type: "backend",
+  //   render: renderGetMealEntriesByDate,
+  // },
+  // get_meal_entries_by_week: {
+  //   type: "backend",
+  //   render: renderGetMealEntriesByWeek,
+  // },
 };
