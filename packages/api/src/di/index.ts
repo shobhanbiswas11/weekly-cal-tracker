@@ -1,14 +1,15 @@
 import { Container } from "@needle-di/core";
 import { DynamoDBMealEntryRepo } from "../repo/meal-entry-dynamodb.repo";
 import { DynamoDBProfileRepo } from "../repo/profile-dynamodb.repo";
+import { createAppConfig } from "./config";
 import {
   APP_CONFIG,
   AUTH_CONTEXT,
-  createAppConfig,
   MEAL_ENTRY_REPO,
   PROFILE_REPO,
 } from "./tokens";
 export { inject, injectable } from "@needle-di/core";
+export * from "./config";
 export * from "./tokens";
 
 // =============================================================================
