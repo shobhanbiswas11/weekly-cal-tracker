@@ -9,4 +9,8 @@ export interface ProfileRepo {
   update: (userId: string, data: Partial<CreateProfile>) => Promise<Profile>;
   delete: (userId: string) => Promise<void>;
   getByUserId: (userId: string) => Promise<Profile | null>;
+  getSelectedFieldsByUserId: <T extends keyof Profile>(
+    userId: string,
+    fields: T[],
+  ) => Promise<Pick<Profile, T> | null>;
 }

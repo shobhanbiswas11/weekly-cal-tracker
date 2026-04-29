@@ -1,7 +1,39 @@
-import { agentDefinitionPrimary, isUIFlow } from "@weekly-cal/core";
-import { ModelMessage, StopCondition, ToolLoopAgent, UIMessage } from "ai";
+import { isUIFlow } from "@weekly-cal/core";
+import { ModelMessage, StopCondition, ToolLoopAgent } from "ai";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import { inject, injectable } from "../di";
-import { ProfileAgent } from "./profile.agent";
+import { MealAgent } from "./meal";
+import { ProfileAgent } from "./profile";
+
+// =============================================================================
+// Primary Agent Definition
+// =============================================================================
+
+function buildPrimaryAgentDateContext(now: Date = new Date()): string {
+  const today = format(now, "yyyy-MM-dd");
+  const dayOfWeek = format(now, "EEEE");
+  const month = format(now, "MMMM yyyy");
+  const week = format(now, "RRRR-'W'II");
+  const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  return `## Current Date Context
+- Today: ${dayOfWeek}, ${today}
+- Month: ${month}
+- Week: ${week} (Monday ${weekStart} to Sunday ${weekEnd})`;
+}
+
+const AGENT_NAME = "primary_agent";
+
+const AGENT_INSTRUCTIONS = `You are a health tracking assistant.
+
+## Behavior
+- Be concise
+- Ask ONE clarifying question if input is ambiguous
+- Use tools to log or retrieve data
+
+${buildPrimaryAgentDateContext()}
+`;
 
 function hasUIFlowResult(): StopCondition<any> {
   return ({ steps }) => {
@@ -13,7 +45,10 @@ function hasUIFlowResult(): StopCondition<any> {
 
 @injectable()
 export class PrimaryAgent {
-  constructor(private profileAgent = inject(ProfileAgent)) {}
+  constructor(
+    private profileAgent = inject(ProfileAgent),
+    private mealAgent = inject(MealAgent),
+  ) {}
 
   /**
    * Returns the tools available to this agent.
@@ -21,7 +56,8 @@ export class PrimaryAgent {
   private getTools(model: any, frontendTools: Record<string, any> = {}) {
     return {
       ...frontendTools,
-      [this.profileAgent.name]: this.profileAgent.createTool(model),
+      profileAgent: this.profileAgent.createTool(model),
+      mealAgent: this.mealAgent.createTool(model),
     };
   }
 
@@ -34,8 +70,8 @@ export class PrimaryAgent {
     frontendInstructions?: string,
   ) {
     const instructions = frontendInstructions
-      ? `${agentDefinitionPrimary.instructions}\n\n${frontendInstructions}`
-      : agentDefinitionPrimary.instructions;
+      ? `${AGENT_INSTRUCTIONS}\n\n${frontendInstructions}`
+      : AGENT_INSTRUCTIONS;
 
     return new ToolLoopAgent({
       model,
@@ -50,13 +86,14 @@ export class PrimaryAgent {
    */
   stream(
     model: any,
-    messages: UIMessage[] | ModelMessage[],
+    messages: ModelMessage[],
     frontendTools: Record<string, any> = {},
     frontendInstructions?: string,
   ) {
     const agent = this.create(model, frontendTools, frontendInstructions);
+
     return agent.stream({
-      messages: messages as ModelMessage[],
+      messages,
     });
   }
 
@@ -64,6 +101,6 @@ export class PrimaryAgent {
    * Returns the agent name.
    */
   get name(): string {
-    return agentDefinitionPrimary.name;
+    return AGENT_NAME;
   }
 }

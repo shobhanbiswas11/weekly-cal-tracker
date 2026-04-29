@@ -7,7 +7,7 @@ import { z } from "zod";
 const appConfigSchema = z.object({
   TABLE_NAME: z.string().min(1, "TABLE_NAME is required"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
-  PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-nano"),
+  PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-nano"), // gpt-5.4-nano
   ENABLE_DEV_TOOLS: z
     .string()
     .transform((v) => v === "true")

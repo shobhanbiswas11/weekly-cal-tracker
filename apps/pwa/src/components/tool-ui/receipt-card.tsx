@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { AlertCircle, Check, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { ToolUIWrapper } from "./tool-wrapper";
 
 export function ReceiptCard({
   icon,
@@ -26,21 +27,23 @@ export function ReceiptCard({
   };
 
   return (
-    <div className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm">
-      <span
-        className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
-          variantStyles[variant],
-        )}
-      >
-        {icon ?? variantIcons[variant]}
-      </span>
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">{title}</span>
-        {subtitle && (
-          <span className="text-sm text-muted-foreground">{subtitle}</span>
-        )}
+    <ToolUIWrapper>
+      <div className="flex w-full max-w-md items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3 shadow-sm">
+        <span
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full bg-muted",
+            variantStyles[variant],
+          )}
+        >
+          {icon ?? variantIcons[variant]}
+        </span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{title}</span>
+          {subtitle && (
+            <span className="text-sm text-muted-foreground">{subtitle}</span>
+          )}
+        </div>
       </div>
-    </div>
+    </ToolUIWrapper>
   );
 }

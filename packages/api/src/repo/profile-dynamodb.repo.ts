@@ -132,4 +132,36 @@ export class DynamoDBProfileRepo implements ProfileRepo {
 
     return toProfile(result.Item as DynamoDBProfile);
   }
+
+  async getSelectedFieldsByUserId<T extends keyof Profile>(
+    userId: string,
+    fields: T[],
+  ): Promise<Pick<Profile, T> | null> {
+    const expressionNames: Record<string, string> = {};
+    const projectionParts: string[] = [];
+
+    for (const field of fields) {
+      const nameKey = `#${String(field)}`;
+      expressionNames[nameKey] = String(field);
+      projectionParts.push(nameKey);
+    }
+
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: this.config.tableName,
+        Key: {
+          PK: createPK(userId),
+          SK: PROFILE_SK,
+        },
+        ProjectionExpression: projectionParts.join(", "),
+        ExpressionAttributeNames: expressionNames,
+      }),
+    );
+
+    if (!result.Item) {
+      return null;
+    }
+
+    return result.Item as Pick<Profile, T>;
+  }
 }

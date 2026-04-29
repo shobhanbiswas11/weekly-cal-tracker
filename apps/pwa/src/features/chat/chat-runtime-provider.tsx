@@ -5,6 +5,7 @@ import {
 } from "@assistant-ui/react-ai-sdk";
 import { type ReactNode } from "react";
 import { toolkit } from "./toolkit";
+import { useAutoCancelInitiatedFlows } from "./use-auto-cancel-initiated-flows";
 
 const transport = new AssistantChatTransport({
   api: import.meta.env.VITE_CHAT_URL,
@@ -21,6 +22,15 @@ interface ChatRuntimeProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Component that hooks into chat events for auto-cancellation of initiated flows.
+ * Must be rendered inside AssistantRuntimeProvider.
+ */
+function ChatEventHandlers() {
+  useAutoCancelInitiatedFlows();
+  return null;
+}
+
 export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
   const runtime = useChatRuntime({
     transport,
@@ -32,6 +42,7 @@ export function ChatRuntimeProvider({ children }: ChatRuntimeProviderProps) {
 
   return (
     <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+      <ChatEventHandlers />
       {children}
     </AssistantRuntimeProvider>
   );
