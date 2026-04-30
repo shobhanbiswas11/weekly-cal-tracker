@@ -27,9 +27,9 @@ export function CalorieKPI({
 
   // Determine status color
   const getStatusColor = () => {
-    if (percentage >= 100) return "text-red-500";
+    if (percentage >= 100) return "text-destructive";
     if (percentage >= 80) return "text-amber-500";
-    return "text-green-500";
+    return "text-success";
   };
 
   return (

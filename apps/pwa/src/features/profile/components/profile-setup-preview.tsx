@@ -78,7 +78,7 @@ function MetabolismSection({ profile }: { profile: CreateProfile }) {
               className={
                 profile.dailyCalorieAdjustment < 0
                   ? "text-orange-600"
-                  : "text-green-600"
+                  : "text-success"
               }
             >
               {profile.dailyCalorieAdjustment > 0 ? "+" : ""}

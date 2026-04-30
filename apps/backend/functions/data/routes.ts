@@ -69,7 +69,7 @@ const handleGetEntriesByDate: RouteHandler = async (event, userId) => {
 
 // POST /entries - Create new food entry
 const handleCreateEntry = withValidation(
-  schemaCreateMealEntry.omit({ createdAt: true, updatedAt: true }),
+  schemaCreateMealEntry,
   async (_event, userId, entryData) => {
     const entryId = uuidv4();
 

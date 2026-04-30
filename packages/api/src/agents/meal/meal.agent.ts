@@ -1,19 +1,27 @@
-import { isUIFlow, schemaMealEntryEntity, uiFlow } from "@weekly-cal/core";
-import { StopCondition, tool, ToolLoopAgent } from "ai";
+import {
+  describeSchema,
+  isUIFlow,
+  schemaMealEntryEntity,
+} from "@weekly-cal/core";
+import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
-import { AUTH_CONTEXT, AuthContext, inject, injectable } from "../../di";
-
-function hasUIFlowResult(): StopCondition<any> {
-  return ({ steps }) => {
-    return steps.some((step) =>
-      step.toolResults?.some((result) => isUIFlow(result.output)),
-    );
-  };
-}
+import {
+  AUTH_CONTEXT,
+  AuthContext,
+  inject,
+  injectable,
+  MEAL_ENTRY_REPO,
+} from "../../di";
+import { MealEntryRepo } from "../../repo/meal-entry.repo.interface";
+import { hasUIFlowResult } from "../utils";
+import { getMealTools } from "./meal.tools";
 
 @injectable()
 export class MealAgent {
-  constructor(private auth: AuthContext = inject(AUTH_CONTEXT)) {}
+  constructor(
+    private mealRepo: MealEntryRepo = inject(MEAL_ENTRY_REPO),
+    private auth: AuthContext = inject(AUTH_CONTEXT),
+  ) {}
 
   /**
    * Creates a standalone ToolLoopAgent for direct use.
@@ -21,45 +29,10 @@ export class MealAgent {
   create(model: any) {
     return new ToolLoopAgent({
       model,
-      instructions: `You are a meal tracking assistant. Use the available tools if needed.`,
-      tools: {
-        logMeal: tool({
-          description: "Tool to log a meal from food items",
-          inputSchema: z.object({
-            date: schemaMealEntryEntity.shape.date,
-            name: schemaMealEntryEntity.shape.name,
-            specialNote: schemaMealEntryEntity.shape.note,
-            foodItems: z
-              .array(
-                z.object({
-                  name: z.string().describe("Singular Name of the food"),
-                  quantity: z
-                    .string()
-                    .describe(
-                      "Quantity of the food item, e.g., '2 large', '1 cup', '150g', etc.",
-                    ),
-                  calories: z.number(),
-                  protein: z.number(),
-                  carbs: z.number(),
-                  fats: z.number(),
-                  fiber: z.number(),
-                  sugar: z.number(),
-                  sodium: z.number(),
-                }),
-              )
-              .describe("Macros should be estimated based on the quantity"),
-          }),
-          execute: ({ foodItems, name, specialNote, date }) => {
-            return uiFlow("LOG_MEAL", {
-              state: "initiated",
-              date,
-              name,
-              note: specialNote,
-              foodItems,
-            });
-          },
-        }),
-      },
+      instructions: `You are a meal tracking assistant.
+- Use tools if necessary
+- The meal is stored as key-value pairs with the following fields and types: ${describeSchema(schemaMealEntryEntity)}.`,
+      tools: getMealTools(this.mealRepo, this.auth.userId),
       stopWhen: hasUIFlowResult(),
     });
   }

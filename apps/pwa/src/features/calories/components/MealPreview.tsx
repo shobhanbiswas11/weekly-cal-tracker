@@ -113,10 +113,10 @@ export function MealPreview({
         <div className="flex w-full items-center gap-3 rounded-2xl border bg-card p-4 shadow-sm">
           {result.success ? (
             <>
-              <span className="flex size-8 items-center justify-center rounded-full bg-green-500/10 text-green-600">
+              <span className="flex size-8 items-center justify-center rounded-full bg-success/10 text-success">
                 <Check className="size-4" />
               </span>
-              <span className="text-sm font-medium text-green-600">
+              <span className="text-sm font-medium text-success">
                 Meal logged successfully
               </span>
             </>

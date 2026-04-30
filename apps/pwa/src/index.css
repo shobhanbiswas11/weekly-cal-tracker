@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -19,6 +19,8 @@
   --accent-foreground: oklch(0.3958 0.1331 25.723);
   --destructive: oklch(0.4437 0.1613 26.8994);
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.5 0.15 145);
+  --success-foreground: oklch(1 0 0);
   --border: oklch(0.9355 0.0324 80.9937);
   --input: oklch(0.9355 0.0324 80.9937);
   --ring: oklch(0.465 0.147 24.9381);
@@ -84,6 +86,8 @@
   --accent-foreground: oklch(0.9619 0.058 95.6174);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.6 0.15 145);
+  --success-foreground: oklch(1 0 0);
   --border: oklch(0.3741 0.0087 67.5582);
   --input: oklch(0.3741 0.0087 67.5582);
   --ring: oklch(0.5054 0.1905 27.5181);
@@ -147,6 +151,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

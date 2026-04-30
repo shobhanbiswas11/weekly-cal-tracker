@@ -67,7 +67,7 @@ export default function WeeklyPage() {
 
   // Determine progress color
   const getProgressColor = () => {
-    if (percentage >= 100) return "bg-red-500";
+    if (percentage >= 100) return "bg-destructive";
     if (percentage >= 85) return "bg-amber-500";
     return "bg-primary";
   };
@@ -130,7 +130,7 @@ export default function WeeklyPage() {
           {bestDay && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingDown className="size-4 text-green-500" />
+                <TrendingDown className="size-4 text-success" />
                 <span className="text-sm text-muted-foreground">Lowest</span>
               </div>
               <span className="text-sm">

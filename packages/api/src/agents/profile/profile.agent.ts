@@ -3,7 +3,7 @@ import {
   isUIFlow,
   schemaProfileEntity,
 } from "@weekly-cal/core";
-import { StopCondition, tool, ToolLoopAgent } from "ai";
+import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
 import {
   AUTH_CONTEXT,
@@ -13,15 +13,8 @@ import {
   PROFILE_REPO,
 } from "../../di";
 import { ProfileRepo } from "../../repo/profile.repo.interface";
+import { hasUIFlowResult } from "../utils";
 import { getProfileTools } from "./profile.tools";
-
-function hasUIFlowResult(): StopCondition<any> {
-  return ({ steps }) => {
-    return steps.some((step) =>
-      step.toolResults?.some((result) => isUIFlow(result.output)),
-    );
-  };
-}
 
 @injectable()
 export class ProfileAgent {
@@ -36,7 +29,7 @@ export class ProfileAgent {
   create(model: any) {
     return new ToolLoopAgent({
       model,
-      instructions: `You are a profile management assistant. Your job is to help users:
+      instructions: `You are a profile management assistant.
 - Use tools if necessary
 - The profile is stored as key-value pairs with the following fields and types: ${describeSchema(schemaProfileEntity)}.
 `,

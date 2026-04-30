@@ -1,0 +1,28 @@
+import { mealUIFlowActions, profileUIFlowActions } from "@weekly-cal/core";
+import type { ComponentType, ReactNode } from "react";
+import type { UIFlowRendererProps } from "../types";
+import { DeleteMeal } from "./delete-meal";
+import { LogMeal } from "./log-meal";
+import { UpdateMeal } from "./update-meal";
+import { UpdateProfile } from "./update-profile";
+
+const registry: Map<string, ComponentType<any>> = new Map();
+
+function addToRegistry(action: string, component: ComponentType<any>) {
+  registry.set(action, component);
+}
+
+// Profiles
+addToRegistry(profileUIFlowActions.updateProfile, UpdateProfile);
+
+// Meals
+addToRegistry(mealUIFlowActions.logMeal, LogMeal);
+addToRegistry(mealUIFlowActions.updateMeal, UpdateMeal);
+addToRegistry(mealUIFlowActions.deleteMeal, DeleteMeal);
+
+export function renderUIFlow(props: UIFlowRendererProps): ReactNode {
+  const Component = registry.get(props.flow.action);
+  if (!Component) return null;
+
+  return <Component {...props} />;
+}

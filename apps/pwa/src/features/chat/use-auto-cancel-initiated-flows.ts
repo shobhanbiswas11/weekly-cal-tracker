@@ -1,5 +1,5 @@
 import { useAui, useAuiEvent } from "@assistant-ui/react";
-import { isUIFlow, uiFlowAutoCancel, type UIFlow } from "@weekly-cal/core";
+import { isInitiatedUIFlow, isUIFlow, uiFlowCancel } from "@weekly-cal/core";
 
 /**
  * Hook that auto-cancels any initiated UI flows when the user sends a new message.
@@ -25,8 +25,7 @@ export function useAutoCancelInitiatedFlows() {
         const result = part.result;
         if (!isUIFlow(result)) continue;
 
-        const flow = result as UIFlow & { payload?: { state?: string } };
-        if (flow.payload?.state !== "initiated") continue;
+        if (!isInitiatedUIFlow(result)) continue;
 
         // Found an initiated flow - cancel it
         const partApi = aui
@@ -35,7 +34,10 @@ export function useAutoCancelInitiatedFlows() {
           .part({ index: partIdx });
 
         partApi.addToolResult(
-          uiFlowAutoCancel("Auto Cancelled due to new user message"),
+          uiFlowCancel({
+            action: result.action,
+            message: "Auto Cancelled due to New user message",
+          }),
         );
       }
     }

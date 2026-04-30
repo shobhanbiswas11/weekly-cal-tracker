@@ -39,8 +39,8 @@ const macroConfig = {
   fiber: {
     icon: Leaf,
     label: "Fiber",
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
+    color: "text-success",
+    bgColor: "bg-success/10",
     unit: "g",
   },
   sugar: {

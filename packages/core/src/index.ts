@@ -1,3 +1,3 @@
 export * from "./schemas";
-export * from "./ui-flows";
+export * from "./ui-flow";
 export * from "./utils";

@@ -71,7 +71,7 @@ export function WeeklyGraph({ days, dailyGoal, className }: WeeklyGraphProps) {
                       "w-full max-w-8 rounded-t-md transition-all group-hover:opacity-80",
                       hasEntries
                         ? isOverGoal
-                          ? "bg-red-500"
+                          ? "bg-destructive"
                           : isTodayBar
                             ? "bg-primary"
                             : "bg-primary/60"

@@ -1,13 +1,13 @@
 import { createEntry } from "@/lib/api";
-import { uiFlow, uiFlowAutoCancel, type UIFlow } from "@weekly-cal/core";
-import { CheckCircle, Utensils, X } from "lucide-react";
-import type { UIFlowRenderer } from "../ui-flow-registry";
+import { isCompleteOrCancelledUIFlow, uiFlowMeal } from "@weekly-cal/core";
+import { Utensils } from "lucide-react";
+import { useState } from "react";
+import type { UIFlowRendererProps } from "../types";
+import { FlowActionButtons, FlowResultCard } from "./common";
 
 // =============================================================================
 // Types
 // =============================================================================
-
-type LogMealFlow = Extract<UIFlow, { action: "LOG_MEAL" }>;
 
 type FoodItem = {
   name: string;
@@ -58,51 +58,23 @@ function calculateTotals(foods: FoodItem[]) {
 // Component
 // =============================================================================
 
-export const LogMeal: UIFlowRenderer<"LOG_MEAL"> = ({ addResult, flow }) => {
-  const { state } = flow.payload;
+export function LogMeal({ addResult, flow }: UIFlowRendererProps) {
+  const [loading, setLoading] = useState(false);
 
-  // Show result state for confirmed, cancelled, or error
-  if (state === "confirmed" || state === "cancelled" || state === "error") {
-    const isSuccess = state === "confirmed";
-    return (
-      <article className="flex w-full max-w-md flex-col gap-3 text-foreground">
-        <div className="flex w-full items-center gap-3 rounded-2xl border bg-card p-4 shadow-sm">
-          {isSuccess ? (
-            <>
-              <span className="flex size-8 items-center justify-center rounded-full bg-green-500/10 text-green-600">
-                <CheckCircle className="size-4" />
-              </span>
-              <span className="text-sm font-medium text-green-600">
-                {flow.payload.message}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <X className="size-4" />
-              </span>
-              <span className="text-sm font-medium text-muted-foreground">
-                {flow.payload.message}
-              </span>
-            </>
-          )}
-        </div>
-      </article>
-    );
+  // Show result state for completed or cancelled
+  if (isCompleteOrCancelledUIFlow(flow)) {
+    return <FlowResultCard state={flow.state} message={flow.message} />;
   }
 
   // State is "initiated" - show confirmation UI
-  const { name, date, note, foodItems } = flow.payload as Extract<
-    LogMealFlow["payload"],
-    { state: "initiated" }
-  >;
-
+  const { name, date, note, foodItems } = uiFlowMeal.log.getInitPayload(flow);
   const hasFood = foodItems && foodItems.length > 0;
   const totals = hasFood ? calculateTotals(foodItems) : null;
 
   // Handle confirm - call API and add result
   const handleConfirm = async () => {
     if (!totals) return;
+    setLoading(true);
     try {
       await createEntry({
         name,
@@ -115,32 +87,27 @@ export const LogMeal: UIFlowRenderer<"LOG_MEAL"> = ({ addResult, flow }) => {
         fiber: Math.round(totals.fiber * 10) / 10,
         sugar: Math.round(totals.sugar * 10) / 10,
         sodium: Math.round(totals.sodium * 10) / 10,
-        foodItems: foodItems.map((item) => ({
+        foodItems: foodItems.map((item: FoodItem) => ({
           name: item.name,
           quantity: item.quantity,
         })),
       });
-      addResult(
-        uiFlow("LOG_MEAL", {
-          state: "confirmed",
-          message: "Meal logged successfully",
-        }) as LogMealFlow,
-      );
+      addResult(uiFlowMeal.log.complete("Meal logged successfully"));
     } catch (error) {
       console.log(error);
       addResult(
-        uiFlow("LOG_MEAL", {
-          state: "error",
-          message:
-            error instanceof Error ? error.message : "Failed to log meal",
-        }) as LogMealFlow,
+        uiFlowMeal.log.cancel(
+          error instanceof Error ? error.message : "Failed to log meal",
+        ),
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle cancel
   const handleCancel = () => {
-    addResult(uiFlowAutoCancel("Meal log cancelled by user"));
+    addResult(uiFlowMeal.log.cancel("Meal log cancelled by user"));
   };
 
   return (
@@ -166,7 +133,7 @@ export const LogMeal: UIFlowRenderer<"LOG_MEAL"> = ({ addResult, flow }) => {
                 Items
               </span>
               <div className="space-y-2">
-                {foodItems.map((food, index) => (
+                {foodItems.map((food: FoodItem, index: number) => (
                   <div
                     key={`${food.name}-${index}`}
                     className="rounded-lg border bg-muted/30 p-3"
@@ -315,23 +282,14 @@ export const LogMeal: UIFlowRenderer<"LOG_MEAL"> = ({ addResult, flow }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Log
-          </button>
-        </div>
+        <FlowActionButtons
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+          cancelLabel="Cancel"
+          confirmLabel="Log"
+          loading={loading}
+        />
       </div>
     </article>
   );
-};
+}

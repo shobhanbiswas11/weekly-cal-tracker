@@ -41,9 +41,9 @@ export default function DailyPage() {
 
   // Determine progress color
   const getProgressColor = () => {
-    if (percentage >= 100) return "bg-red-500";
+    if (percentage >= 100) return "bg-destructive";
     if (percentage >= 80) return "bg-amber-500";
-    return "bg-green-500";
+    return "bg-success";
   };
 
   return (
@@ -80,7 +80,7 @@ export default function DailyPage() {
                 calories remaining
               </span>
             ) : (
-              <span className="text-red-500 font-medium">
+              <span className="text-destructive font-medium">
                 {Math.abs(totals.calories - calorieGoal).toLocaleString()} over
                 goal
               </span>

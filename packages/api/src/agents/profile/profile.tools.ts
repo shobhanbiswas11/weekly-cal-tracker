@@ -1,4 +1,4 @@
-import { uiFlow } from "@weekly-cal/core";
+import { uiFlowProfile } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
 import { ProfileRepo } from "../../repo/profile.repo.interface";
@@ -32,8 +32,7 @@ export const getProfileTools = (profileRepo: ProfileRepo, userId: string) => {
         ),
       }),
       execute: async ({ changes, message }) => {
-        return uiFlow("UPDATE_PROFILE", {
-          state: "initiated",
+        return uiFlowProfile.update.init({
           message,
           changes: changes.reduce(
             (acc, { field, value }) => {

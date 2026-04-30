@@ -65,13 +65,13 @@ function CalorieCard({
   const Icon = config.icon;
 
   const getStatusColor = () => {
-    if (percentage >= 100) return "text-red-500";
+    if (percentage >= 100) return "text-destructive";
     if (percentage >= 80) return "text-amber-500";
-    return "text-green-500";
+    return "text-success";
   };
 
   const getProgressColor = () => {
-    if (percentage >= 100) return "bg-red-500";
+    if (percentage >= 100) return "bg-destructive";
     if (percentage >= 80) return "bg-amber-500";
     return config.progressColor;
   };
