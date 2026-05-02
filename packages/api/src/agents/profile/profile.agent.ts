@@ -5,21 +5,15 @@ import {
 } from "@weekly-cal/core";
 import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
-import {
-  AUTH_CONTEXT,
-  AuthContext,
-  inject,
-  injectable,
-  PROFILE_REPO,
-} from "../../di";
-import { ProfileRepo } from "../../repo/profile.repo.interface";
+import { AUTH_CONTEXT, AuthContext, inject, injectable } from "../../di";
+import { ProfileService } from "../../services/profile.service";
 import { hasUIFlowResult } from "../utils";
 import { getProfileTools } from "./profile.tools";
 
 @injectable()
 export class ProfileAgent {
   constructor(
-    private profileRepo: ProfileRepo = inject(PROFILE_REPO),
+    private profileService: ProfileService = inject(ProfileService),
     private auth: AuthContext = inject(AUTH_CONTEXT),
   ) {}
 
@@ -33,7 +27,7 @@ export class ProfileAgent {
 - Use tools if necessary
 - The profile is stored as key-value pairs with the following fields and types: ${describeSchema(schemaProfileEntity)}.
 `,
-      tools: getProfileTools(this.profileRepo, this.auth.userId),
+      tools: getProfileTools(this.profileService, this.auth.userId),
       stopWhen: hasUIFlowResult(),
     });
   }

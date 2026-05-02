@@ -1,9 +1,12 @@
 import { uiFlowProfile } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
-import { ProfileRepo } from "../../repo/profile.repo.interface";
+import { ProfileService } from "../../services/profile.service";
 
-export const getProfileTools = (profileRepo: ProfileRepo, userId: string) => {
+export const getProfileTools = (
+  profileService: ProfileService,
+  userId: string,
+) => {
   return {
     getProfile: tool({
       description:
@@ -14,7 +17,7 @@ export const getProfileTools = (profileRepo: ProfileRepo, userId: string) => {
           .describe("List of profile fields to retrieve."),
       }),
       execute: ({ fields }) =>
-        profileRepo.getSelectedFieldsByUserId(userId, fields as any),
+        profileService.getSelectedFields(userId, fields as any),
     }),
     updateProfile: tool({
       description: "Update user profile fields with new values",

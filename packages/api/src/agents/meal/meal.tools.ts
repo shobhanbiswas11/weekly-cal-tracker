@@ -1,7 +1,7 @@
 import { schemaMealEntryEntity, uiFlowMeal } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
-import { MealEntryRepo } from "../../repo/meal-entry.repo.interface";
+import { MealService } from "../../services/meal.service";
 
 const dateSchema = z.iso.date().describe("Date in YYYY-MM-DD format");
 
@@ -21,7 +21,7 @@ const foodItemSchema = z.object({
   sodium: z.number(),
 });
 
-export const getMealTools = (mealRepo: MealEntryRepo, userId: string) => {
+export const getMealTools = (mealService: MealService, userId: string) => {
   return {
     // =========================================================================
     // Mutation Tools (UI Flow)
@@ -54,7 +54,7 @@ export const getMealTools = (mealRepo: MealEntryRepo, userId: string) => {
       inputSchema: z.object({
         date: dateSchema,
       }),
-      execute: ({ date }) => mealRepo.getByDate(userId, date),
+      execute: ({ date }) => mealService.getByDate(userId, date),
     }),
 
     getTodaysMeals: tool({
@@ -62,7 +62,7 @@ export const getMealTools = (mealRepo: MealEntryRepo, userId: string) => {
       inputSchema: z.object({}),
       execute: () => {
         const today = new Date().toISOString().split("T")[0];
-        return mealRepo.getByDate(userId, today);
+        return mealService.getByDate(userId, today);
       },
     }),
 
@@ -73,7 +73,7 @@ export const getMealTools = (mealRepo: MealEntryRepo, userId: string) => {
         endDate: dateSchema.describe("End date of the range"),
       }),
       execute: ({ startDate, endDate }) =>
-        mealRepo.getByDateRange(userId, startDate, endDate),
+        mealService.getByDateRange(userId, startDate, endDate),
     }),
 
     getMealById: tool({
@@ -81,7 +81,7 @@ export const getMealTools = (mealRepo: MealEntryRepo, userId: string) => {
       inputSchema: z.object({
         mealId: z.string().describe("The ID of the meal to retrieve"),
       }),
-      execute: ({ mealId }) => mealRepo.getById(userId, mealId),
+      execute: ({ mealId }) => mealService.getById(userId, mealId),
     }),
 
     // =========================================================================

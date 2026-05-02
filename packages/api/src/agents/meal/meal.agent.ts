@@ -5,21 +5,15 @@ import {
 } from "@weekly-cal/core";
 import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
-import {
-  AUTH_CONTEXT,
-  AuthContext,
-  inject,
-  injectable,
-  MEAL_ENTRY_REPO,
-} from "../../di";
-import { MealEntryRepo } from "../../repo/meal-entry.repo.interface";
+import { AUTH_CONTEXT, AuthContext, inject, injectable } from "../../di";
+import { MealService } from "../../services/meal.service";
 import { hasUIFlowResult } from "../utils";
 import { getMealTools } from "./meal.tools";
 
 @injectable()
 export class MealAgent {
   constructor(
-    private mealRepo: MealEntryRepo = inject(MEAL_ENTRY_REPO),
+    private mealService: MealService = inject(MealService),
     private auth: AuthContext = inject(AUTH_CONTEXT),
   ) {}
 
@@ -32,7 +26,7 @@ export class MealAgent {
       instructions: `You are a meal tracking assistant.
 - Use tools if necessary
 - The meal is stored as key-value pairs with the following fields and types: ${describeSchema(schemaMealEntryEntity)}.`,
-      tools: getMealTools(this.mealRepo, this.auth.userId),
+      tools: getMealTools(this.mealService, this.auth.userId),
       stopWhen: hasUIFlowResult(),
     });
   }
