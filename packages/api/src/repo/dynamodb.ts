@@ -1,13 +1,21 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient as DynamoDBsdkClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { injectable } from "@needle-di/core";
+@injectable()
+export class DynamoDBClient {
+  public readonly client: DynamoDBDocumentClient;
 
-const client = new DynamoDBClient({});
-export const docClient = DynamoDBDocumentClient.from(client);
+  constructor() {
+    this.client = DynamoDBDocumentClient.from(new DynamoDBsdkClient({}));
+  }
 
-export const createPK = (userId: string): string => `USER#${userId}`;
+  static SK_PREFIX = {
+    PROFILE: "PROFILE",
+    FOOD_ENTRY: "FOOD_ENTRY",
+    WORKOUT_ENTRY: "WORKOUT_ENTRY", // Future
+  } as const;
 
-export const SK_PREFIX = {
-  PROFILE: "PROFILE",
-  FOOD_ENTRY: "FOOD_ENTRY",
-  WORKOUT_ENTRY: "WORKOUT_ENTRY", // Future
-} as const;
+  static createPK(userId: string): string {
+    return `USER#${userId}`;
+  }
+}

@@ -7,7 +7,7 @@ import {
 import { inject, injectable } from "@needle-di/core";
 import { v4 as uuidv4 } from "uuid";
 import { AppConfigService } from "../services";
-import { createPK, docClient, SK_PREFIX } from "./dynamodb";
+import { DynamoDBClient } from "./dynamodb";
 import type {
   CreateMealEntry,
   MealEntry,
@@ -15,37 +15,29 @@ import type {
 } from "./meal-entry.repo.interface";
 import type { ISODate } from "./types";
 
-// =============================================================================
-// Key Helpers
-// =============================================================================
-
-const ENTRY_PREFIX = SK_PREFIX.FOOD_ENTRY;
-
-/**
- * Sort key format: FOOD_ENTRY#<date>#<id>
- * This allows efficient date range queries using begins_with and between
- */
-const createSK = (date: string, id: string): string =>
-  `${ENTRY_PREFIX}#${date}#${id}`;
-
-// =============================================================================
-// Mappers
-// =============================================================================
-
 type DynamoDBMealEntry = MealEntry & { PK: string; SK: string };
-
-const toMealEntry = (item: DynamoDBMealEntry): MealEntry => {
-  const { PK, SK, ...entry } = item;
-  return entry;
-};
-
-// =============================================================================
-// Repository Implementation
-// =============================================================================
 
 @injectable()
 export class DynamoDBMealEntryRepo implements MealEntryRepo {
-  constructor(private config = inject(AppConfigService)) {}
+  private static readonly ENTRY_PREFIX = DynamoDBClient.SK_PREFIX.FOOD_ENTRY;
+
+  /**
+   * Sort key format: FOOD_ENTRY#<date>#<id>
+   * This allows efficient date range queries using begins_with and between
+   */
+  private static createSK(date: string, id: string): string {
+    return `${DynamoDBMealEntryRepo.ENTRY_PREFIX}#${date}#${id}`;
+  }
+
+  private static toMealEntry(item: DynamoDBMealEntry): MealEntry {
+    const { PK, SK, ...entry } = item;
+    return entry;
+  }
+
+  constructor(
+    private config = inject(AppConfigService),
+    private db = inject(DynamoDBClient),
+  ) {}
 
   async create(userId: string, data: CreateMealEntry): Promise<MealEntry> {
     const now = new Date().toISOString();
@@ -56,20 +48,20 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       ...data,
       id,
       date,
-      PK: createPK(userId),
-      SK: createSK(date, id),
+      PK: DynamoDBClient.createPK(userId),
+      SK: DynamoDBMealEntryRepo.createSK(date, id),
       createdAt: now,
       updatedAt: now,
     };
 
-    await docClient.send(
+    await this.db.client.send(
       new PutCommand({
         TableName: this.config.tableName,
         Item: item,
       }),
     );
 
-    return toMealEntry(item);
+    return DynamoDBMealEntryRepo.toMealEntry(item);
   }
 
   async update(
@@ -118,12 +110,12 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       expressionValues[valueKey] = value;
     }
 
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new UpdateCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: createSK(existing.date, id),
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBMealEntryRepo.createSK(existing.date, id),
         },
         UpdateExpression: `SET ${updateParts.join(", ")}`,
         ExpressionAttributeValues: expressionValues,
@@ -136,7 +128,9 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       throw new Error(`Meal entry not found: ${id}`);
     }
 
-    return toMealEntry(result.Attributes as DynamoDBMealEntry);
+    return DynamoDBMealEntryRepo.toMealEntry(
+      result.Attributes as DynamoDBMealEntry,
+    );
   }
 
   async delete(userId: string, id: string): Promise<void> {
@@ -146,12 +140,12 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       return; // Already deleted, idempotent
     }
 
-    await docClient.send(
+    await this.db.client.send(
       new DeleteCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: createSK(existing.date, id),
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBMealEntryRepo.createSK(existing.date, id),
         },
       }),
     );
@@ -160,14 +154,14 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
   async getById(userId: string, id: string): Promise<MealEntry | null> {
     // Since we don't know the date, we need to query by id
     // Query all entries and filter by id (inefficient but necessary without GSI)
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new QueryCommand({
         TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
         FilterExpression: "id = :id",
         ExpressionAttributeValues: {
-          ":pk": createPK(userId),
-          ":skPrefix": `${ENTRY_PREFIX}#`,
+          ":pk": DynamoDBClient.createPK(userId),
+          ":skPrefix": `${DynamoDBMealEntryRepo.ENTRY_PREFIX}#`,
           ":id": id,
         },
       }),
@@ -177,17 +171,19 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       return null;
     }
 
-    return toMealEntry(result.Items[0] as DynamoDBMealEntry);
+    return DynamoDBMealEntryRepo.toMealEntry(
+      result.Items[0] as DynamoDBMealEntry,
+    );
   }
 
   async getByDate(userId: string, date: ISODate): Promise<MealEntry[]> {
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new QueryCommand({
         TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
         ExpressionAttributeValues: {
-          ":pk": createPK(userId),
-          ":skPrefix": `${ENTRY_PREFIX}#${date}#`,
+          ":pk": DynamoDBClient.createPK(userId),
+          ":skPrefix": `${DynamoDBMealEntryRepo.ENTRY_PREFIX}#${date}#`,
         },
       }),
     );
@@ -196,7 +192,9 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       return [];
     }
 
-    return result.Items.map((item) => toMealEntry(item as DynamoDBMealEntry));
+    return result.Items.map((item) =>
+      DynamoDBMealEntryRepo.toMealEntry(item as DynamoDBMealEntry),
+    );
   }
 
   async getByDateRange(
@@ -209,14 +207,14 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
     // Use BETWEEN for date range query
     // SK format: FOOD_ENTRY#<date>#<id>
     // We want all entries where date is between startDate and endDate
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new QueryCommand({
         TableName: this.config.tableName,
         KeyConditionExpression: "PK = :pk AND SK BETWEEN :skStart AND :skEnd",
         ExpressionAttributeValues: {
-          ":pk": createPK(userId),
-          ":skStart": `${ENTRY_PREFIX}#${startDate}#`,
-          ":skEnd": `${ENTRY_PREFIX}#${end}#~`, // ~ is after all UUIDs lexicographically
+          ":pk": DynamoDBClient.createPK(userId),
+          ":skStart": `${DynamoDBMealEntryRepo.ENTRY_PREFIX}#${startDate}#`,
+          ":skEnd": `${DynamoDBMealEntryRepo.ENTRY_PREFIX}#${end}#~`, // ~ is after all UUIDs lexicographically
         },
       }),
     );
@@ -225,6 +223,8 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
       return [];
     }
 
-    return result.Items.map((item) => toMealEntry(item as DynamoDBMealEntry));
+    return result.Items.map((item) =>
+      DynamoDBMealEntryRepo.toMealEntry(item as DynamoDBMealEntry),
+    );
   }
 }

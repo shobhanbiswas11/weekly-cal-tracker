@@ -6,37 +6,28 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
 import { AppConfigService } from "../services";
-import { createPK, docClient, SK_PREFIX } from "./dynamodb";
+import { DynamoDBClient } from "./dynamodb";
 import type {
   CreateProfile,
   Profile,
   ProfileRepo,
 } from "./profile.repo.interface";
 
-// =============================================================================
-// Key Helpers
-// =============================================================================
-
-const PROFILE_SK = SK_PREFIX.PROFILE;
-
-// =============================================================================
-// Mappers
-// =============================================================================
-
 type DynamoDBProfile = Profile & { PK: string; SK: string };
-
-const toProfile = (item: DynamoDBProfile): Profile => {
-  const { PK, SK, ...profile } = item;
-  return profile;
-};
-
-// =============================================================================
-// Repository Implementation
-// =============================================================================
 
 @injectable()
 export class DynamoDBProfileRepo implements ProfileRepo {
-  constructor(private config = inject(AppConfigService)) {}
+  private static readonly PROFILE_SK = DynamoDBClient.SK_PREFIX.PROFILE;
+
+  private static toProfile(item: DynamoDBProfile): Profile {
+    const { PK, SK, ...profile } = item;
+    return profile;
+  }
+
+  constructor(
+    private config = inject(AppConfigService),
+    private db = inject(DynamoDBClient),
+  ) {}
 
   async create(userId: string, data: CreateProfile): Promise<Profile> {
     const now = new Date().toISOString();
@@ -44,13 +35,13 @@ export class DynamoDBProfileRepo implements ProfileRepo {
     const item: DynamoDBProfile = {
       ...data,
       id: userId,
-      PK: createPK(userId),
-      SK: PROFILE_SK,
+      PK: DynamoDBClient.createPK(userId),
+      SK: DynamoDBProfileRepo.PROFILE_SK,
       createdAt: now,
       updatedAt: now,
     };
 
-    await docClient.send(
+    await this.db.client.send(
       new PutCommand({
         TableName: this.config.tableName,
         Item: item,
@@ -59,7 +50,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       }),
     );
 
-    return toProfile(item);
+    return DynamoDBProfileRepo.toProfile(item);
   }
 
   async update(userId: string, data: Partial<CreateProfile>): Promise<Profile> {
@@ -82,12 +73,12 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       expressionValues[valueKey] = value;
     }
 
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new UpdateCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: PROFILE_SK,
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBProfileRepo.PROFILE_SK,
         },
         UpdateExpression: `SET ${updateParts.join(", ")}`,
         ExpressionAttributeValues: expressionValues,
@@ -100,28 +91,28 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       throw new Error(`Profile not found: ${userId}`);
     }
 
-    return toProfile(result.Attributes as DynamoDBProfile);
+    return DynamoDBProfileRepo.toProfile(result.Attributes as DynamoDBProfile);
   }
 
   async delete(userId: string): Promise<void> {
-    await docClient.send(
+    await this.db.client.send(
       new DeleteCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: PROFILE_SK,
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBProfileRepo.PROFILE_SK,
         },
       }),
     );
   }
 
   async getByUserId(userId: string): Promise<Profile | null> {
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new GetCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: PROFILE_SK,
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBProfileRepo.PROFILE_SK,
         },
       }),
     );
@@ -130,7 +121,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       return null;
     }
 
-    return toProfile(result.Item as DynamoDBProfile);
+    return DynamoDBProfileRepo.toProfile(result.Item as DynamoDBProfile);
   }
 
   async getSelectedFieldsByUserId<T extends keyof Profile>(
@@ -146,12 +137,12 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       projectionParts.push(nameKey);
     }
 
-    const result = await docClient.send(
+    const result = await this.db.client.send(
       new GetCommand({
         TableName: this.config.tableName,
         Key: {
-          PK: createPK(userId),
-          SK: PROFILE_SK,
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBProfileRepo.PROFILE_SK,
         },
         ProjectionExpression: projectionParts.join(", "),
         ExpressionAttributeNames: expressionNames,

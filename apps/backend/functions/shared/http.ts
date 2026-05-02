@@ -6,7 +6,7 @@ import type {
 } from "aws-lambda";
 
 // API Response wrapper
-export interface ApiResponse<T> {
+interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
@@ -57,23 +57,8 @@ export const getUserId = (
   return claims.sub as string;
 };
 
-// Get today's date in YYYY-MM-DD format
-export const getTodayDate = (): string => {
-  return new Date().toISOString().split("T")[0];
-};
-
-// Validate date format (YYYY-MM-DD)
-export const isValidDateFormat = (date: string): boolean => {
-  return /^\d{4}-\d{2}-\d{2}$/.test(date);
-};
-
-// Validate ISO week format (YYYY-Www)
-export const isValidWeekFormat = (week: string): boolean => {
-  return /^\d{4}-W\d{2}$/.test(week);
-};
-
 // Parse request body with error handling
-export const parseBody = <T>(body: string | undefined): T | null => {
+const parseBody = <T>(body: string | undefined): T | null => {
   if (!body) return null;
   try {
     return JSON.parse(body) as T;
@@ -98,7 +83,7 @@ type AnyZodSchema = {
 };
 
 // Validated route handler - receives validated & typed body
-export type ValidatedRouteHandler<T> = (
+type ValidatedRouteHandler<T> = (
   event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0],
   userId: string,
   body: T,

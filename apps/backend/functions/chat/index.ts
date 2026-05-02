@@ -1,6 +1,3 @@
-// Chat Lambda - AI conversation with streaming responses
-// Uses AI SDK with Lambda Response Streaming for assistant-ui
-
 import {
   ChatService,
   createRequestContainer,
@@ -8,6 +5,7 @@ import {
 } from "@weekly-cal/api";
 import type { UIMessage } from "ai";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createCorsHeaders } from "../shared/http";
 
 // Initialize DI container (validates env vars at cold start)
 initContainer();
@@ -24,12 +22,8 @@ interface ChatRequest {
   tools?: any;
 }
 
-// CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "*",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "POST,OPTIONS",
-};
+// CORS headers for streaming responses
+const corsHeaders = createCorsHeaders("POST,OPTIONS");
 
 // Helper to send error response
 function sendError(

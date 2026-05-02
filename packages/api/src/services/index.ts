@@ -4,3 +4,4 @@ export { ChatService } from "./chat.service";
 export { MealService } from "./meal.service";
 export { ModelService } from "./model.service";
 export { ProfileService } from "./profile.service";
+export { QueryService } from "./query.service";

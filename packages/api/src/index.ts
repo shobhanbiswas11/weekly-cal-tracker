@@ -10,4 +10,9 @@ export {
 // =============================================================================
 // Services
 // =============================================================================
-export { ChatService, MealService, ProfileService } from "./services";
+export {
+  ChatService,
+  MealService,
+  ProfileService,
+  QueryService,
+} from "./services";

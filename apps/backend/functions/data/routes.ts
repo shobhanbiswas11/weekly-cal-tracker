@@ -1,26 +1,25 @@
-// Data Lambda routes - handles all data queries and mutations
-// Minimal validation - only check required fields (id, date)
-
 import {
+  MealService,
+  ProfileService,
+  QueryService,
+  createRequestContainer,
+} from "@weekly-cal/api";
+import {
+  getWeekBoundaries,
+  isValidDateFormat,
+  isValidWeekFormat,
   schemaCreateMealEntry,
   schemaCreateProfile,
   schemaUpdateMealEntry,
   schemaUpdateProfile,
 } from "@weekly-cal/core";
-import { v4 as uuidv4 } from "uuid";
 import {
   createErrorResponse,
   createResponse,
-  getTodayDate,
-  isValidDateFormat,
-  isValidWeekFormat,
+  withValidation,
   type Route,
   type RouteHandler,
-  withValidation,
 } from "../shared/http";
-import * as dashboardService from "./domain/dashboard-service";
-import * as entryRepo from "./domain/entry-repository";
-import * as profileRepo from "./domain/profile-repository";
 
 // =============================================================================
 // Route Handlers
@@ -28,8 +27,10 @@ import * as profileRepo from "./domain/profile-repository";
 
 // GET /dashboard - App init data
 const handleGetDashboard: RouteHandler = async (_event, userId) => {
-  const dashboard = await dashboardService.getDashboard(userId);
-  return createResponse(dashboard);
+  const container = createRequestContainer(userId);
+  const queryService = container.get(QueryService);
+  const summary = await queryService.summary();
+  return createResponse(summary);
 };
 
 // GET /weeks/{weekId} - Get specific week summary
@@ -47,8 +48,11 @@ const handleGetWeek: RouteHandler = async (event, userId) => {
     );
   }
 
-  const summary = await dashboardService.getWeeklySummary(userId, weekId);
-  return createResponse(summary);
+  const { start, end } = getWeekBoundaries(weekId);
+  const container = createRequestContainer(userId);
+  const mealService = container.get(MealService);
+  const mealEntries = await mealService.getByDateRange(userId, start, end);
+  return createResponse({ weekId, mealEntries });
 };
 
 // GET /entries/{date} - Get entries for a specific date
@@ -63,7 +67,9 @@ const handleGetEntriesByDate: RouteHandler = async (event, userId) => {
     return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
   }
 
-  const entries = await entryRepo.getEntriesByDate(userId, date);
+  const container = createRequestContainer(userId);
+  const mealService = container.get(MealService);
+  const entries = await mealService.getByDate(userId, date);
   return createResponse({ entries });
 };
 
@@ -71,13 +77,9 @@ const handleGetEntriesByDate: RouteHandler = async (event, userId) => {
 const handleCreateEntry = withValidation(
   schemaCreateMealEntry,
   async (_event, userId, entryData) => {
-    const entryId = uuidv4();
-
-    const entry = await entryRepo.createEntry(userId, entryId, {
-      ...entryData,
-      date: entryData.date || getTodayDate(),
-    });
-
+    const container = createRequestContainer(userId);
+    const mealService = container.get(MealService);
+    const entry = await mealService.create(userId, entryData);
     return createResponse(entry, 201);
   },
 );
@@ -96,12 +98,9 @@ const handleUpdateEntry = withValidation(
       return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
     }
 
-    const entry = await entryRepo.updateEntry(userId, date, id, body);
-
-    if (!entry) {
-      return createErrorResponse("Entry not found or no updates provided", 404);
-    }
-
+    const container = createRequestContainer(userId);
+    const mealService = container.get(MealService);
+    const entry = await mealService.update(userId, id, body);
     return createResponse(entry);
   },
 );
@@ -118,8 +117,9 @@ const handleDeleteEntry: RouteHandler = async (event, userId) => {
     return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
   }
 
-  await entryRepo.deleteEntry(userId, date, id);
-
+  const container = createRequestContainer(userId);
+  const mealService = container.get(MealService);
+  await mealService.delete(userId, id);
   return createResponse({ message: "Entry deleted successfully" });
 };
 
@@ -127,7 +127,9 @@ const handleDeleteEntry: RouteHandler = async (event, userId) => {
 const handleUpdateProfile = withValidation(
   schemaUpdateProfile,
   async (_event, userId, body) => {
-    const profile = await profileRepo.upsertProfile(userId, body);
+    const container = createRequestContainer(userId);
+    const profileService = container.get(ProfileService);
+    const profile = await profileService.update(userId, body);
     return createResponse({ profile });
   },
 );
@@ -136,7 +138,9 @@ const handleUpdateProfile = withValidation(
 const handleCreateProfile = withValidation(
   schemaCreateProfile,
   async (_event, userId, body) => {
-    const profile = await profileRepo.upsertProfile(userId, body);
+    const container = createRequestContainer(userId);
+    const profileService = container.get(ProfileService);
+    const profile = await profileService.create(userId, body);
     return createResponse({ profile }, 201);
   },
 );
