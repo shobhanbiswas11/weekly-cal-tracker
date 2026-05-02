@@ -1,13 +1,14 @@
-import { inject, injectable, PROFILE_REPO } from "../di";
-import type {
-  CreateProfile,
-  Profile,
-  ProfileRepo,
+import { inject, injectable } from "../di-utils";
+import {
+  PROFILE_REPO_TOKEN,
+  type CreateProfile,
+  type Profile,
+  type ProfileRepo,
 } from "../repo/profile.repo.interface";
 
 @injectable()
 export class ProfileService {
-  constructor(private profileRepo: ProfileRepo = inject(PROFILE_REPO)) {}
+  constructor(private profileRepo: ProfileRepo = inject(PROFILE_REPO_TOKEN)) {}
 
   async create(userId: string, data: CreateProfile): Promise<Profile> {
     return this.profileRepo.create(userId, data);

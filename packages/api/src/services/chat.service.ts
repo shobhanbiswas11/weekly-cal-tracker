@@ -2,7 +2,7 @@ import { frontendTools } from "@assistant-ui/react-ai-sdk";
 
 import { convertToModelMessages, UIMessage, type StreamTextResult } from "ai";
 import { PrimaryAgent } from "../agents";
-import { inject, injectable } from "../di";
+import { inject, injectable } from "../di-utils";
 import { ModelService } from "./model.service";
 
 // =============================================================================

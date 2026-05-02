@@ -1,7 +1,7 @@
 import { uiFlowProfile } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
-import { ProfileService } from "../../services/profile.service";
+import { ProfileService } from "../../services";
 
 export const getProfileTools = (
   profileService: ProfileService,

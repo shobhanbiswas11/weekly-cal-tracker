@@ -5,7 +5,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
-import { APP_CONFIG } from "../di/tokens";
+import { AppConfigService } from "../services";
 import { createPK, docClient, SK_PREFIX } from "./dynamodb";
 import type {
   CreateProfile,
@@ -36,7 +36,7 @@ const toProfile = (item: DynamoDBProfile): Profile => {
 
 @injectable()
 export class DynamoDBProfileRepo implements ProfileRepo {
-  constructor(private config = inject(APP_CONFIG)) {}
+  constructor(private config = inject(AppConfigService)) {}
 
   async create(userId: string, data: CreateProfile): Promise<Profile> {
     const now = new Date().toISOString();

@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { wrapLanguageModel } from "ai";
-import { APP_CONFIG, inject, injectable, type AppConfig } from "../di";
+import { inject, injectable } from "../di-utils";
+import { AppConfigService } from "./app-config.service";
 
 export type Model = ReturnType<typeof openai>;
 
@@ -9,7 +10,7 @@ export class ModelService {
   private primaryModel: Model | null = null;
   private initialized = false;
 
-  constructor(private config: AppConfig = inject(APP_CONFIG)) {}
+  constructor(private config = inject(AppConfigService)) {}
 
   private async wrapWithDevTools(model: Model): Promise<Model> {
     const { devToolsMiddleware } = await import("@ai-sdk/devtools");

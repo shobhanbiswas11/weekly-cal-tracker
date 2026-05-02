@@ -1,5 +1,6 @@
 import { schemaCreateMealEntry, schemaMealEntryEntity } from "@weekly-cal/core";
 import type { z } from "zod";
+import { InjectionToken } from "../di-utils";
 import type { ISODate } from "./types";
 
 export type MealEntry = z.infer<typeof schemaMealEntryEntity>;
@@ -21,3 +22,7 @@ export interface MealEntryRepo {
     endDate?: ISODate,
   ) => Promise<MealEntry[]>;
 }
+
+export const MEAL_ENTRY_REPO_TOKEN = new InjectionToken<MealEntryRepo>(
+  "MEAL_ENTRY_REPO",
+);

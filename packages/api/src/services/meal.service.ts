@@ -1,14 +1,17 @@
-import { inject, injectable, MEAL_ENTRY_REPO } from "../di";
-import type {
-  CreateMealEntry,
-  MealEntry,
-  MealEntryRepo,
+import { inject, injectable } from "../di-utils";
+import {
+  MEAL_ENTRY_REPO_TOKEN,
+  type CreateMealEntry,
+  type MealEntry,
+  type MealEntryRepo,
 } from "../repo/meal-entry.repo.interface";
 import type { ISODate } from "../repo/types";
 
 @injectable()
 export class MealService {
-  constructor(private mealEntryRepo: MealEntryRepo = inject(MEAL_ENTRY_REPO)) {}
+  constructor(
+    private mealEntryRepo: MealEntryRepo = inject(MEAL_ENTRY_REPO_TOKEN),
+  ) {}
 
   async create(userId: string, data: CreateMealEntry): Promise<MealEntry> {
     return this.mealEntryRepo.create(userId, data);

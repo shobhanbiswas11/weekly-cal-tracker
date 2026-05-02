@@ -1,5 +1,6 @@
 import { schemaCreateProfile, schemaProfileEntity } from "@weekly-cal/core";
 import type { z } from "zod";
+import { InjectionToken } from "../di-utils";
 
 export type Profile = z.infer<typeof schemaProfileEntity>;
 export type CreateProfile = z.infer<typeof schemaCreateProfile>;
@@ -14,3 +15,7 @@ export interface ProfileRepo {
     fields: T[],
   ) => Promise<Pick<Profile, T> | null>;
 }
+
+export const PROFILE_REPO_TOKEN = new InjectionToken<ProfileRepo>(
+  "PROFILE_REPO",
+);

@@ -1,0 +1,4 @@
+export { DynamoDBMealEntryRepo } from "./meal-entry-dynamodb.repo";
+export * from "./meal-entry.repo.interface";
+export { DynamoDBProfileRepo } from "./profile-dynamodb.repo";
+export * from "./profile.repo.interface";

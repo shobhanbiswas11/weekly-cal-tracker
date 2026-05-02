@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
 import { v4 as uuidv4 } from "uuid";
-import { APP_CONFIG } from "../di/tokens";
+import { AppConfigService } from "../services";
 import { createPK, docClient, SK_PREFIX } from "./dynamodb";
 import type {
   CreateMealEntry,
@@ -45,7 +45,7 @@ const toMealEntry = (item: DynamoDBMealEntry): MealEntry => {
 
 @injectable()
 export class DynamoDBMealEntryRepo implements MealEntryRepo {
-  constructor(private config = inject(APP_CONFIG)) {}
+  constructor(private config = inject(AppConfigService)) {}
 
   async create(userId: string, data: CreateMealEntry): Promise<MealEntry> {
     const now = new Date().toISOString();

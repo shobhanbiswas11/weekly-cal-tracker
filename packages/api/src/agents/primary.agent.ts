@@ -1,6 +1,6 @@
 import { ModelMessage, ToolLoopAgent } from "ai";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import { inject, injectable } from "../di";
+import { inject, injectable } from "../di-utils";
 import { MealAgent } from "./meal";
 import { ProfileAgent } from "./profile";
 import { hasUIFlowResult } from "./utils";

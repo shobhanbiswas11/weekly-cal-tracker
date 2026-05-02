@@ -5,8 +5,8 @@ import {
 } from "@weekly-cal/core";
 import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
-import { AUTH_CONTEXT, AuthContext, inject, injectable } from "../../di";
-import { MealService } from "../../services/meal.service";
+import { inject, injectable } from "../../di-utils";
+import { AuthService, MealService } from "../../services";
 import { hasUIFlowResult } from "../utils";
 import { getMealTools } from "./meal.tools";
 
@@ -14,7 +14,7 @@ import { getMealTools } from "./meal.tools";
 export class MealAgent {
   constructor(
     private mealService: MealService = inject(MealService),
-    private auth: AuthContext = inject(AUTH_CONTEXT),
+    private auth = inject(AuthService),
   ) {}
 
   /**

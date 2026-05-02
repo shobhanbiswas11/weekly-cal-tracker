@@ -5,8 +5,8 @@ import {
 } from "@weekly-cal/core";
 import { tool, ToolLoopAgent } from "ai";
 import z from "zod";
-import { AUTH_CONTEXT, AuthContext, inject, injectable } from "../../di";
-import { ProfileService } from "../../services/profile.service";
+import { inject, injectable } from "../../di-utils";
+import { AuthService, ProfileService } from "../../services";
 import { hasUIFlowResult } from "../utils";
 import { getProfileTools } from "./profile.tools";
 
@@ -14,7 +14,7 @@ import { getProfileTools } from "./profile.tools";
 export class ProfileAgent {
   constructor(
     private profileService: ProfileService = inject(ProfileService),
-    private auth: AuthContext = inject(AUTH_CONTEXT),
+    private auth = inject(AuthService),
   ) {}
 
   /**

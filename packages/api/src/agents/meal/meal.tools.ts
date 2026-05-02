@@ -1,7 +1,7 @@
 import { schemaMealEntryEntity, uiFlowMeal } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
-import { MealService } from "../../services/meal.service";
+import { MealService } from "../../services";
 
 const dateSchema = z.iso.date().describe("Date in YYYY-MM-DD format");
 
