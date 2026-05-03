@@ -1,9 +1,9 @@
-import { useDashboard } from "@/hooks/dashboard";
+import { useSummaryQuery } from "@/hooks/use-summary-query";
 import { useMemo } from "react";
 import type { Profile } from "./types";
 
 export function useIsProfileSetupDone() {
-  const { data } = useDashboard();
+  const { data } = useSummaryQuery();
 
   return useMemo(() => {
     return !!data?.profile;
@@ -11,7 +11,7 @@ export function useIsProfileSetupDone() {
 }
 
 export function useProfile() {
-  const { data } = useDashboard();
+  const { data } = useSummaryQuery();
 
   return useMemo(() => {
     return (data?.profile ?? null) as Profile | null;

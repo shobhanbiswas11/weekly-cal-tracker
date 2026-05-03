@@ -4,14 +4,19 @@
 // These hooks are feature-level abstractions, not page-specific.
 // Pages compose these hooks to build their views.
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  skipToken,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type { CalorieEntry, DailySummary, UserGoals } from "@weekly-cal/core";
 import { useMemo } from "react";
 import {
   createEntry as apiCreateEntry,
   deleteEntry as apiDeleteEntry,
   updateEntry as apiUpdateEntry,
-  fetchDashboard,
+  fetchSummary,
   fetchWeeklySummary,
 } from "../../../lib/api";
 import type { Profile } from "../../profile/types";
@@ -37,10 +42,10 @@ export { calorieKeys } from "../../shared/query-keys";
  * Get dashboard data directly from the API
  * Returns profile and current week's entries
  */
-export function useDashboard() {
-  return useQuery({
+export function useSummary() {
+  return useSuspenseQuery({
     queryKey: dashboardKeys.all,
-    queryFn: fetchDashboard,
+    queryFn: fetchSummary,
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -50,7 +55,7 @@ export function useDashboard() {
  * Returns null if no profile exists.
  */
 export function useDailyGoal(): UserGoals | null {
-  const { data } = useDashboard();
+  const { data } = useSummary();
 
   return useMemo(() => {
     const profile = data?.profile as Profile | undefined;
@@ -64,16 +69,12 @@ export function useDailyGoal(): UserGoals | null {
  * Returns processed calorie data with profile existence check.
  * Combines profile + current week entries into a unified view.
  */
-export function useDashboardSummary() {
-  const { data: dashboard, isLoading, error } = useDashboard();
-
-  if (isLoading || !dashboard) {
-    return { isLoading: true, hasProfile: false } as const;
-  }
+export function useSummarySummary() {
+  const { data: dashboard } = useSummary();
 
   // Check if profile exists
   if (!dashboard.profile) {
-    return { isLoading: false, hasProfile: false } as const;
+    return { hasProfile: false } as const;
   }
 
   const profile = dashboard.profile as Profile;
@@ -90,7 +91,6 @@ export function useDashboardSummary() {
   const weekGoal = calorieGoal * 7;
 
   return {
-    isLoading: false,
     hasProfile: true,
     weekId: dashboard.weekId,
     calorieGoal,
@@ -98,7 +98,6 @@ export function useDashboardSummary() {
     todayEntries,
     todayTotals,
     weekTotals,
-    error,
   } as const;
 }
 
@@ -120,9 +119,6 @@ export function useEntries(date?: string) {
 
   return {
     data: dayData,
-    isLoading: weekQuery.isLoading,
-    error: weekQuery.error,
-    refetch: weekQuery.refetch,
   };
 }
 
@@ -132,40 +128,26 @@ export function useEntries(date?: string) {
  * Returns undefined if no profile exists.
  */
 export function useTodaySummary() {
-  const dashboard = useQuery({
-    queryKey: dashboardKeys.all,
-    queryFn: fetchDashboard,
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: dashboard } = useSummary();
 
-  const profile = dashboard.data?.profile as Profile | undefined;
+  const profile = dashboard.profile as Profile | undefined;
   if (!profile) {
-    return {
-      data: undefined,
-      isLoading: dashboard.isLoading,
-      error: dashboard.error,
-    };
+    return { data: undefined };
   }
 
   const today = getToday();
   const calorieGoal = profile.dailyCalorieTarget;
 
   // Transform API response to WeeklySummary, then extract today
-  const weekSummary = dashboard.data
-    ? transformToWeeklySummary(
-        dashboard.data.weekId,
-        dashboard.data.entries,
-        calorieGoal,
-      )
-    : undefined;
+  const weekSummary = transformToWeeklySummary(
+    dashboard.weekId,
+    dashboard.entries,
+    calorieGoal,
+  );
 
-  const dayData = weekSummary?.days.find((d) => d.date === today);
+  const dayData = weekSummary.days.find((d) => d.date === today);
 
-  return {
-    data: dayData,
-    isLoading: dashboard.isLoading,
-    error: dashboard.error,
-  };
+  return { data: dayData };
 }
 
 /**
@@ -180,19 +162,17 @@ export function useWeeklySummary(weekId?: string) {
   const isCurrentWeek = targetWeek === currentWeek;
 
   // Dashboard query (for current week)
-  const dashboardQuery = useQuery({
+  const dashboardQuery = useSuspenseQuery({
     queryKey: dashboardKeys.all,
-    queryFn: fetchDashboard,
+    queryFn: isCurrentWeek ? fetchSummary : skipToken,
     staleTime: 1000 * 60 * 5,
-    enabled: isCurrentWeek,
   });
 
   // Week query (for historical weeks)
-  const weekQuery = useQuery({
+  const weekQuery = useSuspenseQuery({
     queryKey: calorieKeys.weeks(targetWeek),
-    queryFn: () => fetchWeeklySummary(targetWeek),
-    staleTime: 1000 * 60 * 30, // 30 minutes for historical data
-    enabled: !isCurrentWeek,
+    queryFn: !isCurrentWeek ? () => fetchWeeklySummary(targetWeek) : skipToken,
+    staleTime: 1000 * 60 * 30,
   });
 
   // Get profile from dashboard (needed for calorie goal)
@@ -200,12 +180,7 @@ export function useWeeklySummary(weekId?: string) {
 
   if (isCurrentWeek) {
     if (!profile) {
-      return {
-        data: undefined,
-        isLoading: dashboardQuery.isLoading,
-        error: dashboardQuery.error,
-        refetch: dashboardQuery.refetch,
-      };
+      return { data: undefined };
     }
 
     const calorieGoal = profile.dailyCalorieTarget;
@@ -217,23 +192,13 @@ export function useWeeklySummary(weekId?: string) {
         )
       : undefined;
 
-    return {
-      data: weekSummary,
-      isLoading: dashboardQuery.isLoading,
-      error: dashboardQuery.error,
-      refetch: dashboardQuery.refetch,
-    };
+    return { data: weekSummary };
   }
 
   // For historical weeks, we still need profile for the calorie goal
   // If no profile, can't show meaningful data
   if (!profile) {
-    return {
-      data: undefined,
-      isLoading: dashboardQuery.isLoading || weekQuery.isLoading,
-      error: weekQuery.error,
-      refetch: weekQuery.refetch,
-    };
+    return { data: undefined };
   }
 
   // Transform historical week data using profile's goal
@@ -245,12 +210,7 @@ export function useWeeklySummary(weekId?: string) {
       )
     : undefined;
 
-  return {
-    data: weekSummary,
-    isLoading: weekQuery.isLoading,
-    error: weekQuery.error,
-    refetch: weekQuery.refetch,
-  };
+  return { data: weekSummary };
 }
 
 /**

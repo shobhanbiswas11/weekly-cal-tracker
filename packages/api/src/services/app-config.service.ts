@@ -6,8 +6,8 @@ import { injectable } from "../di-utils";
 // =============================================================================
 
 const appConfigSchema = z.object({
-  TABLE_NAME: z.string().min(1, "TABLE_NAME is required"),
-  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+  TABLE_NAME: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
   PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-nano"), // gpt-5.4-nano
   ENABLE_DEV_TOOLS: z
     .string()
@@ -18,14 +18,33 @@ const appConfigSchema = z.object({
 
 @injectable()
 export class AppConfigService {
-  readonly tableName: string;
-  readonly primaryModelName: string;
-  readonly enableDevTools: boolean;
+  private readonly config: z.infer<typeof appConfigSchema>;
 
   constructor(env: NodeJS.ProcessEnv = process.env) {
-    const parsed = appConfigSchema.parse(env);
-    this.tableName = parsed.TABLE_NAME;
-    this.primaryModelName = parsed.PRIMARY_MODEL_NAME;
-    this.enableDevTools = parsed.ENABLE_DEV_TOOLS;
+    this.config = appConfigSchema.parse(env);
+  }
+
+  get tableName(): string {
+    if (!this.config.TABLE_NAME) {
+      throw new Error("TABLE_NAME environment variable is required");
+    }
+    return this.config.TABLE_NAME;
+  }
+
+  get openaiApiKey(): string {
+    if (!this.config.OPENAI_API_KEY) {
+      throw new Error(
+        "OPENAI_API_KEY environment variable is required for AI features",
+      );
+    }
+    return this.config.OPENAI_API_KEY;
+  }
+
+  get primaryModelName(): string {
+    return this.config.PRIMARY_MODEL_NAME;
+  }
+
+  get enableDevTools(): boolean {
+    return this.config.ENABLE_DEV_TOOLS;
   }
 }

@@ -1,16 +1,9 @@
 // HTTP utilities for Lambda functions
-
+import { ApiResponse } from "@weekly-cal/core";
 import type {
   APIGatewayProxyHandlerV2WithJWTAuthorizer,
   APIGatewayProxyResultV2,
 } from "aws-lambda";
-
-// API Response wrapper
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
 
 // Create CORS headers
 export const createCorsHeaders = (
@@ -23,13 +16,13 @@ export const createCorsHeaders = (
 });
 
 // Create a successful response
-export const createResponse = <T>(
-  data: T,
+export const createResponse = (
+  data: unknown,
   statusCode: number = 200,
 ): APIGatewayProxyResultV2 => ({
   statusCode,
   headers: createCorsHeaders(),
-  body: JSON.stringify({ success: true, data } as ApiResponse<T>),
+  body: JSON.stringify({ success: true, data } satisfies ApiResponse),
 });
 
 // Create an error response
@@ -39,7 +32,7 @@ export const createErrorResponse = (
 ): APIGatewayProxyResultV2 => ({
   statusCode,
   headers: createCorsHeaders(),
-  body: JSON.stringify({ success: false, error } as ApiResponse<never>),
+  body: JSON.stringify({ success: false, error } satisfies ApiResponse),
 });
 
 // Create CORS preflight response

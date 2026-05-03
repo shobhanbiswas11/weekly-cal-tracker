@@ -8,7 +8,9 @@
     "awsdeploy:frontend": "pnpm --filter pwa awsdeploy",
     "awsdeploy:backend": "pnpm --filter backend awsdeploy",
     "awsdeploy": "pnpm awsdeploy:backend && pnpm awsdeploy:frontend",
-    "build:frontend": "pnpm --filter pwa build"
+    "build:frontend": "pnpm --filter pwa build",
+    "test:core": "pnpm --filter core test",
+    "test:core:watch": "pnpm --filter core test:watch"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

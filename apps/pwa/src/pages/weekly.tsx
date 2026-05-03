@@ -17,14 +17,14 @@ export default function WeeklyPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const weekId = searchParams.get("week") || getCurrentWeek();
 
-  const { data: summary, isLoading } = useWeeklySummary(weekId);
+  const { data: summary } = useWeeklySummary(weekId);
   const goals = useDailyGoal();
 
   const handleWeekChange = (newWeek: string) => {
     setSearchParams({ week: newWeek });
   };
 
-  if (isLoading || !summary) {
+  if (!summary) {
     return <div className="p-4">Loading...</div>;
   }
 

@@ -107,7 +107,8 @@ Response:
         "carbs": 1,
         "fat": 10,
         "date": "2026-03-29",
-        "timestamp": "2026-03-29T10:30:00.000Z"
+        "createdAt": "2026-03-29T10:30:00.000Z",
+        "updatedAt": "2026-03-29T10:30:00.000Z"
       },
       {
         "id": "def456",
@@ -117,7 +118,8 @@ Response:
         "carbs": 15,
         "fat": 1,
         "date": "2026-03-29",
-        "timestamp": "2026-03-29T10:30:00.000Z"
+        "createdAt": "2026-03-29T10:30:00.000Z",
+        "updatedAt": "2026-03-29T10:30:00.000Z"
       }
     ],
     "message": "Successfully logged 2 items"

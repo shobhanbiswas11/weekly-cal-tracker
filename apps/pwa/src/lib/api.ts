@@ -1,9 +1,14 @@
 // API client for backend communication
 
 import type {
+  ApiResponse,
+  CreateMealEntryDto,
   CreateProfileDto,
   MealEntry,
   Profile,
+  ResponseEntriesByDate,
+  ResponseSummary,
+  UpdateMealEntryDto,
   UpdateProfileDto,
 } from "@weekly-cal/core";
 
@@ -27,56 +32,6 @@ declare global {
       };
     };
   }
-}
-
-// API Response wrapper (from backend shared/http.ts)
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-// -----------------------------------------------------------------------------
-// Dashboard
-// -----------------------------------------------------------------------------
-
-/** GET /dashboard response */
-export interface DashboardResponse {
-  profile: Profile | null;
-  weekId: string; // Format: YYYY-Www (e.g., "2026-W13")
-  entries: MealEntry[];
-}
-
-/** Entry data structure - uses MealEntry schema from core */
-export type EntryData = MealEntry;
-
-/** POST /entries request body */
-export type EntryCreateRequest = Omit<
-  MealEntry,
-  "id" | "createdAt" | "updatedAt"
->;
-
-/** PUT /entries/{date}/{id} request body */
-export type EntryUpdateRequest = Partial<EntryCreateRequest>;
-
-/** GET /entries/{date} response */
-export interface EntriesByDateResponse {
-  entries: EntryData[];
-}
-
-/** DELETE /entries/{date}/{id} response */
-export interface EntryDeleteResponse {
-  message: string;
-}
-
-// -----------------------------------------------------------------------------
-// Weekly Summary
-// -----------------------------------------------------------------------------
-
-/** GET /weeks/{weekId} response */
-export interface WeeklySummaryResponse {
-  weekId: string; // Format: YYYY-Www
-  entries: EntryData[];
 }
 
 // =============================================================================
@@ -116,7 +71,7 @@ async function apiFetch<T = unknown>(
     throw new Error(errorData.error || `API error: ${response.status}`);
   }
 
-  const result: ApiResponse<T> = await response.json();
+  const result: ApiResponse = await response.json();
 
   if (!result.success) {
     throw new Error(result.error || "API request failed");
@@ -129,75 +84,54 @@ async function apiFetch<T = unknown>(
 // API Functions
 // =============================================================================
 
-/** GET /dashboard - Initialize app with current week's profile and entries */
-export async function fetchDashboard(): Promise<DashboardResponse> {
-  return apiFetch<DashboardResponse>("/dashboard");
+export async function fetchSummary() {
+  return apiFetch<ResponseSummary>("/summary");
 }
 
-/** GET /weeks/{weekId} - Get summary for a specific week */
-export async function fetchWeeklySummary(
-  weekId: string,
-): Promise<WeeklySummaryResponse> {
-  return apiFetch<WeeklySummaryResponse>(`/weeks/${weekId}`);
+export async function fetchWeeklySummary(weekId: string) {
+  return apiFetch<ResponseSummary>(`/weeks/${weekId}`);
 }
 
-/** GET /entries/{date} - Get all entries for a specific date */
-export async function fetchEntriesByDate(
-  date: string,
-): Promise<EntriesByDateResponse> {
-  return apiFetch<EntriesByDateResponse>(`/entries/${date}`);
+export async function fetchEntriesByDate(date: string) {
+  return apiFetch<ResponseEntriesByDate>(`/entries/${date}`);
 }
 
-/** POST /entries - Create a new food entry */
-export async function createEntry(
-  data: EntryCreateRequest,
-): Promise<EntryData> {
-  return apiFetch<EntryData>("/entries", {
+export async function createEntry(data: CreateMealEntryDto) {
+  return apiFetch<MealEntry>("/entries", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
-/** PUT /entries/{date}/{id} - Update an existing food entry */
 export async function updateEntry(
   date: string,
   id: string,
-  data: EntryUpdateRequest,
-): Promise<EntryData> {
-  return apiFetch<EntryData>(`/entries/${date}/${id}`, {
+  data: UpdateMealEntryDto,
+) {
+  return apiFetch<MealEntry>(`/entries/${date}/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
-/** DELETE /entries/{date}/{id} - Delete a food entry */
-export async function deleteEntry(
-  date: string,
-  id: string,
-): Promise<EntryDeleteResponse> {
-  return apiFetch<EntryDeleteResponse>(`/entries/${date}/${id}`, {
+export async function deleteEntry(date: string, id: string) {
+  return apiFetch(`/entries/${date}/${id}`, {
     method: "DELETE",
   });
 }
 
-/** POST /profile - Create user profile */
-export async function createProfile(data: CreateProfileDto): Promise<Profile> {
-  return apiFetch("/profile", {
+export async function createProfile(data: CreateProfileDto) {
+  return apiFetch<Profile>("/profile", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
-/** PUT /profile - Update user profile */
-export async function updateProfile(data: UpdateProfileDto): Promise<Profile> {
-  return apiFetch("/profile", {
+export async function updateProfile(data: UpdateProfileDto) {
+  return apiFetch<Profile>("/profile", {
     method: "PUT",
     body: JSON.stringify(data),
   });
 }
-
-// =============================================================================
-// Exports
-// =============================================================================
 
 export { API_BASE_URL, CHAT_URL, getAuthToken };

@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useInvalidateDashboard } from "@/hooks/dashboard";
+import { useInvalidateDashboard } from "@/hooks/use-summary-query";
 import { createProfile } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import type { CreateProfile } from "../types";

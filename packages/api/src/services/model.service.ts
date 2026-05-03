@@ -1,9 +1,9 @@
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { wrapLanguageModel } from "ai";
 import { inject, injectable } from "../di-utils";
 import { AppConfigService } from "./app-config.service";
 
-export type Model = ReturnType<typeof openai>;
+export type Model = ReturnType<ReturnType<typeof createOpenAI>>;
 
 @injectable()
 export class ModelService {
@@ -23,7 +23,11 @@ export class ModelService {
   private async ensureInitialized(): Promise<void> {
     if (this.initialized) return;
 
-    const baseModel = openai(this.config.primaryModelName);
+    // Access openaiApiKey here - will throw if not configured
+    const openaiProvider = createOpenAI({
+      apiKey: this.config.openaiApiKey,
+    });
+    const baseModel = openaiProvider(this.config.primaryModelName);
 
     this.primaryModel = this.config.enableDevTools
       ? await this.wrapWithDevTools(baseModel)

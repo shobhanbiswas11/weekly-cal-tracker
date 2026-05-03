@@ -9,10 +9,24 @@ export const schemaProfileEntity = z.object({
     .string()
     .describe("User's date of birth in ISO format (YYYY-MM-DD)"),
   biologicalSex: z
-    .string()
+    .enum(["Male", "Female"])
     .describe("Biological sex (Male or Female) for accurate BMR calculation"),
-  height: z.string().describe("Height in feet or centimeters (with unit)"),
-  weight: z.string().describe("Current weight in lbs or kg (with unit)"),
+  height: z.number().describe("Height in centimeters"),
+  weight: z.number().describe("Current weight in kilograms"),
+  activityLevel: z
+    .enum([
+      "Sedentary",
+      "Lightly Active",
+      "Moderately Active",
+      "Very Active",
+      "Super Active",
+    ])
+    .describe(
+      "Activity level (Sedentary, Lightly Active, Moderately Active, Very Active, Super Active)",
+    ),
+  goal: z
+    .enum(["Lose Weight", "Maintain Healthy Lifestyle", "Gain Weight"])
+    .describe("User's goal for weight management"),
 
   // ---------------------------------------------------------------------------
   additionalNotes: z

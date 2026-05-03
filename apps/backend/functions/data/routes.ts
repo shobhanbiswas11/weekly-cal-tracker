@@ -25,8 +25,8 @@ import {
 // Route Handlers
 // =============================================================================
 
-// GET /dashboard - App init data
-const handleGetDashboard: RouteHandler = async (_event, userId) => {
+// GET /summary - App init data
+const handleGetSummary: RouteHandler = async (_event, userId) => {
   const container = createRequestContainer(userId);
   const queryService = container.get(QueryService);
   const summary = await queryService.summary();
@@ -153,8 +153,8 @@ export const routes: Route[] = [
   // Queries
   {
     method: "GET",
-    pattern: /^\/dashboard$/,
-    handler: handleGetDashboard,
+    pattern: /^\/summary$/,
+    handler: handleGetSummary,
   },
   {
     method: "GET",

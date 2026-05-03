@@ -2,7 +2,7 @@
 //
 // Components: UI elements for calorie display (CalorieKPI, MacroGrid, etc.)
 // Services: Pure business logic functions (transformToWeeklySummary, etc.)
-// Hooks: React Query wrappers (useDashboardSummary, useWeeklySummary, etc.)
+// Hooks: React Query wrappers (useSummarySummary, useWeeklySummary, etc.)
 // Types: Domain types from @weekly-cal/core (CalorieEntry, DailySummary, etc.)
 // Utils: Date/time utilities (getToday, getCurrentWeek, etc.)
 // Schemas: Zod schemas for tool parameters

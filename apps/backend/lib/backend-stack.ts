@@ -136,9 +136,9 @@ export class BackendStack extends cdk.Stack {
     // API Routes
     // =====================
 
-    // Dashboard - app init
+    // Summary - app init
     httpApi.addRoutes({
-      path: "/dashboard",
+      path: "/summary",
       methods: [apigatewayv2.HttpMethod.GET],
       integration: dataIntegration,
       authorizer: jwtAuthorizer,

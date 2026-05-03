@@ -1,4 +1,4 @@
-import type { QueryResponseSummary } from "@weekly-cal/core";
+import { ResponseSummary } from "@weekly-cal/core";
 import {
   endOfISOWeek,
   format,
@@ -19,7 +19,7 @@ export class QueryService {
     private mealService = inject(MealService),
   ) {}
 
-  async summary(): Promise<QueryResponseSummary> {
+  async summary(): Promise<ResponseSummary> {
     const userId = this.auth.userId;
     const today = new Date();
     const weekStart = format(startOfISOWeek(today), "yyyy-MM-dd");

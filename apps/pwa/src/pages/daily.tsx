@@ -17,16 +17,12 @@ export default function DailyPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const date = searchParams.get("date") || getToday();
 
-  const { data: summary, isLoading } = useEntries(date);
+  const { data: summary } = useEntries(date);
   const goals = useDailyGoal();
 
   const handleDateChange = (newDate: string) => {
     setSearchParams({ date: newDate });
   };
-
-  if (isLoading) {
-    return <div className="p-4">Loading...</div>;
-  }
 
   if (!goals || !summary) {
     return (
