@@ -1,1 +1,1 @@
-export * from "./weekly-nutrition";
+export * from "./stat-calculation";

@@ -1,38 +1,34 @@
 import { clamp, cn, fmt } from "@/lib/utils";
-import type { MealEntry } from "@weekly-cal/core";
+import type { DailyStat } from "@weekly-cal/core";
 import { getTodayISO } from "@weekly-cal/core";
-import { getDayTotals } from "./utils";
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function WeeklyStrip({
   weekDates,
-  entries,
-  dailyCalorieBudget,
+  dailyStats,
 }: {
   weekDates: string[];
-  entries: MealEntry[];
-  dailyCalorieBudget: number;
+  dailyStats: DailyStat[];
 }) {
   const today = getTodayISO();
+  const calorieBudget = dailyStats[0]?.calorieBudget ?? 0;
 
   return (
     <div className="grid grid-cols-7 gap-1">
       {weekDates.map((date, i) => {
-        const totals = getDayTotals(entries, date);
-        const isPast = date < today;
+        const stat = dailyStats.find((d) => d.date === date);
         const isToday = date === today;
         const isFuture = date > today;
 
-        // Rule: past days with no entries → full budget consumed
-        const effectiveCalories =
-          isPast && totals.count === 0 ? dailyCalorieBudget : totals.calories;
+        // Domain already handles past-day projection; future days have no stat
+        const effectiveCalories = stat?.caloriesConsumed ?? 0;
 
         const pct =
-          dailyCalorieBudget > 0
-            ? clamp(effectiveCalories / dailyCalorieBudget, 0, 1)
+          calorieBudget > 0
+            ? clamp(effectiveCalories / calorieBudget, 0, 1)
             : 0;
-        const over = effectiveCalories > dailyCalorieBudget;
+        const over = effectiveCalories > calorieBudget;
 
         const barColor = isFuture
           ? "bg-muted"

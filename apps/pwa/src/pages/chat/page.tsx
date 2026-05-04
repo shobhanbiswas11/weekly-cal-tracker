@@ -1,5 +1,5 @@
 import { Thread } from "@/components/assistant-ui/thread";
 
-export default function ChatPage() {
+export function PageChat() {
   return <Thread />;
 }

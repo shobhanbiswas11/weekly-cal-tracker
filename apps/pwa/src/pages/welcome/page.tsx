@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useClerk } from "@clerk/react";
 
-export default function WelcomePage() {
+export function PageWelcome() {
   const { client } = useClerk();
 
   const handleGoogleSignIn = async () => {

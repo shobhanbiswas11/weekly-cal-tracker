@@ -1,5 +1,5 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/react";
 
-export default function SSOCallbackPage() {
+export function PageSSOCallback() {
   return <AuthenticateWithRedirectCallback />;
 }

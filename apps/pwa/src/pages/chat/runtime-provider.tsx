@@ -4,8 +4,8 @@ import {
   useChatRuntime,
 } from "@assistant-ui/react-ai-sdk";
 import { type ReactNode } from "react";
+import { useAutoCancelInitiatedFlows } from "./hooks/use-auto-cancel-initiated-flows";
 import { toolkit } from "./toolkit";
-import { useAutoCancelInitiatedFlows } from "./use-auto-cancel-initiated-flows";
 
 const transport = new AssistantChatTransport({
   api: import.meta.env.VITE_CHAT_URL,

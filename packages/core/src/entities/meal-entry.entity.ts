@@ -1,4 +1,5 @@
 import z from "zod";
+import { schemaNutrients } from "./nutrient.vo";
 
 export const schemaMealEntryEntity = z.object({
   id: z.string(),
@@ -8,13 +9,8 @@ export const schemaMealEntryEntity = z.object({
     .describe(
       "Short name of the meal, e.g., '2 egg whites with pasta', 'Light Dinner with salad', 'Biryani with raita', etc. Important: Only should describe the food items",
     ),
-  calories: z.number().min(0).describe("Total calories in kcal"),
-  protein: z.number().min(0).describe("Total protein in grams"),
-  carbs: z.number().min(0).describe("Total carbohydrates in grams"),
-  fats: z.number().min(0).describe("Total fat in grams"),
-  fiber: z.number().min(0).describe("Total fiber in grams"),
-  sugar: z.number().min(0).describe("Total sugar in grams"),
-  sodium: z.number().min(0).describe("Total sodium in mg"),
+  // nutritional info
+  ...schemaNutrients.shape,
   note: z
     .string()
     .nullable()

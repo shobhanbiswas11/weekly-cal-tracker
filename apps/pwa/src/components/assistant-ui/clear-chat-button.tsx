@@ -9,16 +9,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useClearChat } from "@/features/chat";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 
 export function ClearChatButton() {
-  const { clearChat } = useClearChat();
   const [open, setOpen] = useState(false);
 
   const handleClearChat = () => {
-    clearChat();
+    // TODO: Implement actual chat clearing logic here
     setOpen(false);
   };
 

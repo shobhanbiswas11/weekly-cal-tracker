@@ -3,30 +3,23 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import { ProtectedRoute, UnProtectedRoute } from "./components/auth";
 import { ErrorBoundary } from "./components/error-boundary";
 import { Header } from "./components/layout/Header";
-import ChatPage from "./pages/chat";
-import DailyPage from "./pages/daily";
-import { PageHome } from "./pages/home";
-import { LoadingSkeleton } from "./pages/home/loading-skeleton";
-import SSOCallbackPage from "./pages/sso-callback";
-import WeeklyPage from "./pages/weekly";
-import WelcomePage from "./pages/welcome";
-
-const PageFallback = () => (
-  <div className="p-4 text-sm text-muted-foreground">Loading...</div>
-);
+import { PageChat } from "./pages/chat";
+import { LoaderPageHome, PageHome } from "./pages/home";
+import { PageSSOCallback } from "./pages/sso";
+import { PageWelcome } from "./pages/welcome";
 
 function App() {
   const location = useLocation();
 
   // Handle SSO callback separately (outside auth guards)
   if (location.pathname === "/sso-callback") {
-    return <SSOCallbackPage />;
+    return <PageSSOCallback />;
   }
 
   return (
     <>
       <UnProtectedRoute>
-        <WelcomePage />
+        <PageWelcome />
       </UnProtectedRoute>
       <ProtectedRoute>
         <div className="flex flex-col h-dvh">
@@ -37,28 +30,12 @@ function App() {
                 <Route
                   path="/"
                   element={
-                    <Suspense fallback={<LoadingSkeleton />}>
+                    <Suspense fallback={<LoaderPageHome />}>
                       <PageHome />
                     </Suspense>
                   }
                 />
-                <Route path="/chat" element={<ChatPage />} />
-                <Route
-                  path="/daily"
-                  element={
-                    <Suspense fallback={<PageFallback />}>
-                      <DailyPage />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="/weekly"
-                  element={
-                    <Suspense fallback={<PageFallback />}>
-                      <WeeklyPage />
-                    </Suspense>
-                  }
-                />
+                <Route path="/chat" element={<PageChat />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </ErrorBoundary>

@@ -1,0 +1,1 @@
+export { PageSSOCallback } from "./page";
