@@ -1,5 +1,5 @@
+import { getCurrentDateContext } from "@weekly-cal/core";
 import { ModelMessage, ToolLoopAgent } from "ai";
-import { endOfWeek, format, startOfWeek } from "date-fns";
 import { inject, injectable } from "../di-utils";
 import { MealAgent } from "./meal";
 import { ProfileAgent } from "./profile";
@@ -22,28 +22,13 @@ export class PrimaryAgent {
    * Builds the complete system instructions for the agent.
    */
   private buildInstructions(frontendInstructions?: string): string {
-    const now = new Date();
-    const today = format(now, "yyyy-MM-dd");
-    const dayOfWeek = format(now, "EEEE");
-    const month = format(now, "MMMM yyyy");
-    const week = format(now, "RRRR-'W'II");
-    const weekStart = format(
-      startOfWeek(now, { weekStartsOn: 1 }),
-      "yyyy-MM-dd",
-    );
-    const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
-
     return `You are a health tracking assistant.
 
 ## Behavior
 - Be concise
 - Ask ONE clarifying question if input is ambiguous
 - Use tools to log or retrieve data
-
-## Current Date Context
-- Today: ${dayOfWeek}, ${today}
-- Month: ${month}
-- Week: ${week} (Monday ${weekStart} to Sunday ${weekEnd})
+${getCurrentDateContext()}
 ${frontendInstructions ? `\n${frontendInstructions}` : ""}`;
   }
 

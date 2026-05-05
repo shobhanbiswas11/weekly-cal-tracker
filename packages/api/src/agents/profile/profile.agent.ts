@@ -1,5 +1,6 @@
 import {
   describeSchema,
+  getCurrentDateContext,
   isUIFlow,
   schemaProfileEntity,
 } from "@weekly-cal/core";
@@ -26,6 +27,7 @@ export class ProfileAgent {
       instructions: `You are a profile management assistant.
 - Use tools if necessary
 - The profile is stored as key-value pairs with the following fields and types: ${describeSchema(schemaProfileEntity)}.
+${getCurrentDateContext()}
 `,
       tools: getProfileTools(this.profileService, this.auth.userId),
       stopWhen: hasUIFlowResult(),

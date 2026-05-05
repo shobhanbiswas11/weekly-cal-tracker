@@ -1,5 +1,6 @@
 import {
   describeSchema,
+  getCurrentDateContext,
   isUIFlow,
   schemaMealEntryEntity,
 } from "@weekly-cal/core";
@@ -25,7 +26,9 @@ export class MealAgent {
       model,
       instructions: `You are a meal tracking assistant.
 - Use tools if necessary
-- The meal is stored as key-value pairs with the following fields and types: ${describeSchema(schemaMealEntryEntity)}.`,
+- The meal is stored as key-value pairs with the following fields and types: ${describeSchema(schemaMealEntryEntity)}.
+${getCurrentDateContext()}
+`,
       tools: getMealTools(this.mealService, this.auth.userId),
       stopWhen: hasUIFlowResult(),
     });
