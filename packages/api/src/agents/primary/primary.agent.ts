@@ -1,9 +1,9 @@
 import { dateContext, uiFlowContext } from "@weekly-cal/core";
 import { ModelMessage, ToolLoopAgent } from "ai";
-import { inject, injectable } from "../di-utils";
-import { MealAgent } from "./meal";
-import { ProfileAgent } from "./profile";
-import { hasUIFlowResult } from "./utils";
+import { inject, injectable } from "../../di-utils";
+import { MealAgent } from "../meal";
+import { ProfileAgent } from "../profile";
+import { hasUIFlowResult } from "../utils";
 
 // =============================================================================
 // Primary Agent Definition
@@ -26,7 +26,7 @@ export class PrimaryAgent {
 
 ## Behavior
 - Be concise
-- Ask ONE clarifying question if input is ambiguous
+- You have access to multiple sub-agents, each with specialized tools—explore their capabilities before asking the user for clarification
 - Use tools to log or retrieve data
 ${dateContext()}
 ${uiFlowContext()}

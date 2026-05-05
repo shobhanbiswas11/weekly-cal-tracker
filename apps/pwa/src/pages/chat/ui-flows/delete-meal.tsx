@@ -1,3 +1,4 @@
+import { useInvalidateSummaryQuery } from "@/hooks/use-summary-query";
 import { deleteEntry } from "@/lib/api";
 import { isCompleteOrCancelledUIFlow, uiFlowMeal } from "@weekly-cal/core";
 import { Trash2 } from "lucide-react";
@@ -12,6 +13,7 @@ import {
 
 export const DeleteMeal = ({ addResult, flow }: UIFlowRendererProps) => {
   const [loading, setLoading] = useState(false);
+  const invalidateSummary = useInvalidateSummaryQuery();
 
   // Show result state for completed or cancelled
   if (isCompleteOrCancelledUIFlow(flow)) {
@@ -25,6 +27,7 @@ export const DeleteMeal = ({ addResult, flow }: UIFlowRendererProps) => {
     setLoading(true);
     try {
       await deleteEntry(date, mealId);
+      invalidateSummary();
       addResult(uiFlowMeal.delete.complete("Meal deleted successfully"));
     } catch (error) {
       console.log(error);

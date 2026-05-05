@@ -3,7 +3,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
 const SUMMARY_QUERY_KEY = "summary";
 
-export function useInvalidateDashboard() {
+export function useInvalidateSummaryQuery() {
   const queryClient = useQueryClient();
 
   return () => {
