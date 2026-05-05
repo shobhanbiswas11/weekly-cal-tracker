@@ -1,6 +1,5 @@
 import { clamp, cn, fmt } from "@/lib/utils";
-import type { DailyStat } from "@weekly-cal/core";
-import { getTodayISO } from "@weekly-cal/core";
+import { getTodayISO, type DailyStat } from "@weekly-cal/core";
 
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

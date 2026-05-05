@@ -1,4 +1,4 @@
-import { UpdateProfileDto } from "../schemas";
+import type { UpdateProfileDto } from "../dtos";
 import { defaultFlowBuilder } from "./utils";
 
 const actions = {
