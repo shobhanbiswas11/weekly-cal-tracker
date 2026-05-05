@@ -1,6 +1,6 @@
 import { endOfWeek, format, startOfWeek } from "date-fns";
 
-export function getCurrentDateContext() {
+export function dateContext() {
   const now = new Date();
   const today = format(now, "yyyy-MM-dd");
   const dayOfWeek = format(now, "EEEE");

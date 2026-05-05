@@ -1,4 +1,4 @@
-import { getCurrentDateContext } from "@weekly-cal/core";
+import { dateContext, uiFlowContext } from "@weekly-cal/core";
 import { ModelMessage, ToolLoopAgent } from "ai";
 import { inject, injectable } from "../di-utils";
 import { MealAgent } from "./meal";
@@ -28,7 +28,8 @@ export class PrimaryAgent {
 - Be concise
 - Ask ONE clarifying question if input is ambiguous
 - Use tools to log or retrieve data
-${getCurrentDateContext()}
+${dateContext()}
+${uiFlowContext()}
 ${frontendInstructions ? `\n${frontendInstructions}` : ""}`;
   }
 
