@@ -8,7 +8,7 @@ import { injectable } from "../di-utils";
 const appConfigSchema = z.object({
   TABLE_NAME: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
-  PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-nano"), // gpt-5.4-nano
+  PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-mini"), // gpt-5.4-nano
   ENABLE_DEV_TOOLS: z
     .string()
     .transform((v) => v === "true")
