@@ -15,7 +15,7 @@ export const schemaMealEntryEntity = z.object({
     .string()
     .nullable()
     .describe(
-      "Additional short notes only specific to the meal, e.g., 'Meal taken late at night', 'Sodium quantity high', 'Cheat Meal' etc. Don't put random stuff",
+      "Additional short notes only specific to the meal, e.g.,'Sodium quantity high', 'Cheat Meal', 'Protein content low', etc. Don't put random stuff",
     ),
   foodItems: z
     .array(
