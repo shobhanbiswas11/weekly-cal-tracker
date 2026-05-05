@@ -113,12 +113,12 @@ export const getMealTools = (mealService: MealService, userId: string) => {
         message: z
           .string()
           .describe(
-            "Confirmation message to show the user before updating profile",
+            "Confirmation message to show the user before updating meal",
           ),
         changes: z.array(
           z.object({
-            field: z.string().describe("The profile field to update"),
-            value: z.string().describe("The new value for the profile field"),
+            field: z.string().describe("The meal field to update"),
+            value: z.string().describe("The new value for the meal field"),
           }),
         ),
       }),
