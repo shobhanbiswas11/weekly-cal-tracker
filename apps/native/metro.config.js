@@ -1,18 +1,4 @@
+// SDK 54+ auto-configures monorepo settings - no manual config needed
 const { getDefaultConfig } = require("expo/metro-config");
-const path = require("path");
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, "../..");
-
-const config = getDefaultConfig(projectRoot);
-
-// Watch all files within the monorepo so Metro resolves workspace packages
-config.watchFolders = [workspaceRoot];
-
-// Resolve packages from the app first, then the workspace root
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(workspaceRoot, "node_modules"),
-];
-
-module.exports = config;
+module.exports = getDefaultConfig(__dirname);
