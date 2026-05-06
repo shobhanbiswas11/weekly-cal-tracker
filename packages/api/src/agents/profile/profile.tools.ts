@@ -1,4 +1,4 @@
-import { uiFlowProfile } from "@weekly-cal/core";
+import { calculateCaloriePlan, uiFlowProfile } from "@weekly-cal/core";
 import { tool } from "ai";
 import z from "zod";
 import { ProfileService } from "../../services";
@@ -16,8 +16,20 @@ export const getProfileTools = (
           .array(z.string())
           .describe("List of profile fields to retrieve."),
       }),
-      execute: ({ fields }) =>
-        profileService.getSelectedFields(userId, fields as any),
+      execute: async ({ fields }) => {
+        const profile = await profileService.getSelectedFields(
+          userId,
+          fields as any,
+        );
+        if (!profile) {
+          throw new Error("Profile not found");
+        }
+        const caloriePlan = calculateCaloriePlan(profile);
+        return {
+          ...profile,
+          ...caloriePlan,
+        };
+      },
     }),
     updateProfile: tool({
       description: "Update user profile fields with new values",
