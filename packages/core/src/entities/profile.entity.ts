@@ -1,4 +1,9 @@
 import z from "zod";
+import {
+  schemaActivityLevel,
+  schemaBiologicalSex,
+  schemaGoal,
+} from "../constants";
 
 export const schemaProfileEntity = z.object({
   id: z.string(), // this will be the user id
@@ -8,25 +13,15 @@ export const schemaProfileEntity = z.object({
   dateOfBirth: z
     .string()
     .describe("User's date of birth in ISO format (YYYY-MM-DD)"),
-  biologicalSex: z
-    .enum(["Male", "Female"])
-    .describe("Biological sex (Male or Female) for accurate BMR calculation"),
+  biologicalSex: schemaBiologicalSex.describe(
+    "Biological sex (Male or Female) for accurate BMR calculation",
+  ),
   height: z.number().describe("Height in centimeters"),
   weight: z.number().describe("Current weight in kilograms"),
-  activityLevel: z
-    .enum([
-      "Sedentary",
-      "Lightly Active",
-      "Moderately Active",
-      "Very Active",
-      "Super Active",
-    ])
-    .describe(
-      "Activity level (Sedentary, Lightly Active, Moderately Active, Very Active, Super Active)",
-    ),
-  goal: z
-    .enum(["Lose Weight", "Maintain Healthy Lifestyle", "Gain Weight"])
-    .describe("User's goal for weight management"),
+  activityLevel: schemaActivityLevel.describe(
+    "Activity level (Sedentary, Lightly Active, Moderately Active, Very Active, Super Active)",
+  ),
+  goal: schemaGoal.describe("User's goal for weight management"),
 
   // ---------------------------------------------------------------------------
   additionalNotes: z

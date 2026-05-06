@@ -1,12 +1,7 @@
 import type { ActivityEntry, MealEntry, Profile } from "../entities";
 import type { DailyStat } from "../entities/daily-stat.vo";
 import type { WeeklyStat } from "../entities/weekly-stat.vo";
-import {
-  calculateBMR,
-  calculateDailyCalorieBudget,
-  calculateTDEE,
-  getWeekDates,
-} from "../utils";
+import { calculateCaloriePlan, getWeekDates } from "../utils";
 
 export interface StatCalculationParams {
   weekId: string;
@@ -32,9 +27,7 @@ export function calculateStat({
   mealEntries,
   activityEntries,
 }: StatCalculationParams): StatCalculationResult {
-  const bmr = calculateBMR(profile);
-  const tdee = calculateTDEE(bmr, profile.activityLevel);
-  const dailyCalorieBudget = calculateDailyCalorieBudget(tdee, profile.goal);
+  const { bmr, tdee, dailyCalorieBudget } = calculateCaloriePlan(profile);
 
   const weekDates = getWeekDates(weekId);
 

@@ -1,18 +1,12 @@
 import { differenceInYears, parseISO } from "date-fns";
+import type { ActivityLevel, BiologicalSex, Goal } from "../constants";
+import { mapActivityMultipliers } from "../constants";
 
 type BMRInput = {
   dateOfBirth: string;
   weight: number;
   height: number;
-  biologicalSex: "Male" | "Female";
-};
-
-export const ACTIVITY_MULTIPLIERS: Record<string, number> = {
-  Sedentary: 1.2,
-  "Lightly Active": 1.375,
-  "Moderately Active": 1.55,
-  "Very Active": 1.725,
-  "Super Active": 1.9,
+  biologicalSex: BiologicalSex;
 };
 
 export const calculateAge = (dateOfBirth: string): number => {
@@ -25,13 +19,16 @@ export const calculateBMR = (profile: BMRInput): number => {
   return Math.round(profile.biologicalSex === "Female" ? base - 161 : base + 5);
 };
 
-export const calculateTDEE = (bmr: number, activityLevel: string): number => {
-  return Math.round(bmr * (ACTIVITY_MULTIPLIERS[activityLevel] ?? 1.375));
+export const calculateTDEE = (
+  bmr: number,
+  activityLevel: ActivityLevel,
+): number => {
+  return Math.round(bmr * (mapActivityMultipliers[activityLevel] ?? 1.375));
 };
 
 export const calculateDailyCalorieBudget = (
   tdee: number,
-  goal: string,
+  goal: Goal,
 ): number => {
   if (goal === "Lose Weight") return Math.max(1200, tdee - 500);
   if (goal === "Gain Weight") return tdee + 500;
@@ -40,7 +37,7 @@ export const calculateDailyCalorieBudget = (
 
 export const calculateNutrientTargets = (
   dailyCalorieBudget: number,
-  biologicalSex: "Male" | "Female",
+  biologicalSex: BiologicalSex,
 ): {
   protein: number;
   carbs: number;
@@ -54,3 +51,19 @@ export const calculateNutrientTargets = (
   fiber: biologicalSex === "Female" ? 25 : 38,
   sodium: 2300,
 });
+
+type CaloriePlanInput = BMRInput & {
+  activityLevel: ActivityLevel;
+  goal: Goal;
+};
+
+export const calculateCaloriePlan = (profile: CaloriePlanInput) => {
+  const bmr = calculateBMR(profile);
+  const tdee = calculateTDEE(bmr, profile.activityLevel);
+  const dailyCalorieBudget = calculateDailyCalorieBudget(tdee, profile.goal);
+  const nutrientTargets = calculateNutrientTargets(
+    dailyCalorieBudget,
+    profile.biologicalSex,
+  );
+  return { bmr, tdee, dailyCalorieBudget, nutrientTargets };
+};
