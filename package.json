@@ -10,7 +10,8 @@
     "awsdeploy": "pnpm awsdeploy:backend && pnpm awsdeploy:frontend",
     "build:frontend": "pnpm --filter pwa build",
     "test:core": "pnpm --filter core test",
-    "test:core:watch": "pnpm --filter core test:watch"
+    "test:core:watch": "pnpm --filter core test:watch",
+    "remove-all-node-modules": "find . -name node_modules -type d -prune -exec rm -rf '{}' +"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
