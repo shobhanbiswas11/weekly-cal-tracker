@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "concurrently \"pnpm --filter express dev\" \"pnpm --filter pwa dev\" \"pnpm --filter express start:aisdk-devtools\"",
     "start:native": "pnpm --filter native start",
+    "start:native:ios": "pnpm --filter native ios",
     "run:single": "pnpx tsx",
     "awsdeploy:frontend": "pnpm --filter pwa awsdeploy",
     "awsdeploy:backend": "pnpm --filter backend awsdeploy",
