@@ -1,9 +1,24 @@
+import { useAuth } from "@clerk/expo";
+import { AuthView } from "@clerk/expo/native";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard() {
+  const { isSignedIn, isLoaded } = useAuth({ treatPendingAsSignedOut: false });
   const router = useRouter();
+
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <AuthView mode="signInOrUp" />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>

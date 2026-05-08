@@ -20,7 +20,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.botobrain.calorie"
     },
     "web": {
       "output": "static",
@@ -39,7 +40,9 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      ["@clerk/expo", { "appleSignIn": false }],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
