@@ -2,15 +2,15 @@ import {
   AssistantChatTransport,
   useChatRuntime,
 } from "@assistant-ui/react-ai-sdk";
-import { useAuth } from "@clerk/expo";
 import { fetch } from "expo/fetch";
 import { useMemo } from "react";
+import { useAppAuth } from "./use-auth";
 
 const API_URL =
   process.env.EXPO_PUBLIC_CHAT_ENDPOINT_URL ?? "http://localhost:3000";
 
-export function useAppRuntime() {
-  const { getToken } = useAuth();
+export function useAssistantRuntime() {
+  const { getToken } = useAppAuth();
 
   const transport = useMemo(
     () =>
@@ -29,7 +29,6 @@ export function useAppRuntime() {
       }),
     [getToken],
   );
-  return useChatRuntime({
-    transport,
-  });
+
+  return useChatRuntime({ transport });
 }

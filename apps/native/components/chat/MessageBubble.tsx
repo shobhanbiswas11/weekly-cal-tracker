@@ -1,7 +1,7 @@
 import type { ThreadMessage } from "@assistant-ui/react-native";
 import { Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 import { AssistantAvatar } from "./AssistantAvatar";
-import { C } from "./constants";
 
 export function MessageBubble({ message }: { message: ThreadMessage }) {
   const isUser = message.role === "user";
@@ -14,47 +14,48 @@ export function MessageBubble({ message }: { message: ThreadMessage }) {
 
   if (isUser) {
     return (
-      <View
-        style={{
-          alignSelf: "flex-end",
-          backgroundColor: C.userBubble,
-          borderRadius: 20,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          marginVertical: 2,
-          marginHorizontal: 16,
-          maxWidth: "78%",
-        }}
-      >
-        <Text style={{ color: C.textPrimary, fontSize: 16, lineHeight: 23 }}>
-          {text}
-        </Text>
+      <View style={styles.userBubble}>
+        <Text style={styles.userText}>{text}</Text>
       </View>
     );
   }
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "flex-start",
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        marginVertical: 2,
-        maxWidth: "92%",
-      }}
-    >
+    <View style={styles.assistantRow}>
       <AssistantAvatar />
-      <Text
-        style={{
-          flex: 1,
-          color: C.textPrimary,
-          fontSize: 16,
-          lineHeight: 24,
-        }}
-      >
-        {text}
-      </Text>
+      <Text style={styles.assistantText}>{text}</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create((theme) => ({
+  userBubble: {
+    alignSelf: "flex-end",
+    backgroundColor: theme.colors.card,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginVertical: 2,
+    marginHorizontal: 16,
+    maxWidth: "78%",
+  },
+  userText: {
+    color: theme.colors.foreground,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  assistantRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginVertical: 2,
+    maxWidth: "92%",
+  },
+  assistantText: {
+    flex: 1,
+    color: theme.colors.foreground,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+}));
