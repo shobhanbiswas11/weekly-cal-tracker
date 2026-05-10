@@ -281,6 +281,9 @@ importers:
       '@weekly-cal/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@weekly-cal/frontend':
+        specifier: workspace:*
+        version: link:../../packages/frontend
       ai:
         specifier: ^6.0.146
         version: 6.0.175(zod@4.4.3)

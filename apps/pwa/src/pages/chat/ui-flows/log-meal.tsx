@@ -1,6 +1,6 @@
 import { useInvalidateSummaryQuery } from "@/hooks/use-summary-query";
-import { createEntry } from "@/lib/api";
 import { isCompleteOrCancelledUIFlow, uiFlowMeal } from "@weekly-cal/core";
+import { useApi } from "@weekly-cal/frontend";
 import { Utensils } from "lucide-react";
 import { useState } from "react";
 import type { UIFlowRendererProps } from "../types";
@@ -61,6 +61,7 @@ function calculateTotals(foods: FoodItem[]) {
 
 export function LogMeal({ addResult, flow }: UIFlowRendererProps) {
   const [loading, setLoading] = useState(false);
+  const { createEntry } = useApi();
   const invalidateSummary = useInvalidateSummaryQuery();
 
   // Show result state for completed or cancelled

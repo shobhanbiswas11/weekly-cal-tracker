@@ -1,6 +1,6 @@
 import { useInvalidateSummaryQuery } from "@/hooks/use-summary-query";
-import { updateEntry } from "@/lib/api";
 import { isCompleteOrCancelledUIFlow, uiFlowMeal } from "@weekly-cal/core";
+import { useApi } from "@weekly-cal/frontend";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import type { UIFlowRendererProps } from "../types";
@@ -79,6 +79,7 @@ function changesToObject(
 
 export const UpdateMeal = ({ addResult, flow }: UIFlowRendererProps) => {
   const [loading, setLoading] = useState(false);
+  const { updateEntry } = useApi();
   const invalidateSummary = useInvalidateSummaryQuery();
 
   // Show result state for completed or cancelled

@@ -1,5 +1,5 @@
-import { updateProfile } from "@/lib/api";
 import { isCompleteOrCancelledUIFlow, uiFlowProfile } from "@weekly-cal/core";
+import { useApi } from "@weekly-cal/frontend";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import type { UIFlowRendererProps } from "../types";
@@ -56,6 +56,7 @@ function formatValue(key: string, value: unknown): string {
 
 export const UpdateProfile = ({ addResult, flow }: UIFlowRendererProps) => {
   const [loading, setLoading] = useState(false);
+  const { updateProfile } = useApi();
 
   // Show result state for completed or cancelled
   if (isCompleteOrCancelledUIFlow(flow)) {
