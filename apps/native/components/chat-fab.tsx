@@ -2,11 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
+import { useCSSVariable } from "uniwind";
 
 export function ChatFAB() {
   const router = useRouter();
   const pathname = usePathname();
   const [isPressed, setIsPressed] = useState(false);
+  const iconColor = useCSSVariable("--color-primary-foreground") as string;
 
   if (pathname === "/chat") return null;
 
@@ -20,7 +22,7 @@ export function ChatFAB() {
       accessibilityRole="button"
     >
       <View className="flex-1 w-full rounded-full bg-primary justify-center items-center">
-        <Ionicons name="chatbubble" size={26} color="#fff" />
+        <Ionicons name="chatbubble" size={26} color={iconColor} />
       </View>
     </Pressable>
   );

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 import { useAuth } from "@clerk/react";
 import { createApiClient } from "@weekly-cal/frontend";
 import { useMemo } from "react";

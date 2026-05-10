@@ -13,7 +13,7 @@ export function MessageBubble({ message }: { message: ThreadMessage }) {
 
   if (isUser) {
     return (
-      <View className="self-end bg-card rounded-[20px] px-4 py-2.5 my-0.5 mx-4 max-w-[78%]">
+      <View className="self-end bg-card rounded-xl px-4 py-2.5 my-0.5 mx-4 max-w-[78%]">
         <Text className="text-foreground text-base leading-5.75">{text}</Text>
       </View>
     );

@@ -56,6 +56,7 @@ PWA (React 19 + Vite) → API Gateway → Lambda → OpenAI GPT-4 (tool calling)
 ## Coding Style
 
 - **Minimal comments**: Only add comments where logic is non-obvious. Don't comment every line—let the code speak for itself.
+- **Class-based styling**: Always use Tailwind/UniWind `className` utility classes for styling in both native (UniWind) and web (TailwindCSS) apps. Avoid inline `style` props except for truly computed/dynamic values with no Tailwind equivalent (e.g., dynamically computed pixel sizes, percentage widths, `fontVariant`, `contentContainerStyle` on ScrollView).
 
 ## Current Status
 

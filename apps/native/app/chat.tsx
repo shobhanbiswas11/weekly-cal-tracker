@@ -39,7 +39,7 @@ const Composer = function Composer() {
 
   return (
     <View className="px-4 pt-2.5 pb-2 bg-background border-t border-border">
-      <View className="flex-row items-center bg-card rounded-[26px] pl-4.5 pr-1.5 py-1.5 min-h-13">
+      <View className="flex-row items-center bg-card rounded-2xl pl-4.5 pr-1.5 py-1.5 min-h-13">
         <TextInput
           ref={inputRef}
           onChangeText={handleChangeText}
@@ -53,7 +53,7 @@ const Composer = function Composer() {
           disabled={!hasText}
           className={`w-9 h-9 rounded-full justify-center items-center ml-2 self-end mb-0.5 ${hasText ? "bg-fill" : "bg-fill-disabled"}`}
         >
-          <Text className="text-fill-foreground text-[18px] font-bold -mt-px">
+          <Text className="text-fill-foreground text-lg font-bold -mt-px">
             ↑
           </Text>
         </Pressable>

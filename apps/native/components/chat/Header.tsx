@@ -7,7 +7,7 @@ export function Header() {
   return (
     <View className="flex-row items-center justify-between py-3.5 px-4 border-b border-border bg-background">
       <View className="w-11" />
-      <Text className="text-[17px] font-semibold text-foreground">
+      <Text className="text-lg font-semibold text-foreground">
         Calorie Coach
       </Text>
       <Pressable onPress={() => router.back()}>
