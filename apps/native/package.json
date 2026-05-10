@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@weekly-cal/core": "workspace:*",
+    "@weekly-cal/frontend": "workspace:*",
+    "@tanstack/react-query": "^5.0.0",
     "@assistant-ui/react-ai-sdk": "^1.3.16",
     "@assistant-ui/react-native": "^0.1.13",
     "@clerk/expo": "^3.2.9",
