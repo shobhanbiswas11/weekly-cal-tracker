@@ -1,6 +1,5 @@
 import type { ThreadMessage } from "@assistant-ui/react-native";
 import { Text, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
 import { AssistantAvatar } from "./AssistantAvatar";
 
 export function MessageBubble({ message }: { message: ThreadMessage }) {
@@ -14,48 +13,16 @@ export function MessageBubble({ message }: { message: ThreadMessage }) {
 
   if (isUser) {
     return (
-      <View style={styles.userBubble}>
-        <Text style={styles.userText}>{text}</Text>
+      <View className="self-end bg-card rounded-[20px] px-4 py-2.5 my-0.5 mx-4 max-w-[78%]">
+        <Text className="text-foreground text-base leading-5.75">{text}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.assistantRow}>
+    <View className="flex-row items-start px-4 py-1.5 my-0.5 max-w-[92%]">
       <AssistantAvatar />
-      <Text style={styles.assistantText}>{text}</Text>
+      <Text className="flex-1 text-foreground text-base leading-6">{text}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  userBubble: {
-    alignSelf: "flex-end",
-    backgroundColor: theme.colors.card,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginVertical: 2,
-    marginHorizontal: 16,
-    maxWidth: "78%",
-  },
-  userText: {
-    color: theme.colors.foreground,
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  assistantRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginVertical: 2,
-    maxWidth: "92%",
-  },
-  assistantText: {
-    flex: 1,
-    color: theme.colors.foreground,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-}));

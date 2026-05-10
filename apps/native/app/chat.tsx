@@ -1,3 +1,4 @@
+import { StyledSafeAreaView } from "@/components";
 import { EmptyState, Header, MessageBubble } from "@/components/chat";
 import { useAssistantRuntime } from "@/hooks/use-assistant-runtime";
 import type { ThreadMessage } from "@assistant-ui/react-native";
@@ -10,14 +11,13 @@ import { useCallback, useRef, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useCSSVariable } from "uniwind";
 
 const listContentStyle = { paddingTop: 16, paddingBottom: 8 };
 
 const Composer = function Composer() {
-  const { theme } = useUnistyles();
   const aui = useAui();
+  const placeholderColor = useCSSVariable("--color-muted-foreground");
   const inputRef = useRef<TextInput>(null);
   const textRef = useRef("");
   const [hasText, setHasText] = useState(false);
@@ -38,22 +38,24 @@ const Composer = function Composer() {
   }, [aui]);
 
   return (
-    <View style={styles.composerOuter}>
-      <View style={styles.composerInner}>
+    <View className="px-4 pt-2.5 pb-2 bg-background border-t border-border">
+      <View className="flex-row items-center bg-card rounded-[26px] pl-4.5 pr-1.5 py-1.5 min-h-13">
         <TextInput
           ref={inputRef}
           onChangeText={handleChangeText}
           placeholder="Message"
-          placeholderTextColor={theme.colors.mutedForeground}
+          placeholderTextColor={placeholderColor as string}
           multiline
-          style={styles.composerInput}
+          className="flex-1 text-base text-foreground leading-5.5 max-h-30 py-1.5"
         />
         <Pressable
           onPress={handleSend}
           disabled={!hasText}
-          style={styles.sendButton(hasText)}
+          className={`w-9 h-9 rounded-full justify-center items-center ml-2 self-end mb-0.5 ${hasText ? "bg-fill" : "bg-fill-disabled"}`}
         >
-          <Text style={styles.sendIcon}>↑</Text>
+          <Text className="text-fill-foreground text-[18px] font-bold -mt-px">
+            ↑
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -73,7 +75,7 @@ function ChatContent() {
 
   return (
     <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-      <View style={styles.chatContent}>
+      <View className="flex-1 bg-background">
         <Header />
         {messages.length === 0 ? (
           <EmptyState />
@@ -98,59 +100,9 @@ export default function ChatModal() {
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <SafeAreaView style={{ flex: 1 }}>
+      <StyledSafeAreaView className="flex-1 bg-background">
         <ChatContent />
-      </SafeAreaView>
+      </StyledSafeAreaView>
     </AssistantRuntimeProvider>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  chatContent: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  composerOuter: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 8,
-    backgroundColor: theme.colors.background,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  composerInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.card,
-    borderRadius: 26,
-    paddingLeft: 18,
-    paddingRight: 6,
-    paddingVertical: 6,
-    minHeight: 52,
-  },
-  composerInput: {
-    flex: 1,
-    fontSize: 16,
-    color: theme.colors.foreground,
-    lineHeight: 22,
-    maxHeight: 120,
-    paddingVertical: 6,
-  },
-  sendButton: (active: boolean) => ({
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: active ? theme.colors.fill : theme.colors.fillDisabled,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-    alignSelf: "flex-end",
-    marginBottom: 2,
-  }),
-  sendIcon: {
-    color: theme.colors.fillForeground,
-    fontSize: 18,
-    fontWeight: "700",
-    marginTop: -1,
-  },
-}));

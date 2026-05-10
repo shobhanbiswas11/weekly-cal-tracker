@@ -1,28 +1,27 @@
-import { ClerkProvider } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
 import { Stack } from "expo-router";
+import { View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-
-if (!publishableKey) {
-  throw new Error("Add your Clerk Publishable Key to the .env file");
-}
+import { ChatFAB } from "../components";
+import { ClerkProvider } from "../components/clerk-provider";
+import "../global.css";
 
 export default function RootLayout() {
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+    <ClerkProvider>
       <KeyboardProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="chat"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-        </Stack>
+        <View style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="chat"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+              }}
+            />
+          </Stack>
+          <ChatFAB />
+        </View>
       </KeyboardProvider>
     </ClerkProvider>
   );

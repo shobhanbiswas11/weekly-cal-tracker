@@ -1,17 +1,13 @@
-import { useAuth } from "@clerk/expo";
-import { AuthView } from "@clerk/expo/native";
-import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet } from "react-native-unistyles";
+import { AuthView, StyledSafeAreaView } from "@/components";
+import { useAppAuth } from "@/hooks/use-auth";
+import { ActivityIndicator, Text, View } from "react-native";
 
 export default function Dashboard() {
-  const { isSignedIn, isLoaded } = useAuth({ treatPendingAsSignedOut: false });
-  const router = useRouter();
+  const { isSignedIn, isLoaded } = useAppAuth();
 
   if (!isLoaded) {
     return (
-      <View style={styles.loading}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -22,59 +18,13 @@ export default function Dashboard() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.container}>
-        <Text style={styles.heading}>Dashboard</Text>
-        <Text style={styles.subheading}>Your daily calorie overview</Text>
+    <StyledSafeAreaView className="flex-1 bg-background">
+      <View className="flex-1 px-4 pt-4">
+        <Text className="text-[28px] font-bold text-foreground">Dashboard</Text>
+        <Text className="text-[15px] text-muted-foreground mt-2">
+          Your daily calorie overview
+        </Text>
       </View>
-
-      <Pressable onPress={() => router.push("/chat")} style={styles.fab}>
-        <Text style={styles.fabIcon}>💬</Text>
-      </Pressable>
-    </SafeAreaView>
+    </StyledSafeAreaView>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    backgroundColor: theme.colors.background,
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: theme.colors.foreground,
-  },
-  subheading: {
-    fontSize: 15,
-    color: theme.colors.mutedForeground,
-    marginTop: 8,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 40,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  fabIcon: {
-    color: theme.colors.primaryForeground,
-    fontSize: 24,
-  },
-}));

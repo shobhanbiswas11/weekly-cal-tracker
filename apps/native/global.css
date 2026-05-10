@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: oklch(1 0 0);
+      --color-card: oklch(0.963 0 0);
+      --color-foreground: oklch(0.145 0 0);
+      --color-muted-foreground: oklch(0.491 0.019 265);
+      --color-primary: oklch(0.638 0.138 167);
+      --color-primary-foreground: oklch(1 0 0);
+      --color-border: oklch(0.924 0 0);
+      --color-fill: oklch(0.198 0 0);
+      --color-fill-foreground: oklch(1 0 0);
+      --color-fill-disabled: oklch(0.806 0 0);
+    }
+
+    @variant dark {
+      --color-background: oklch(0.145 0 0);
+      --color-card: oklch(0.208 0 0);
+      --color-foreground: oklch(0.969 0 0);
+      --color-muted-foreground: oklch(0.608 0.019 265);
+      --color-primary: oklch(0.638 0.138 167);
+      --color-primary-foreground: oklch(1 0 0);
+      --color-border: oklch(0.245 0 0);
+      --color-fill: oklch(1 0 0);
+      --color-fill-foreground: oklch(0.145 0 0);
+      --color-fill-disabled: oklch(0.311 0 0);
+    }
+  }
+}
+
+@theme {
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+  --radius-full: 9999px;
+}

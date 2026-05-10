@@ -1,53 +1,20 @@
 import { Keyboard, Pressable, Text, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
 
 export function EmptyState() {
   return (
-    <Pressable style={styles.container} onPress={Keyboard.dismiss}>
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>✦</Text>
+    <Pressable
+      className="flex-1 justify-center items-center px-8 pb-15"
+      onPress={Keyboard.dismiss}
+    >
+      <View className="w-15 h-15 rounded-full bg-primary justify-center items-center mb-5.5">
+        <Text className="text-primary-foreground text-[28px] font-bold">✦</Text>
       </View>
-      <Text style={styles.title}>How can I help you?</Text>
-      <Text style={styles.subtitle}>
+      <Text className="text-[22px] font-semibold text-foreground mb-2.5 text-center">
+        How can I help you?
+      </Text>
+      <Text className="text-[15px] text-muted-foreground text-center leading-5.5">
         Ask me about your calories, macros, or nutrition goals.
       </Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-    paddingBottom: 60,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 22,
-  },
-  icon: {
-    color: theme.colors.primaryForeground,
-    fontSize: 28,
-    fontWeight: "700",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: theme.colors.foreground,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 15,
-    color: theme.colors.mutedForeground,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-}));
