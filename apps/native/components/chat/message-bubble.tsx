@@ -1,6 +1,6 @@
 import type { ThreadMessage } from "@assistant-ui/react-native";
 import { Text, View } from "react-native";
-import { AssistantAvatar } from "./AssistantAvatar";
+import { AssistantAvatar } from "./assistant-avatar";
 
 export function MessageBubble({ message }: { message: ThreadMessage }) {
   const isUser = message.role === "user";

@@ -1,3 +1,7 @@
+import {
+  SuggestionPrimitive,
+  ThreadPrimitive,
+} from "@assistant-ui/react-native";
 import { Keyboard, Pressable, Text, View } from "react-native";
 
 export function EmptyState() {
@@ -15,6 +19,22 @@ export function EmptyState() {
       <Text className="text-base text-muted-foreground text-center leading-5.5">
         Ask me about your calories, macros, or nutrition goals.
       </Text>
+      <View className="w-full mt-6 gap-2">
+        <ThreadPrimitive.Suggestions
+          components={{ Suggestion: SuggestionItem }}
+        />
+      </View>
     </Pressable>
+  );
+}
+
+function SuggestionItem() {
+  return (
+    <SuggestionPrimitive.Trigger send>
+      <View className="rounded-2xl border border-border bg-background px-4 py-3">
+        <SuggestionPrimitive.Title className="text-sm font-medium text-foreground" />
+        <SuggestionPrimitive.Description className="text-xs text-muted-foreground" />
+      </View>
+    </SuggestionPrimitive.Trigger>
   );
 }
