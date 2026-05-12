@@ -1,10 +1,12 @@
 import { AuiIf, ComposerPrimitive, useAui } from "@assistant-ui/react-native";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Keyboard, Pressable, Text, TextInput, View } from "react-native";
 import { useCSSVariable } from "uniwind";
+import { useListRef } from "./scroll-context";
 
 export function Composer() {
   const aui = useAui();
+  const listRef = useListRef();
   const placeholderColor = useCSSVariable("--color-muted-foreground");
   const inputRef = useRef<TextInput>(null);
   const textRef = useRef("");
@@ -18,12 +20,16 @@ export function Composer() {
   const handleSend = useCallback(() => {
     const t = textRef.current.trim();
     if (!t) return;
+    Keyboard.dismiss();
     aui.composer().setText(t);
     aui.composer().send();
     inputRef.current?.clear();
     textRef.current = "";
     setHasText(false);
-  }, [aui]);
+    setTimeout(() => {
+      listRef?.current?.scrollToEnd({ animated: true });
+    }, 150);
+  }, [aui, listRef]);
 
   return (
     <View className="px-4 pt-2.5 pb-2 bg-background border-t border-border">

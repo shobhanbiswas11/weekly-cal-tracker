@@ -1,13 +1,26 @@
 import { StyledSafeAreaView } from "@/components";
-import { Thread } from "@/components/chat";
+import { toolkit } from "@/components/chat/toolkit";
 import { useAssistantRuntime } from "@/hooks/use-assistant-runtime";
-import { AssistantRuntimeProvider } from "@assistant-ui/react-native";
+import { useAutoCancelInitiatedFlows } from "@/hooks/use-auto-cancel-initiated-flows";
+import {
+  AssistantRuntimeProvider,
+  Tools,
+  useAui,
+} from "@assistant-ui/react-native";
+import { Thread } from "../components/chat";
+
+function ChatEventHandlers() {
+  useAutoCancelInitiatedFlows();
+  return null;
+}
 
 export default function ChatModal() {
   const runtime = useAssistantRuntime();
+  const aui = useAui({ tools: Tools({ toolkit }) });
 
   return (
-    <AssistantRuntimeProvider runtime={runtime}>
+    <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+      <ChatEventHandlers />
       <StyledSafeAreaView className="flex-1 bg-background">
         <Thread />
       </StyledSafeAreaView>

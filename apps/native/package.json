@@ -13,8 +13,8 @@
     "prebuild": "expo prebuild --clean"
   },
   "dependencies": {
-    "@assistant-ui/react-ai-sdk": "^1.3.16",
-    "@assistant-ui/react-native": "^0.1.13",
+    "@assistant-ui/react-ai-sdk": "^1.3.23",
+    "@assistant-ui/react-native": "^0.1.15",
     "@clerk/expo": "^3.2.9",
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/bottom-tabs": "^7.4.0",
@@ -25,6 +25,7 @@
     "@weekly-cal/frontend": "workspace:*",
     "expo": "~54.0.33",
     "expo-auth-session": "~7.0.11",
+    "expo-clipboard": "^55.0.13",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.9",
     "expo-dev-client": "~6.0.21",

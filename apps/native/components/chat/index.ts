@@ -7,4 +7,5 @@ export { Header } from "./header";
 export { MessageBubble } from "./message-bubble";
 export { Thread } from "./thread";
 export { ToolFallback } from "./tool-fallback";
-export { EditComposer, UserMessage } from "./user-message";
+export { toolkit } from "./toolkit";
+export { UserMessage } from "./user-message";
