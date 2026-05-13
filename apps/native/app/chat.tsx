@@ -7,6 +7,7 @@ import {
   Tools,
   useAui,
 } from "@assistant-ui/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Thread } from "../components/chat";
 
 function ChatEventHandlers() {
@@ -21,9 +22,11 @@ export default function ChatModal() {
   return (
     <AssistantRuntimeProvider runtime={runtime} aui={aui}>
       <ChatEventHandlers />
-      <StyledSafeAreaView className="flex-1 bg-background">
-        <Thread />
-      </StyledSafeAreaView>
+      <SafeAreaProvider>
+        <StyledSafeAreaView className="flex-1 bg-background">
+          <Thread />
+        </StyledSafeAreaView>
+      </SafeAreaProvider>
     </AssistantRuntimeProvider>
   );
 }

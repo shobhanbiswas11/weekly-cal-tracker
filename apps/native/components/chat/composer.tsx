@@ -2,11 +2,9 @@ import { AuiIf, ComposerPrimitive, useAui } from "@assistant-ui/react-native";
 import { useCallback, useRef, useState } from "react";
 import { Keyboard, Pressable, Text, TextInput, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { useListRef } from "./scroll-context";
 
 export function Composer() {
   const aui = useAui();
-  const listRef = useListRef();
   const placeholderColor = useCSSVariable("--color-muted-foreground");
   const inputRef = useRef<TextInput>(null);
   const textRef = useRef("");
@@ -26,21 +24,18 @@ export function Composer() {
     inputRef.current?.clear();
     textRef.current = "";
     setHasText(false);
-    setTimeout(() => {
-      listRef?.current?.scrollToEnd({ animated: true });
-    }, 150);
-  }, [aui, listRef]);
+  }, [aui]);
 
+  // TODO: Auto grow text-input does not work
   return (
     <View className="px-4 pt-2.5 pb-2 bg-background border-t border-border">
-      <View className="flex-row items-center bg-card rounded-2xl pl-4.5 pr-1.5 py-1.5 min-h-13">
+      <View className="flex-row bg-card rounded-2xl pl-4.5 pr-1.5 py-1.5">
         <TextInput
           ref={inputRef}
           onChangeText={handleChangeText}
           placeholder="3 eggs for breakfast.."
           placeholderTextColor={placeholderColor as string}
-          multiline
-          className="flex-1 text-base text-foreground leading-5.5 max-h-30 py-1.5"
+          className="flex-1 text-base text-foreground py-1.5"
         />
         <AuiIf condition={(s) => !s.thread.isRunning}>
           <Pressable

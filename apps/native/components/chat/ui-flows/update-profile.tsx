@@ -69,13 +69,9 @@ export function UpdateProfile({ addResult, flow }: UIFlowRendererProps) {
       await updateProfile(changes);
       addResult(uiFlowProfile.update.complete());
     } catch (error) {
-      addResult(
-        uiFlowProfile.update.cancel(
-          error instanceof Error
-            ? `Canceled Due to Error: ${error.message}`
-            : undefined,
-        ),
-      );
+      // TODO: Log the error somewhere more permanent than console
+      console.log(error);
+      addResult(uiFlowProfile.update.cancel("Something went wrong"));
     } finally {
       setLoading(false);
     }

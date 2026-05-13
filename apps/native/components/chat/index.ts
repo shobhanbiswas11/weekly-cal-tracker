@@ -4,7 +4,6 @@ export { BranchPicker } from "./branch-picker";
 export { Composer } from "./composer";
 export { EmptyState } from "./empty-state";
 export { Header } from "./header";
-export { MessageBubble } from "./message-bubble";
 export { Thread } from "./thread";
 export { ToolFallback } from "./tool-fallback";
 export { toolkit } from "./toolkit";

@@ -27,7 +27,7 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="chat"
                   options={{
-                    presentation: "modal",
+                    presentation: "fullScreenModal",
                     headerShown: false,
                   }}
                 />

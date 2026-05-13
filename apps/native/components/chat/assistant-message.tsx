@@ -5,14 +5,16 @@ import {
 } from "@assistant-ui/react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { ActivityIndicator, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Text, View } from "react-native";
 import { useCSSVariable } from "uniwind";
+import { MessageContainer } from "./message-container";
 import { ToolFallback } from "./tool-fallback";
 
 export function AssistantMessage() {
   return (
-    <MessagePrimitive.Root>
-      <View className="px-4 py-1.5 my-0.5 max-w-[92%]">
+    <MessageContainer>
+      <View className="px-4 max-w-full">
         <MessagePrimitive.Content
           renderText={({ part }) => (
             <Text className="text-foreground text-base leading-6">
@@ -29,13 +31,63 @@ export function AssistantMessage() {
           )}
         />
         <AuiIf condition={(s) => s.thread.isRunning && s.message.isLast}>
-          <ActivityIndicator size="small" className="mt-2 self-start" />
+          <TypingIndicator />
         </AuiIf>
         <AuiIf condition={(s) => !s.thread.isRunning || !s.message.isLast}>
           <AssistantActionBar />
         </AuiIf>
       </View>
-    </MessagePrimitive.Root>
+    </MessageContainer>
+  );
+}
+
+function TypingIndicator() {
+  const dot1 = useRef(new Animated.Value(0.3)).current;
+  const dot2 = useRef(new Animated.Value(0.3)).current;
+  const dot3 = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    const pulseDuration = 300;
+    const stagger = 250;
+    const totalDuration = 1400;
+
+    const makeDotAnim = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: pulseDuration,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0.3,
+            duration: pulseDuration,
+            useNativeDriver: true,
+          }),
+          Animated.delay(totalDuration - delay - pulseDuration * 2),
+        ]),
+      );
+
+    const anim = Animated.parallel([
+      makeDotAnim(dot1, 0),
+      makeDotAnim(dot2, stagger),
+      makeDotAnim(dot3, stagger * 2),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [dot1, dot2, dot3]);
+
+  return (
+    <View className="flex-row gap-1.5 mt-3 self-start items-center h-5">
+      {[dot1, dot2, dot3].map((dot, i) => (
+        <Animated.View
+          key={i}
+          style={{ opacity: dot }}
+          className="w-2 h-2 rounded-full bg-foreground"
+        />
+      ))}
+    </View>
   );
 }
 
