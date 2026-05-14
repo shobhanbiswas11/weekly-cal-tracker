@@ -1,3 +1,6 @@
 packages:
   - apps/*
   - packages/*
+
+patchedDependencies:
+  '@clerk/expo': patches/@clerk__expo.patch

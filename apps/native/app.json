@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "native",
-    "slug": "native",
+    "name": "Weekly Health",
+    "slug": "weekly-health",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.botobrain.calorie"
+      "bundleIdentifier": "com.botobrain.weeklyhealth",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.botobrain.calorie"
+      "package": "com.botobrain.weeklyhealth"
     },
     "web": {
       "output": "static",
@@ -41,13 +44,24 @@
           }
         }
       ],
-      ["@clerk/expo", { "appleSignIn": false }],
+      [
+        "@clerk/expo",
+        {
+          "appleSignIn": false
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true,
+      "reactCompiler": false,
       "autolinkingModuleResolution": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ec9c3fa1-2cc3-4a3c-af4f-e9bc8ba2a664"
+      }
     }
   }
 }
