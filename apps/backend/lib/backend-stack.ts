@@ -176,6 +176,30 @@ export class BackendStack extends cdk.Stack {
       authorizer: jwtAuthorizer,
     });
 
+    // Activities - get by date
+    httpApi.addRoutes({
+      path: "/activities/{date}",
+      methods: [apigatewayv2.HttpMethod.GET],
+      integration: dataIntegration,
+      authorizer: jwtAuthorizer,
+    });
+
+    // Activities - create
+    httpApi.addRoutes({
+      path: "/activities",
+      methods: [apigatewayv2.HttpMethod.POST],
+      integration: dataIntegration,
+      authorizer: jwtAuthorizer,
+    });
+
+    // Activities - update/delete
+    httpApi.addRoutes({
+      path: "/activities/{date}/{id}",
+      methods: [apigatewayv2.HttpMethod.PUT, apigatewayv2.HttpMethod.DELETE],
+      integration: dataIntegration,
+      authorizer: jwtAuthorizer,
+    });
+
     // =====================
     // Outputs
     // =====================

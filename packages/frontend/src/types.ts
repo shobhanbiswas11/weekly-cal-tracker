@@ -1,10 +1,13 @@
 import type {
+  ActivityEntry,
+  CreateActivityEntryDto,
   CreateMealEntryDto,
   CreateProfileDto,
   MealEntry,
   Profile,
   ResponseEntriesByDate,
   ResponseSummary,
+  UpdateActivityEntryDto,
   UpdateMealEntryDto,
   UpdateProfileDto,
 } from "@weekly-cal/core";
@@ -17,6 +20,10 @@ export interface ApiClientConfig {
   baseUrl: string;
   getToken: GetToken;
   fetch: FetchFn;
+}
+
+export interface ResponseActivitiesByDate {
+  entries: ActivityEntry[];
 }
 
 export interface ApiClient {
@@ -32,4 +39,12 @@ export interface ApiClient {
   deleteEntry: (date: string, id: string) => Promise<unknown>;
   createProfile: (data: CreateProfileDto) => Promise<Profile>;
   updateProfile: (data: UpdateProfileDto) => Promise<Profile>;
+  fetchActivitiesByDate: (date: string) => Promise<ResponseActivitiesByDate>;
+  createActivity: (data: CreateActivityEntryDto) => Promise<ActivityEntry>;
+  updateActivity: (
+    date: string,
+    id: string,
+    data: UpdateActivityEntryDto,
+  ) => Promise<ActivityEntry>;
+  deleteActivity: (date: string, id: string) => Promise<unknown>;
 }

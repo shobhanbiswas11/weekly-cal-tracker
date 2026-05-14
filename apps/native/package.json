@@ -8,10 +8,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "ios:device": "expo run:ios --device",
+    "ios:device:release": "expo run:ios --device --configuration Release",
     "web": "expo start --web",
     "lint": "expo lint",
-    "prebuild": "expo prebuild --clean",
-    "build:ios:preview": "eas build --platform ios --profile preview --local"
+    "prebuild": "expo prebuild --clean"
   },
   "dependencies": {
     "@assistant-ui/react-ai-sdk": "^1.3.23",

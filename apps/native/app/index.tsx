@@ -9,8 +9,14 @@ import {
   calculateStat,
   getTodayISO,
 } from "@weekly-cal/core";
-import { useMemo } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 function fmt(n: number) {
   return Math.round(n).toLocaleString();
@@ -24,7 +30,14 @@ function getGreeting(): string {
 }
 
 function SummaryDashboard() {
-  const { data, isLoading, error } = useSummaryQuery();
+  const { data, isLoading, error, refetch } = useSummaryQuery();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
   const today = getTodayISO();
 
   const result = useMemo(() => {
@@ -34,7 +47,7 @@ function SummaryDashboard() {
       today,
       profile: data.profile,
       mealEntries: data.mealEntries,
-      activityEntries: [],
+      activityEntries: data.activityEntries ?? [],
     });
   }, [data, today]);
 
@@ -93,6 +106,9 @@ function SummaryDashboard() {
   return (
     <ScrollView
       className="flex-1"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
       contentContainerStyle={{
         paddingHorizontal: 16,
         paddingTop: 16,
@@ -121,7 +137,7 @@ function SummaryDashboard() {
         <View className="items-center mb-5">
           <CalorieRing consumed={netConsumed} budget={dailyCalorieBudget} />
         </View>
-        {/* 3-column breakdown */}
+        {/* 4-column breakdown */}
         <View className="flex-row border-t border-border">
           <View className="flex-1 items-center pt-3 px-2">
             <Text className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -138,6 +154,15 @@ function SummaryDashboard() {
             </Text>
             <Text className="text-sm font-bold text-foreground mt-0.5">
               {fmt(consumed)}
+            </Text>
+          </View>
+          <View className="w-px bg-border my-2" />
+          <View className="flex-1 items-center pt-3 px-2">
+            <Text className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Burned
+            </Text>
+            <Text className="text-sm font-bold text-primary mt-0.5">
+              {fmt(burned)}
             </Text>
           </View>
           <View className="w-px bg-border my-2" />

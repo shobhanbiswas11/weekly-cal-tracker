@@ -1,6 +1,7 @@
 import { dateContext, uiFlowContext } from "@weekly-cal/core";
 import { ModelMessage, ToolLoopAgent } from "ai";
 import { inject, injectable } from "../../di-utils";
+import { ActivityAgent } from "../activity";
 import { MealAgent } from "../meal";
 import { ProfileAgent } from "../profile";
 import { hasUIFlowResult } from "../utils";
@@ -16,6 +17,7 @@ export class PrimaryAgent {
   constructor(
     private profileAgent = inject(ProfileAgent),
     private mealAgent = inject(MealAgent),
+    private activityAgent = inject(ActivityAgent),
   ) {}
 
   /**
@@ -41,6 +43,7 @@ ${frontendInstructions ? `\n${frontendInstructions}` : ""}`;
       ...frontendTools,
       profileAgent: this.profileAgent.createTool(model),
       mealAgent: this.mealAgent.createTool(model),
+      activityAgent: this.activityAgent.createTool(model),
     };
   }
 

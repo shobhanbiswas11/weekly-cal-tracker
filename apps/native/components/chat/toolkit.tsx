@@ -45,4 +45,10 @@ export const toolkit: Toolkit = {
     type: "backend",
     render: (props) => <SubAgentUI title="Meal Agent" toolCallProps={props} />,
   },
+  activityAgent: {
+    type: "backend",
+    render: (props) => (
+      <SubAgentUI title="Activity Agent" toolCallProps={props} />
+    ),
+  },
 };

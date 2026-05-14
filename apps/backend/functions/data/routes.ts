@@ -1,4 +1,5 @@
 import {
+  ActivityService,
   MealService,
   ProfileService,
   QueryService,
@@ -8,8 +9,10 @@ import {
   getWeekBoundaries,
   isValidDateFormat,
   isValidWeekFormat,
+  schemaCreateActivityEntry,
   schemaCreateMealEntry,
   schemaCreateProfile,
+  schemaUpdateActivityEntry,
   schemaUpdateMealEntry,
   schemaUpdateProfile,
 } from "@weekly-cal/core";
@@ -146,6 +149,78 @@ const handleCreateProfile = withValidation(
 );
 
 // =============================================================================
+// Activity Route Handlers
+// =============================================================================
+
+// GET /activities/{date} - Get activities for a specific date
+const handleGetActivitiesByDate: RouteHandler = async (event, userId) => {
+  const date = event.pathParameters?.date;
+
+  if (!date) {
+    return createErrorResponse("Date is required", 400);
+  }
+
+  if (!isValidDateFormat(date)) {
+    return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
+  }
+
+  const container = createRequestContainer(userId);
+  const activityService = container.get(ActivityService);
+  const entries = await activityService.getByDate(userId, date);
+  return createResponse({ entries });
+};
+
+// POST /activities - Create new activity entry
+const handleCreateActivity = withValidation(
+  schemaCreateActivityEntry,
+  async (_event, userId, data) => {
+    const container = createRequestContainer(userId);
+    const activityService = container.get(ActivityService);
+    const entry = await activityService.create(userId, data);
+    return createResponse(entry, 201);
+  },
+);
+
+// PUT /activities/{date}/{id} - Update activity entry
+const handleUpdateActivity = withValidation(
+  schemaUpdateActivityEntry,
+  async (event, userId, body) => {
+    const { date, id } = event.pathParameters || {};
+
+    if (!date || !id) {
+      return createErrorResponse("Date and entry ID are required", 400);
+    }
+
+    if (!isValidDateFormat(date)) {
+      return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
+    }
+
+    const container = createRequestContainer(userId);
+    const activityService = container.get(ActivityService);
+    const entry = await activityService.update(userId, id, body);
+    return createResponse(entry);
+  },
+);
+
+// DELETE /activities/{date}/{id} - Delete activity entry
+const handleDeleteActivity: RouteHandler = async (event, userId) => {
+  const { date, id } = event.pathParameters || {};
+
+  if (!date || !id) {
+    return createErrorResponse("Date and entry ID are required", 400);
+  }
+
+  if (!isValidDateFormat(date)) {
+    return createErrorResponse("Invalid date format. Use YYYY-MM-DD", 400);
+  }
+
+  const container = createRequestContainer(userId);
+  const activityService = container.get(ActivityService);
+  await activityService.delete(userId, id);
+  return createResponse({ message: "Activity deleted successfully" });
+};
+
+// =============================================================================
 // Route Definitions
 // =============================================================================
 
@@ -192,5 +267,27 @@ export const routes: Route[] = [
     method: "PUT",
     pattern: /^\/profile$/,
     handler: handleUpdateProfile,
+  },
+  // Activity queries
+  {
+    method: "GET",
+    pattern: /^\/activities\/[^/]+$/,
+    handler: handleGetActivitiesByDate,
+  },
+  // Activity mutations
+  {
+    method: "POST",
+    pattern: /^\/activities$/,
+    handler: handleCreateActivity,
+  },
+  {
+    method: "PUT",
+    pattern: /^\/activities\/[^/]+\/[^/]+$/,
+    handler: handleUpdateActivity,
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/activities\/[^/]+\/[^/]+$/,
+    handler: handleDeleteActivity,
   },
 ];

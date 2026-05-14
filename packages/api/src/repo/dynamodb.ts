@@ -12,7 +12,7 @@ export class DynamoDBClient {
   static SK_PREFIX = {
     PROFILE: "PROFILE",
     FOOD_ENTRY: "FOOD_ENTRY",
-    WORKOUT_ENTRY: "WORKOUT_ENTRY", // Future
+    ACTIVITY_ENTRY: "ACTIVITY_ENTRY",
   } as const;
 
   static createPK(userId: string): string {

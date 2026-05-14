@@ -2,6 +2,7 @@ import { isCompleteOrCancelledUIFlow, uiFlowProfile } from "@weekly-cal/core";
 import { useApi } from "@weekly-cal/frontend";
 import { useState } from "react";
 import { Text, View } from "react-native";
+import { useInvalidateSummaryQuery } from "../../../hooks/use-summary-query";
 import {
   FlowActionButtons,
   FlowCard,
@@ -54,6 +55,7 @@ function formatValue(key: string, value: unknown): string {
 export function UpdateProfile({ addResult, flow }: UIFlowRendererProps) {
   const [loading, setLoading] = useState(false);
   const { updateProfile } = useApi();
+  const invalidateSummary = useInvalidateSummaryQuery();
 
   if (isCompleteOrCancelledUIFlow(flow)) {
     return <FlowResultCard state={flow.state} message={flow.message} />;
@@ -67,6 +69,7 @@ export function UpdateProfile({ addResult, flow }: UIFlowRendererProps) {
     setLoading(true);
     try {
       await updateProfile(changes);
+      invalidateSummary();
       addResult(uiFlowProfile.update.complete());
     } catch (error) {
       // TODO: Log the error somewhere more permanent than console

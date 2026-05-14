@@ -1,5 +1,7 @@
 import { Container } from "./di-utils";
 import {
+  ACTIVITY_ENTRY_REPO_TOKEN,
+  DynamoDBActivityEntryRepo,
   DynamoDBMealEntryRepo,
   DynamoDBProfileRepo,
   MEAL_ENTRY_REPO_TOKEN,
@@ -20,6 +22,11 @@ export function initContainer(): void {
   rootContainer.bind({
     provide: PROFILE_REPO_TOKEN,
     useClass: DynamoDBProfileRepo,
+  });
+
+  rootContainer.bind({
+    provide: ACTIVITY_ENTRY_REPO_TOKEN,
+    useClass: DynamoDBActivityEntryRepo,
   });
 }
 

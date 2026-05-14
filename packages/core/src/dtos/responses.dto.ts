@@ -1,4 +1,4 @@
-import type { MealEntry, Profile } from "../entities";
+import type { ActivityEntry, MealEntry, Profile } from "../entities";
 
 export interface ApiResponse {
   success: boolean;
@@ -10,6 +10,7 @@ export interface ResponseSummary {
   profile: Profile;
   weekId: string; // Format: YYYY-Www
   mealEntries: MealEntry[];
+  activityEntries: ActivityEntry[];
 }
 
 export interface ResponseWeeklySummary {

@@ -1,15 +1,22 @@
 import type {
+  ActivityEntry,
   ApiResponse,
+  CreateActivityEntryDto,
   CreateMealEntryDto,
   CreateProfileDto,
   MealEntry,
   Profile,
   ResponseEntriesByDate,
   ResponseSummary,
+  UpdateActivityEntryDto,
   UpdateMealEntryDto,
   UpdateProfileDto,
 } from "@weekly-cal/core";
-import type { ApiClient, ApiClientConfig } from "./types";
+import type {
+  ApiClient,
+  ApiClientConfig,
+  ResponseActivitiesByDate,
+} from "./types";
 
 async function apiFetch<T = unknown>(
   endpoint: string,
@@ -76,5 +83,19 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
         method: "PUT",
         body: JSON.stringify(data),
       }),
+    fetchActivitiesByDate: (date: string) =>
+      fetchApi<ResponseActivitiesByDate>(`/activities/${date}`),
+    createActivity: (data: CreateActivityEntryDto) =>
+      fetchApi<ActivityEntry>("/activities", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateActivity: (date: string, id: string, data: UpdateActivityEntryDto) =>
+      fetchApi<ActivityEntry>(`/activities/${date}/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    deleteActivity: (date: string, id: string) =>
+      fetchApi(`/activities/${date}/${id}`, { method: "DELETE" }),
   };
 }

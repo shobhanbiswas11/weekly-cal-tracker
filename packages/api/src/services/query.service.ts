@@ -7,6 +7,7 @@ import {
   startOfISOWeek,
 } from "date-fns";
 import { inject, injectable } from "../di-utils";
+import { ActivityService } from "./activity.service";
 import { AuthService } from "./auth.service";
 import { MealService } from "./meal.service";
 import { ProfileService } from "./profile.service";
@@ -17,6 +18,7 @@ export class QueryService {
     private auth = inject(AuthService),
     private profileService = inject(ProfileService),
     private mealService = inject(MealService),
+    private activityService = inject(ActivityService),
   ) {}
 
   async summary(): Promise<ResponseSummary> {
@@ -26,15 +28,16 @@ export class QueryService {
     const weekEnd = format(endOfISOWeek(today), "yyyy-MM-dd");
     const weekId = `${getISOWeekYear(today)}-W${String(getISOWeek(today)).padStart(2, "0")}`;
 
-    const [profile, mealEntries] = await Promise.all([
+    const [profile, mealEntries, activityEntries] = await Promise.all([
       this.profileService.getByUserId(userId),
       this.mealService.getByDateRange(userId, weekStart, weekEnd),
+      this.activityService.getByDateRange(userId, weekStart, weekEnd),
     ]);
 
     if (!profile) {
       throw new Error(`Profile not found for user: ${userId}`);
     }
 
-    return { profile, weekId, mealEntries };
+    return { profile, weekId, mealEntries, activityEntries };
   }
 }
