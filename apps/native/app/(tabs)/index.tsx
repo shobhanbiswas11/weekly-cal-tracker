@@ -1,8 +1,7 @@
-import { AuthView, StyledSafeAreaView } from "@/components";
+import { StyledSafeAreaView } from "@/components";
 import { CalorieRing } from "@/components/dashboard/calorie-ring";
 import { NutrientRow } from "@/components/dashboard/nutrient-row";
 import { WeeklyStrip } from "@/components/dashboard/weekly-strip";
-import { useAppAuth } from "@/hooks/use-auth";
 import { useSummaryQuery } from "@/hooks/use-summary-query";
 import {
   calculateNutrientTargets,
@@ -253,22 +252,8 @@ function SummaryDashboard() {
 }
 
 export default function Dashboard() {
-  const { isSignedIn, isLoaded } = useAppAuth();
-
-  if (!isLoaded) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <AuthView mode="signInOrUp" />;
-  }
-
   return (
-    <StyledSafeAreaView className="flex-1 bg-background">
+    <StyledSafeAreaView edges={["top"]} className="flex-1 bg-background">
       <SummaryDashboard />
     </StyledSafeAreaView>
   );
