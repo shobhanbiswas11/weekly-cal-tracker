@@ -17,7 +17,7 @@ export function ChatFAB() {
       onPress={() => router.push("/chat")}
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
-      className={`absolute bottom-10 right-6 w-14 h-14 rounded-full shadow-lg ${isPressed ? "opacity-90 scale-95" : "opacity-100 scale-100"}`}
+      className={`absolute bottom-24 right-6 w-14 h-14 rounded-full shadow-lg ${isPressed ? "opacity-90 scale-95" : "opacity-100 scale-100"}`}
       accessibilityLabel="Open chat assistant"
       accessibilityRole="button"
     >
