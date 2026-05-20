@@ -11,7 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.botobrain.weeklyhealth",
       "icon": {
-        "light": "./assets/icons/ios-light.png",
+        "light": "./assets/icons/ios-dark.png",
         "dark": "./assets/icons/ios-dark.png",
         "tinted": "./assets/icons/ios-tinted.png"
       },
