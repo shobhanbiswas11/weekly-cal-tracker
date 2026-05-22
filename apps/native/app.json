@@ -23,7 +23,6 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.botobrain.weeklyhealth"
     },
@@ -52,7 +51,9 @@
           "appleSignIn": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

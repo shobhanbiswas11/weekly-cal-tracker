@@ -6,6 +6,20 @@ import {
   startOfISOWeek,
 } from "date-fns";
 
+export const isoFromLocal = (date: Date): string => {
+  return format(date, "yyyy-MM-dd");
+};
+
+export const shiftDay = (iso: string, n: number): string => {
+  return format(addDays(parseISO(iso), n), "yyyy-MM-dd");
+};
+
+export const formatDateLabel = (iso: string, today: string): string => {
+  if (iso === today) return "Today";
+  if (iso === shiftDay(today, -1)) return "Yesterday";
+  return format(parseISO(iso), "EEE, MMM d");
+};
+
 export const getWeekBoundaries = (
   weekId: string,
 ): { start: string; end: string } => {
