@@ -64,6 +64,29 @@ export default function RootLayout() {
                       headerShown: false,
                     }}
                   />
+                  {/* Profile */}
+                  <Stack.Screen
+                    name="profile/vitals"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="profile/edit-vitals"
+                    options={{
+                      presentation: "modal",
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/preferences"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="profile/edit-preferences"
+                    options={{
+                      presentation: "modal",
+                      headerShown: false,
+                    }}
+                  />
                 </Stack>
                 <ChatFAB />
               </View>

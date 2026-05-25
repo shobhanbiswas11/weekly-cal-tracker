@@ -1,6 +1,7 @@
 import {
   CalendarPickerModal,
   IconButton,
+  IconButtonIcon,
   StyledSafeAreaView,
 } from "@/components";
 import { useSummaryQuery } from "@/hooks/use-summary-query";
@@ -80,7 +81,9 @@ function MealDetailModal({
               <Text className="text-base font-bold text-foreground flex-1 mr-3">
                 {meal?.name}
               </Text>
-              <IconButton name="close" onPress={onClose} />
+              <IconButton onPress={onClose}>
+                <IconButtonIcon name="close" />
+              </IconButton>
             </View>
 
             {/* Macro chips */}
@@ -166,7 +169,9 @@ function ActivityDetailModal({
               <Text className="text-base font-bold text-foreground flex-1 mr-3">
                 {activity?.name}
               </Text>
-              <IconButton name="close" onPress={onClose} />
+              <IconButton onPress={onClose}>
+                <IconButtonIcon name="close" />
+              </IconButton>
             </View>
 
             <View>
@@ -425,7 +430,9 @@ function DateHeader({
   const canGoForward = selectedDate < today;
   return (
     <View className="flex-row items-center justify-center gap-4 px-4 py-3 border-b border-border">
-      <IconButton name="chevron-back" onPress={onPrev} />
+      <IconButton onPress={onPrev}>
+        <IconButtonIcon name="chevron-back" />
+      </IconButton>
       <Pressable
         onPress={onDatePress}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -437,11 +444,9 @@ function DateHeader({
         </Text>
         <Ionicons name="calendar-outline" size={15} color="#9ca3af" />
       </Pressable>
-      <IconButton
-        name="chevron-forward"
-        onPress={onNext}
-        disabled={!canGoForward}
-      />
+      <IconButton onPress={onNext} disabled={!canGoForward}>
+        <IconButtonIcon name="chevron-forward" />
+      </IconButton>
     </View>
   );
 }
