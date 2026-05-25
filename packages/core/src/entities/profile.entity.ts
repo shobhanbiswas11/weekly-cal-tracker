@@ -3,6 +3,8 @@ import {
   schemaActivityLevel,
   schemaBiologicalSex,
   schemaGoal,
+  schemaHeightUnit,
+  schemaWeightUnit,
 } from "../constants";
 
 export const schemaProfileEntity = z.object({
@@ -22,6 +24,19 @@ export const schemaProfileEntity = z.object({
     "Activity level (Sedentary, Lightly Active, Moderately Active, Very Active, Super Active)",
   ),
   goal: schemaGoal.describe("User's goal for weight management"),
+
+  // ---------------------------------------------------------------------------
+  preferences: z
+    .object({
+      heightUnit: schemaHeightUnit
+        .default("cm")
+        .describe("Preferred unit for displaying height"),
+      weightUnit: schemaWeightUnit
+        .default("kg")
+        .describe("Preferred unit for displaying weight"),
+    })
+    .default({ heightUnit: "cm", weightUnit: "kg" })
+    .describe("User application preferences"),
 
   // ---------------------------------------------------------------------------
   additionalNotes: z

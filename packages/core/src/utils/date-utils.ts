@@ -1,5 +1,6 @@
 import {
   addDays,
+  differenceInYears,
   format,
   parseISO,
   setISOWeek,
@@ -64,4 +65,8 @@ export const getWeekDates = (weekId: string): string[] => {
 export const formatTime = (iso: string | undefined | null): string => {
   if (!iso) return "";
   return format(parseISO(iso), "HH:mm");
+};
+
+export const calcAge = (dob: string): number => {
+  return differenceInYears(new Date(), parseISO(dob));
 };

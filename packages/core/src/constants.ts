@@ -26,3 +26,9 @@ export const schemaGoal = z.enum([
   "Gain Weight",
 ]);
 export type Goal = z.infer<typeof schemaGoal>;
+
+export const schemaHeightUnit = z.enum(["cm", "ft"]);
+export type HeightUnit = z.infer<typeof schemaHeightUnit>;
+
+export const schemaWeightUnit = z.enum(["kg", "lbs"]);
+export type WeightUnit = z.infer<typeof schemaWeightUnit>;
