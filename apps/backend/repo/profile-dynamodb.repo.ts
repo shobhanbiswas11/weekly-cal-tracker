@@ -70,6 +70,26 @@ export class DynamoDBProfileRepo implements ProfileRepo {
       if (["id", "PK", "SK", "createdAt"].includes(key)) continue;
       if (value === undefined) continue;
 
+      // For plain nested objects (e.g. preferences), expand to attribute-path
+      // updates so individual sub-fields are patched without overwriting others.
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        for (const [subKey, subValue] of Object.entries(value)) {
+          if (subValue === undefined) continue;
+          const nameKey = `#${key}`;
+          const subNameKey = `#${key}_${subKey}`;
+          const valueKey = `:${key}_${subKey}`;
+          updateParts.push(`${nameKey}.${subNameKey} = ${valueKey}`);
+          expressionNames[nameKey] = key;
+          expressionNames[subNameKey] = subKey;
+          expressionValues[valueKey] = subValue;
+        }
+        continue;
+      }
+
       const nameKey = `#${key}`;
       const valueKey = `:${key}`;
       updateParts.push(`${nameKey} = ${valueKey}`);

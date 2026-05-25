@@ -5,6 +5,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
+import { schemaProfileEntity } from "@weekly-cal/core";
 import { AppConfigService } from "../services";
 import { DynamoDBClient } from "./dynamodb";
 import type {
@@ -21,7 +22,7 @@ export class DynamoDBProfileRepo implements ProfileRepo {
 
   private static toProfile(item: DynamoDBProfile): Profile {
     const { PK, SK, ...profile } = item;
-    return profile;
+    return schemaProfileEntity.parse(profile);
   }
 
   constructor(

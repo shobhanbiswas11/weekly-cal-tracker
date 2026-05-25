@@ -5,6 +5,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
+import { schemaActivityEntryEntity } from "@weekly-cal/core";
 import { v4 as uuidv4 } from "uuid";
 import { AppConfigService } from "../services";
 import type {
@@ -28,7 +29,7 @@ export class DynamoDBActivityEntryRepo implements ActivityEntryRepo {
 
   private static toActivityEntry(item: DynamoDBActivityEntry): ActivityEntry {
     const { PK, SK, ...entry } = item;
-    return entry;
+    return schemaActivityEntryEntity.parse(entry);
   }
 
   constructor(

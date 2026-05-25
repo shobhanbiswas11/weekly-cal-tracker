@@ -5,6 +5,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { inject, injectable } from "@needle-di/core";
+import { schemaMealEntryEntity } from "@weekly-cal/core";
 import { v4 as uuidv4 } from "uuid";
 import { AppConfigService } from "../services";
 import { DynamoDBClient } from "./dynamodb";
@@ -31,7 +32,7 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
 
   private static toMealEntry(item: DynamoDBMealEntry): MealEntry {
     const { PK, SK, ...entry } = item;
-    return entry;
+    return schemaMealEntryEntity.parse(entry);
   }
 
   constructor(
