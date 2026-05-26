@@ -1,6 +1,5 @@
 import { StyledSafeAreaView } from "@/components";
-import { useAppAuth } from "@/hooks/use-auth";
-import { useSummaryQuery } from "@/hooks/use-summary-query";
+import { useAppAuth, useSummaryQuery } from "@/hooks";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";

@@ -2,7 +2,7 @@ import { StyledSafeAreaView } from "@/components";
 import { CalorieRing } from "@/components/dashboard/calorie-ring";
 import { NutrientRow } from "@/components/dashboard/nutrient-row";
 import { WeeklyStrip } from "@/components/dashboard/weekly-strip";
-import { useSummaryQuery } from "@/hooks/use-summary-query";
+import { useSummaryQuery } from "@/hooks";
 import {
   calculateNutrientTargets,
   calculateStat,

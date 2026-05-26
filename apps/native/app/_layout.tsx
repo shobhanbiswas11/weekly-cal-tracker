@@ -1,3 +1,4 @@
+import { useCreateApiClient } from "@/hooks";
 import { useAuth } from "@clerk/expo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ApiProvider } from "@weekly-cal/frontend";
@@ -9,7 +10,6 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AuthView, ChatFAB, UnauthView } from "../components";
 import { ClerkProvider } from "../components/clerk-provider";
 import "../global.css";
-import { useCreateApiClient } from "../hooks/use-api";
 
 SplashScreen.preventAutoHideAsync();
 

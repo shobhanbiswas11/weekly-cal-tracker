@@ -1,7 +1,6 @@
 import { StyledSafeAreaView } from "@/components";
 import { toolkit } from "@/components/chat/toolkit";
-import { useAssistantRuntime } from "@/hooks/use-assistant-runtime";
-import { useAutoCancelInitiatedFlows } from "@/hooks/use-auto-cancel-initiated-flows";
+import { useAssistantRuntime, useAutoCancelInitiatedFlows } from "@/hooks";
 import {
   AssistantRuntimeProvider,
   Tools,

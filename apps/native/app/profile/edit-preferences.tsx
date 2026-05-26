@@ -1,8 +1,5 @@
 import { StyledSafeAreaView } from "@/components";
-import {
-  useInvalidateSummaryQuery,
-  useSummaryQuery,
-} from "@/hooks/use-summary-query";
+import { useInvalidateSummaryQuery, useSummaryQuery } from "@/hooks";
 import { useMutation } from "@tanstack/react-query";
 import type {
   HeightUnit,

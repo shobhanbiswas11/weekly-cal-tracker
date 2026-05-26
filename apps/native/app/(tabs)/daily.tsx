@@ -4,7 +4,7 @@ import {
   IconButtonIcon,
   StyledSafeAreaView,
 } from "@/components";
-import { useSummaryQuery } from "@/hooks/use-summary-query";
+import { useSummaryQuery } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import type { ActivityEntry, MealEntry } from "@weekly-cal/core";
 import { formatDateLabel, getTodayISO, shiftDay } from "@weekly-cal/core";

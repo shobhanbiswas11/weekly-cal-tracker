@@ -1,6 +1,6 @@
 import { StyledSafeAreaView } from "@/components";
 import { IconButton, IconButtonLabel } from "@/components/ui/icon-button";
-import { useSummaryQuery } from "@/hooks/use-summary-query";
+import { useSummaryQuery } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { calcAge } from "@weekly-cal/core";
 import { router } from "expo-router";
