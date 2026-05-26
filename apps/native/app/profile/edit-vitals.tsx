@@ -1,32 +1,61 @@
-import { StyledSafeAreaView } from "@/components";
+import { Button, StyledSafeAreaView } from "@/components";
 import { useInvalidateSummaryQuery, useSummaryQuery } from "@/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import type {
   ActivityLevel,
   BiologicalSex,
   CreateProfileDto,
   Goal,
+  HeightUnit,
   UpdateProfileDto,
+  WeightUnit,
 } from "@weekly-cal/core";
 import {
+  heightFromCm,
+  heightToCm,
   schemaActivityLevel,
   schemaBiologicalSex,
   schemaGoal,
+  weightFromKg,
+  weightToKg,
+  weightUnitLabel,
 } from "@weekly-cal/core";
 import { useApi } from "@weekly-cal/frontend";
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
+import { useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useCSSVariable } from "uniwind";
+import { z } from "zod";
+
+// ---------------------------------------------------------------------------
+// Form types
+// ---------------------------------------------------------------------------
+
+type VitalsFormValues = {
+  name: string;
+  dateOfBirth: string;
+  biologicalSex: BiologicalSex;
+  /** cm value (used when heightUnit === "cm") */
+  height: string;
+  /** feet part (used when heightUnit === "ft") */
+  heightFeet: string;
+  /** inches part 0-11 (used when heightUnit === "ft") */
+  heightInches: string;
+  weight: string;
+  activityLevel: ActivityLevel;
+  goal: Goal;
+  additionalNotes?: string;
+};
 
 // ---------------------------------------------------------------------------
 // Small reusable form primitives
@@ -44,22 +73,26 @@ function InputRow({
   label,
   value,
   onChangeText,
+  onBlur,
   placeholder,
   keyboardType = "default",
   multiline = false,
   isLast = false,
   foregroundColor,
   placeholderColor,
+  error,
 }: {
   label: string;
   value: string;
   onChangeText: (t: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   keyboardType?: "default" | "decimal-pad";
   multiline?: boolean;
   isLast?: boolean;
   foregroundColor: string;
   placeholderColor: string;
+  error?: string;
 }) {
   return (
     <View
@@ -73,6 +106,7 @@ function InputRow({
       <TextInput
         value={value}
         onChangeText={onChangeText}
+        onBlur={onBlur}
         placeholder={placeholder}
         placeholderTextColor={placeholderColor}
         keyboardType={keyboardType}
@@ -86,6 +120,7 @@ function InputRow({
           textAlignVertical: multiline ? "top" : "auto",
         }}
       />
+      {error && <Text className="text-xs text-destructive mt-1">{error}</Text>}
     </View>
   );
 }
@@ -102,26 +137,15 @@ function BinaryToggle<T extends string>({
   return (
     <View className="flex-row gap-2 mt-1 mb-2">
       {options.map((opt) => (
-        <Pressable
+        <Button
           key={opt}
+          variant={value === opt ? "default" : "outline"}
+          size="lg"
           onPress={() => onChange(opt)}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, flex: 1 })}
-          className={`py-2.5 rounded-xl items-center border ${
-            value === opt
-              ? "bg-primary border-primary"
-              : "bg-card border-border"
-          }`}
+          className="flex-1"
         >
-          <Text
-            className={`text-sm font-medium ${
-              value === opt
-                ? "text-primary-foreground"
-                : "text-muted-foreground"
-            }`}
-          >
-            {opt}
-          </Text>
-        </Pressable>
+          {opt}
+        </Button>
       ))}
     </View>
   );
@@ -139,26 +163,15 @@ function OptionPicker<T extends string>({
   return (
     <View className="gap-2 mt-1 mb-2">
       {options.map((opt) => (
-        <Pressable
+        <Button
           key={opt}
+          variant={value === opt ? "default" : "outline"}
+          size="lg"
           onPress={() => onChange(opt)}
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          className={`px-4 py-3 rounded-xl border ${
-            value === opt
-              ? "bg-primary border-primary"
-              : "bg-card border-border"
-          }`}
+          className="items-start"
         >
-          <Text
-            className={`text-sm font-medium ${
-              value === opt
-                ? "text-primary-foreground"
-                : "text-muted-foreground"
-            }`}
-          >
-            {opt}
-          </Text>
-        </Pressable>
+          {opt}
+        </Button>
       ))}
     </View>
   );
@@ -177,24 +190,80 @@ export default function EditVitalsScreen() {
   const invalidateSummary = useInvalidateSummaryQuery();
 
   const profile = data?.profile;
+  const heightUnit: HeightUnit = profile?.preferences?.heightUnit ?? "cm";
+  const weightUnit: WeightUnit = profile?.preferences?.weightUnit ?? "kg";
 
-  const [form, setForm] = useState(() => ({
-    name: profile?.name ?? "",
-    dateOfBirth: profile?.dateOfBirth ?? "",
-    biologicalSex: (profile?.biologicalSex ?? "Male") as BiologicalSex,
-    height: profile?.height?.toString() ?? "",
-    weight: profile?.weight?.toString() ?? "",
-    activityLevel: (profile?.activityLevel ??
-      "Moderately Active") as ActivityLevel,
-    goal: (profile?.goal ?? "Maintain Healthy Lifestyle") as Goal,
-    additionalNotes: profile?.additionalNotes ?? "",
-  }));
-
-  const set = useCallback(
-    <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
-      setForm((prev) => ({ ...prev, [key]: value })),
-    [],
+  const schemaVitalsForm = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(1, "Name is required"),
+        dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+        biologicalSex: schemaBiologicalSex,
+        height:
+          heightUnit === "cm"
+            ? z.string().refine((v) => {
+                const n = parseFloat(v);
+                return !isNaN(n) && n > 0;
+              }, "Enter a valid height")
+            : z.string(),
+        heightFeet:
+          heightUnit === "ft"
+            ? z.string().refine((v) => {
+                const n = parseInt(v, 10);
+                return !isNaN(n) && n >= 0;
+              }, "Enter valid feet")
+            : z.string(),
+        heightInches:
+          heightUnit === "ft"
+            ? z.string().refine((v) => {
+                const n = parseInt(v, 10);
+                return !isNaN(n) && n >= 0 && n < 12;
+              }, "Enter 0–11")
+            : z.string(),
+        weight: z.string().refine((v) => {
+          const n = parseFloat(v);
+          return !isNaN(n) && n > 0;
+        }, "Enter a valid weight"),
+        activityLevel: schemaActivityLevel,
+        goal: schemaGoal,
+        additionalNotes: z.string().optional(),
+      }),
+    [heightUnit],
   );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VitalsFormValues>({
+    resolver: zodResolver(schemaVitalsForm),
+    defaultValues: {
+      name: profile?.name ?? "",
+      dateOfBirth: profile?.dateOfBirth ?? "",
+      biologicalSex: profile?.biologicalSex ?? "Male",
+      height:
+        heightUnit === "cm" && profile?.height != null
+          ? String(heightFromCm(profile.height, heightUnit))
+          : "",
+      heightFeet: (() => {
+        if (heightUnit !== "ft" || profile?.height == null) return "";
+        const totalInches = heightFromCm(profile.height, "ft");
+        return String(Math.floor(totalInches / 12));
+      })(),
+      heightInches: (() => {
+        if (heightUnit !== "ft" || profile?.height == null) return "";
+        const totalInches = heightFromCm(profile.height, "ft");
+        return String(totalInches % 12);
+      })(),
+      weight:
+        profile?.weight != null
+          ? String(weightFromKg(profile.weight, weightUnit))
+          : "",
+      activityLevel: profile?.activityLevel ?? "Moderately Active",
+      goal: profile?.goal ?? "Maintain Healthy Lifestyle",
+      additionalNotes: profile?.additionalNotes ?? "",
+    },
+  });
 
   const foregroundColor = useCSSVariable("--color-foreground") as string;
   const placeholderColor = useCSSVariable("--color-muted-foreground") as string;
@@ -216,38 +285,25 @@ export default function EditVitalsScreen() {
     },
   });
 
-  const handleSave = useCallback(() => {
-    const height = parseFloat(form.height);
-    const weight = parseFloat(form.weight);
-
-    if (!form.name.trim()) {
-      Alert.alert("Validation", "Name is required.");
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.dateOfBirth)) {
-      Alert.alert("Validation", "Date of birth must be in YYYY-MM-DD format.");
-      return;
-    }
-    if (isNaN(height) || height <= 0) {
-      Alert.alert("Validation", "Please enter a valid height in cm.");
-      return;
-    }
-    if (isNaN(weight) || weight <= 0) {
-      Alert.alert("Validation", "Please enter a valid weight in kg.");
-      return;
-    }
-
+  const onSubmit = handleSubmit((values) => {
     mutation.mutate({
-      name: form.name.trim(),
-      dateOfBirth: form.dateOfBirth,
-      biologicalSex: form.biologicalSex,
-      height,
-      weight,
-      activityLevel: form.activityLevel,
-      goal: form.goal,
-      additionalNotes: form.additionalNotes.trim() || undefined,
+      name: values.name.trim(),
+      dateOfBirth: values.dateOfBirth,
+      biologicalSex: values.biologicalSex,
+      height:
+        heightUnit === "ft"
+          ? heightToCm(
+              parseInt(values.heightFeet ?? "0", 10) * 12 +
+                parseInt(values.heightInches ?? "0", 10),
+              "ft",
+            )
+          : heightToCm(parseFloat(values.height ?? "0"), "cm"),
+      weight: weightToKg(parseFloat(values.weight), weightUnit),
+      activityLevel: values.activityLevel,
+      goal: values.goal,
+      additionalNotes: values.additionalNotes?.trim() || undefined,
     });
-  }, [form, mutation]);
+  });
 
   const isSaving = mutation.isPending;
 
@@ -255,26 +311,20 @@ export default function EditVitalsScreen() {
     <StyledSafeAreaView edges={["top"]} className="flex-1 bg-background">
       {/* Custom modal header */}
       <View className="flex-row items-center justify-between px-4 py-3.5 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-        >
-          <Text className="text-base text-muted-foreground">Cancel</Text>
-        </Pressable>
+        <Button variant="ghost" size="lg" onPress={() => router.back()}>
+          Cancel
+        </Button>
         <Text className="text-base font-semibold text-foreground">
           Edit Vitals
         </Text>
-        <Pressable
-          onPress={handleSave}
+        <Button
+          variant="ghost-primary"
+          size="lg"
+          onPress={onSubmit}
           disabled={isSaving}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={({ pressed }) => ({ opacity: isSaving || pressed ? 0.5 : 1 })}
         >
-          <Text className="text-base font-semibold text-primary">
-            {isSaving ? "Saving…" : "Save"}
-          </Text>
-        </Pressable>
+          {isSaving ? "Saving…" : "Save"}
+        </Button>
       </View>
 
       <KeyboardAvoidingView
@@ -289,87 +339,219 @@ export default function EditVitalsScreen() {
           {/* Personal Details */}
           <SectionHeader title="Personal Details" />
           <View className="rounded-2xl bg-card border border-border px-4 py-2 overflow-hidden">
-            <InputRow
-              label="Name"
-              value={form.name}
-              onChangeText={(v) => set("name", v)}
-              placeholder="Your full name"
-              foregroundColor={foregroundColor}
-              placeholderColor={placeholderColor}
+            <Controller
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <InputRow
+                  label="Name"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Your full name"
+                  error={errors.name?.message}
+                  foregroundColor={foregroundColor}
+                  placeholderColor={placeholderColor}
+                />
+              )}
             />
-            <InputRow
-              label="Date of Birth"
-              value={form.dateOfBirth}
-              onChangeText={(v) => set("dateOfBirth", v)}
-              placeholder="YYYY-MM-DD"
-              isLast
-              foregroundColor={foregroundColor}
-              placeholderColor={placeholderColor}
+            <Controller
+              control={control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <InputRow
+                  label="Date of Birth"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="YYYY-MM-DD"
+                  isLast
+                  error={errors.dateOfBirth?.message}
+                  foregroundColor={foregroundColor}
+                  placeholderColor={placeholderColor}
+                />
+              )}
             />
           </View>
 
           {/* Biological Sex */}
           <SectionHeader title="Biological Sex" />
-          <BinaryToggle
-            options={
-              schemaBiologicalSex.options as [BiologicalSex, BiologicalSex]
-            }
-            value={form.biologicalSex}
-            onChange={(v) => set("biologicalSex", v)}
+          <Controller
+            control={control}
+            name="biologicalSex"
+            render={({ field }) => (
+              <BinaryToggle
+                options={
+                  schemaBiologicalSex.options as [BiologicalSex, BiologicalSex]
+                }
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
           {/* Body Measurements */}
           <SectionHeader title="Body Measurements" />
           <View className="rounded-2xl bg-card border border-border px-4 py-2 overflow-hidden">
-            <InputRow
-              label="Height (cm)"
-              value={form.height}
-              onChangeText={(v) => set("height", v)}
-              placeholder="e.g. 175"
-              keyboardType="decimal-pad"
-              foregroundColor={foregroundColor}
-              placeholderColor={placeholderColor}
-            />
-            <InputRow
-              label="Weight (kg)"
-              value={form.weight}
-              onChangeText={(v) => set("weight", v)}
-              placeholder="e.g. 70"
-              keyboardType="decimal-pad"
-              isLast
-              foregroundColor={foregroundColor}
-              placeholderColor={placeholderColor}
+            {heightUnit === "ft" ? (
+              <View
+                style={{ borderBottomWidth: 1, paddingVertical: 4 }}
+                className="border-border"
+              >
+                <Text className="text-xs text-muted-foreground mb-1 mt-1">
+                  Height (ft / in)
+                </Text>
+                <View className="flex-row gap-6">
+                  <View className="flex-1">
+                    <Controller
+                      control={control}
+                      name="heightFeet"
+                      render={({ field }) => (
+                        <>
+                          <TextInput
+                            value={field.value ?? ""}
+                            onChangeText={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="5"
+                            placeholderTextColor={placeholderColor}
+                            keyboardType="number-pad"
+                            style={{
+                              color: foregroundColor,
+                              fontSize: 15,
+                              paddingVertical: 2,
+                            }}
+                          />
+                          <Text className="text-xs text-muted-foreground mt-0.5">
+                            ft
+                          </Text>
+                          {errors.heightFeet && (
+                            <Text className="text-xs text-destructive mt-1">
+                              {errors.heightFeet.message as string}
+                            </Text>
+                          )}
+                        </>
+                      )}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Controller
+                      control={control}
+                      name="heightInches"
+                      render={({ field }) => (
+                        <>
+                          <TextInput
+                            value={field.value ?? ""}
+                            onChangeText={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="6"
+                            placeholderTextColor={placeholderColor}
+                            keyboardType="number-pad"
+                            style={{
+                              color: foregroundColor,
+                              fontSize: 15,
+                              paddingVertical: 2,
+                            }}
+                          />
+                          <Text className="text-xs text-muted-foreground mt-0.5">
+                            in
+                          </Text>
+                          {errors.heightInches && (
+                            <Text className="text-xs text-destructive mt-1">
+                              {errors.heightInches.message as string}
+                            </Text>
+                          )}
+                        </>
+                      )}
+                    />
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <Controller
+                control={control}
+                name="height"
+                render={({ field }) => (
+                  <InputRow
+                    label="Height (cm)"
+                    value={field.value ?? ""}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="e.g. 175"
+                    keyboardType="decimal-pad"
+                    error={errors.height?.message}
+                    foregroundColor={foregroundColor}
+                    placeholderColor={placeholderColor}
+                  />
+                )}
+              />
+            )}
+            <Controller
+              control={control}
+              name="weight"
+              render={({ field }) => (
+                <InputRow
+                  label={`Weight (${weightUnitLabel(weightUnit)})`}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={weightUnit === "lbs" ? "e.g. 154" : "e.g. 70"}
+                  keyboardType="decimal-pad"
+                  isLast
+                  error={errors.weight?.message}
+                  foregroundColor={foregroundColor}
+                  placeholderColor={placeholderColor}
+                />
+              )}
             />
           </View>
 
           {/* Activity Level */}
           <SectionHeader title="Activity Level" />
-          <OptionPicker
-            options={ACTIVITY_LEVELS}
-            value={form.activityLevel}
-            onChange={(v) => set("activityLevel", v)}
+          <Controller
+            control={control}
+            name="activityLevel"
+            render={({ field }) => (
+              <OptionPicker
+                options={ACTIVITY_LEVELS}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
           {/* Goal */}
           <SectionHeader title="Goal" />
-          <OptionPicker
-            options={GOALS}
-            value={form.goal}
-            onChange={(v) => set("goal", v)}
+          <Controller
+            control={control}
+            name="goal"
+            render={({ field }) => (
+              <OptionPicker
+                options={GOALS}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
 
           {/* Notes */}
           <SectionHeader title="Notes (optional)" />
           <View className="rounded-2xl bg-card border border-border px-4 py-2 overflow-hidden">
-            <InputRow
-              label="Additional notes (dietary restrictions, health conditions, etc.)"
-              value={form.additionalNotes}
-              onChangeText={(v) => set("additionalNotes", v)}
-              placeholder="e.g. lactose intolerant, vegetarian…"
-              multiline
-              isLast
-              foregroundColor={foregroundColor}
-              placeholderColor={placeholderColor}
+            <Controller
+              control={control}
+              name="additionalNotes"
+              render={({ field }) => (
+                <InputRow
+                  label="Additional notes (dietary restrictions, health conditions, etc.)"
+                  value={field.value ?? ""}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="e.g. lactose intolerant, vegetarian…"
+                  multiline
+                  isLast
+                  foregroundColor={foregroundColor}
+                  placeholderColor={placeholderColor}
+                />
+              )}
             />
           </View>
         </ScrollView>

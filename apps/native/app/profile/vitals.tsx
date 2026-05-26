@@ -2,7 +2,7 @@ import { StyledSafeAreaView } from "@/components";
 import { IconButton, IconButtonLabel } from "@/components/ui/icon-button";
 import { useSummaryQuery } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
-import { calcAge } from "@weekly-cal/core";
+import { calcAge, formatHeight, formatWeight } from "@weekly-cal/core";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -87,8 +87,20 @@ export default function VitalsScreen() {
             </View>
           ) : profile ? (
             <>
-              <VitalRow label="Height" value={`${profile.height} cm`} />
-              <VitalRow label="Weight" value={`${profile.weight} kg`} />
+              <VitalRow
+                label="Height"
+                value={formatHeight(
+                  profile.height,
+                  profile.preferences.heightUnit,
+                )}
+              />
+              <VitalRow
+                label="Weight"
+                value={formatWeight(
+                  profile.weight,
+                  profile.preferences.weightUnit,
+                )}
+              />
               <VitalRow
                 label="Age"
                 value={`${calcAge(profile.dateOfBirth)} y`}

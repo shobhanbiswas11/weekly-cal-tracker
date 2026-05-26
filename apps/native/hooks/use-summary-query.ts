@@ -8,6 +8,7 @@ export function useSummaryQuery() {
   return useQuery({
     queryKey: [SUMMARY_QUERY_KEY],
     queryFn: fetchSummary,
+    staleTime: Infinity,
   });
 }
 
