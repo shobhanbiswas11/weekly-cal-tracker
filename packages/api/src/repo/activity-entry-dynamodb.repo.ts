@@ -29,7 +29,12 @@ export class DynamoDBActivityEntryRepo implements ActivityEntryRepo {
 
   private static toActivityEntry(item: DynamoDBActivityEntry): ActivityEntry {
     const { PK, SK, ...entry } = item;
-    return schemaActivityEntryEntity.parse(entry);
+    const [, skDate, skId] = SK.split("#");
+    return schemaActivityEntryEntity.parse({
+      ...entry,
+      id: entry.id ?? skId,
+      date: entry.date ?? skDate,
+    });
   }
 
   constructor(

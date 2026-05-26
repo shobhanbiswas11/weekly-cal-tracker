@@ -22,7 +22,10 @@ export class DynamoDBProfileRepo implements ProfileRepo {
 
   private static toProfile(item: DynamoDBProfile): Profile {
     const { PK, SK, ...profile } = item;
-    return schemaProfileEntity.parse(profile);
+    return schemaProfileEntity.parse({
+      ...profile,
+      id: profile.id ?? PK.replace("USER#", ""),
+    });
   }
 
   constructor(

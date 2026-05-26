@@ -32,7 +32,12 @@ export class DynamoDBMealEntryRepo implements MealEntryRepo {
 
   private static toMealEntry(item: DynamoDBMealEntry): MealEntry {
     const { PK, SK, ...entry } = item;
-    return schemaMealEntryEntity.parse(entry);
+    const [, skDate, skId] = SK.split("#");
+    return schemaMealEntryEntity.parse({
+      ...entry,
+      id: entry.id ?? skId,
+      date: entry.date ?? skDate,
+    });
   }
 
   constructor(
