@@ -7,7 +7,7 @@ export interface ApiResponse {
 }
 
 export interface ResponseSummary {
-  profile: Profile;
+  profile: Profile | null;
   weekId: string; // Format: YYYY-Www
   mealEntries: MealEntry[];
   activityEntries: ActivityEntry[];

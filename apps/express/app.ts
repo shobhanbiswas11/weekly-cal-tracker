@@ -5,6 +5,7 @@ import {
 } from "@weekly-cal/api";
 import { config } from "dotenv";
 import express from "express";
+import dataRouter from "./routes";
 config();
 
 // Initialize DI container (validates env vars at startup)
@@ -13,9 +14,7 @@ initContainer();
 const app = express();
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.use("/", dataRouter);
 
 // Chat endpoint with streaming
 app.post("/api/chat", async (req, res) => {

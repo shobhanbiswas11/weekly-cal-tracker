@@ -34,10 +34,6 @@ export class QueryService {
       this.activityService.getByDateRange(userId, weekStart, weekEnd),
     ]);
 
-    if (!profile) {
-      throw new Error(`Profile not found for user: ${userId}`);
-    }
-
     return { profile, weekId, mealEntries, activityEntries };
   }
 }

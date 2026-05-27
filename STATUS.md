@@ -16,9 +16,9 @@
 ## Phase 2 — Core Pages
 
 - [x] Dashboard page
-- [ ] Daily View page
+- [x] Daily View page
 - [ ] Weekly View page
-- [ ] Profile screen
+- [x] Profile screen
 
 ---
 
@@ -41,7 +41,7 @@
 
 ## Phase 5 — Profile & Settings
 
-- [ ] Edit profile (without chat)
+- [x] Edit profile (without chat)
 - [ ] Edit daily calorie / macro goals
 - [ ] Logout
 - [ ] App appearance — theme toggle (light / dark / system)

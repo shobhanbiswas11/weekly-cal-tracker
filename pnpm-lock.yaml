@@ -110,6 +110,9 @@ importers:
       '@weekly-cal/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@weekly-cal/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       ai:
         specifier: ^4.3.16
         version: 4.3.19(react@19.2.6)(zod@4.4.3)
