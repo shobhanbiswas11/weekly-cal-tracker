@@ -69,11 +69,15 @@ export default function VitalsScreen() {
 
         <Text className="text-base font-semibold text-foreground">Vitals</Text>
 
-        <IconButton onPress={() => router.push("/profile/edit-vitals")}>
-          <IconButtonLabel className="text-sm font-medium text-primary">
-            Edit
-          </IconButtonLabel>
-        </IconButton>
+        {profile ? (
+          <IconButton onPress={() => router.push("/profile/edit-vitals")}>
+            <IconButtonLabel className="text-sm font-medium text-primary">
+              Edit
+            </IconButtonLabel>
+          </IconButton>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <ScrollView
@@ -110,10 +114,19 @@ export default function VitalsScreen() {
               <VitalRow label="Goal" value={profile.goal} isLast />
             </>
           ) : (
-            <View className="py-10 items-center">
+            <View className="py-10 items-center gap-3">
               <Text className="text-sm text-muted-foreground text-center">
-                No vitals yet. Use the chat assistant to get started.
+                No vitals configured yet.
               </Text>
+              <Pressable
+                onPress={() => router.push("/profile/edit-vitals")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                className="bg-primary px-5 py-2.5 rounded-xl"
+              >
+                <Text className="text-sm font-semibold text-primary-foreground">
+                  Set Up Your Vitals
+                </Text>
+              </Pressable>
             </View>
           )}
         </View>

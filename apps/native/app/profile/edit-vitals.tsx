@@ -1,4 +1,8 @@
 import { Button, StyledSafeAreaView } from "@/components";
+import {
+  HeightInputField,
+  WeightInputField,
+} from "@/components/unit-input-fields";
 import { useInvalidateSummaryQuery, useSummaryQuery } from "@/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -12,18 +16,12 @@ import type {
   WeightUnit,
 } from "@weekly-cal/core";
 import {
-  heightFromCm,
-  heightToCm,
   schemaActivityLevel,
   schemaBiologicalSex,
   schemaGoal,
-  weightFromKg,
-  weightToKg,
-  weightUnitLabel,
 } from "@weekly-cal/core";
 import { useApi } from "@weekly-cal/frontend";
 import { router } from "expo-router";
-import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -45,12 +43,9 @@ type VitalsFormValues = {
   name: string;
   dateOfBirth: string;
   biologicalSex: BiologicalSex;
-  /** cm value (used when heightUnit === "cm") */
+  /** Always stored in cm. */
   height: string;
-  /** feet part (used when heightUnit === "ft") */
-  heightFeet: string;
-  /** inches part 0-11 (used when heightUnit === "ft") */
-  heightInches: string;
+  /** Always stored in kg. */
   weight: string;
   activityLevel: ActivityLevel;
   goal: Goal;
@@ -193,43 +188,22 @@ export default function EditVitalsScreen() {
   const heightUnit: HeightUnit = profile?.preferences?.heightUnit ?? "cm";
   const weightUnit: WeightUnit = profile?.preferences?.weightUnit ?? "kg";
 
-  const schemaVitalsForm = useMemo(
-    () =>
-      z.object({
-        name: z.string().min(1, "Name is required"),
-        dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
-        biologicalSex: schemaBiologicalSex,
-        height:
-          heightUnit === "cm"
-            ? z.string().refine((v) => {
-                const n = parseFloat(v);
-                return !isNaN(n) && n > 0;
-              }, "Enter a valid height")
-            : z.string(),
-        heightFeet:
-          heightUnit === "ft"
-            ? z.string().refine((v) => {
-                const n = parseInt(v, 10);
-                return !isNaN(n) && n >= 0;
-              }, "Enter valid feet")
-            : z.string(),
-        heightInches:
-          heightUnit === "ft"
-            ? z.string().refine((v) => {
-                const n = parseInt(v, 10);
-                return !isNaN(n) && n >= 0 && n < 12;
-              }, "Enter 0–11")
-            : z.string(),
-        weight: z.string().refine((v) => {
-          const n = parseFloat(v);
-          return !isNaN(n) && n > 0;
-        }, "Enter a valid weight"),
-        activityLevel: schemaActivityLevel,
-        goal: schemaGoal,
-        additionalNotes: z.string().optional(),
-      }),
-    [heightUnit],
-  );
+  const schemaVitalsForm = z.object({
+    name: z.string().min(1, "Name is required"),
+    dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+    biologicalSex: schemaBiologicalSex,
+    height: z.string().refine((v) => {
+      const n = parseFloat(v);
+      return !isNaN(n) && n > 0;
+    }, "Enter a valid height"),
+    weight: z.string().refine((v) => {
+      const n = parseFloat(v);
+      return !isNaN(n) && n > 0;
+    }, "Enter a valid weight"),
+    activityLevel: schemaActivityLevel,
+    goal: schemaGoal,
+    additionalNotes: z.string().optional(),
+  });
 
   const {
     control,
@@ -241,23 +215,10 @@ export default function EditVitalsScreen() {
       name: profile?.name ?? "",
       dateOfBirth: profile?.dateOfBirth ?? "",
       biologicalSex: profile?.biologicalSex ?? "Male",
-      height:
-        heightUnit === "cm" && profile?.height != null
-          ? String(heightFromCm(profile.height, heightUnit))
-          : "",
-      heightFeet: (() => {
-        if (heightUnit !== "ft" || profile?.height == null) return "";
-        const totalInches = heightFromCm(profile.height, "ft");
-        return String(Math.floor(totalInches / 12));
-      })(),
-      heightInches: (() => {
-        if (heightUnit !== "ft" || profile?.height == null) return "";
-        const totalInches = heightFromCm(profile.height, "ft");
-        return String(totalInches % 12);
-      })(),
+      height: profile?.height != null ? String(Math.round(profile.height)) : "",
       weight:
         profile?.weight != null
-          ? String(weightFromKg(profile.weight, weightUnit))
+          ? String(Math.round(profile.weight * 10) / 10)
           : "",
       activityLevel: profile?.activityLevel ?? "Moderately Active",
       goal: profile?.goal ?? "Maintain Healthy Lifestyle",
@@ -290,15 +251,8 @@ export default function EditVitalsScreen() {
       name: values.name.trim(),
       dateOfBirth: values.dateOfBirth,
       biologicalSex: values.biologicalSex,
-      height:
-        heightUnit === "ft"
-          ? heightToCm(
-              parseInt(values.heightFeet ?? "0", 10) * 12 +
-                parseInt(values.heightInches ?? "0", 10),
-              "ft",
-            )
-          : heightToCm(parseFloat(values.height ?? "0"), "cm"),
-      weight: weightToKg(parseFloat(values.weight), weightUnit),
+      height: parseFloat(values.height),
+      weight: parseFloat(values.weight),
       activityLevel: values.activityLevel,
       goal: values.goal,
       additionalNotes: values.additionalNotes?.trim() || undefined,
@@ -315,7 +269,7 @@ export default function EditVitalsScreen() {
           Cancel
         </Button>
         <Text className="text-base font-semibold text-foreground">
-          Edit Vitals
+          {profile ? "Edit Vitals" : "Set Up Vitals"}
         </Text>
         <Button
           variant="ghost-primary"
@@ -392,118 +346,39 @@ export default function EditVitalsScreen() {
 
           {/* Body Measurements */}
           <SectionHeader title="Body Measurements" />
-          <View className="rounded-2xl bg-card border border-border px-4 py-2 overflow-hidden">
-            {heightUnit === "ft" ? (
-              <View
-                style={{ borderBottomWidth: 1, paddingVertical: 4 }}
-                className="border-border"
-              >
-                <Text className="text-xs text-muted-foreground mb-1 mt-1">
-                  Height (ft / in)
-                </Text>
-                <View className="flex-row gap-6">
-                  <View className="flex-1">
-                    <Controller
-                      control={control}
-                      name="heightFeet"
-                      render={({ field }) => (
-                        <>
-                          <TextInput
-                            value={field.value ?? ""}
-                            onChangeText={field.onChange}
-                            onBlur={field.onBlur}
-                            placeholder="5"
-                            placeholderTextColor={placeholderColor}
-                            keyboardType="number-pad"
-                            style={{
-                              color: foregroundColor,
-                              fontSize: 15,
-                              paddingVertical: 2,
-                            }}
-                          />
-                          <Text className="text-xs text-muted-foreground mt-0.5">
-                            ft
-                          </Text>
-                          {errors.heightFeet && (
-                            <Text className="text-xs text-destructive mt-1">
-                              {errors.heightFeet.message as string}
-                            </Text>
-                          )}
-                        </>
-                      )}
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <Controller
-                      control={control}
-                      name="heightInches"
-                      render={({ field }) => (
-                        <>
-                          <TextInput
-                            value={field.value ?? ""}
-                            onChangeText={field.onChange}
-                            onBlur={field.onBlur}
-                            placeholder="6"
-                            placeholderTextColor={placeholderColor}
-                            keyboardType="number-pad"
-                            style={{
-                              color: foregroundColor,
-                              fontSize: 15,
-                              paddingVertical: 2,
-                            }}
-                          />
-                          <Text className="text-xs text-muted-foreground mt-0.5">
-                            in
-                          </Text>
-                          {errors.heightInches && (
-                            <Text className="text-xs text-destructive mt-1">
-                              {errors.heightInches.message as string}
-                            </Text>
-                          )}
-                        </>
-                      )}
-                    />
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <Controller
-                control={control}
-                name="height"
-                render={({ field }) => (
-                  <InputRow
-                    label="Height (cm)"
-                    value={field.value ?? ""}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder="e.g. 175"
-                    keyboardType="decimal-pad"
-                    error={errors.height?.message}
-                    foregroundColor={foregroundColor}
-                    placeholderColor={placeholderColor}
-                  />
-                )}
+          <Controller
+            control={control}
+            name="height"
+            render={({ field }) => (
+              <HeightInputField
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                defaultUnit={heightUnit}
+                foregroundColor={foregroundColor}
+                placeholderColor={placeholderColor}
+                error={errors.height?.message}
               />
             )}
-            <Controller
-              control={control}
-              name="weight"
-              render={({ field }) => (
-                <InputRow
-                  label={`Weight (${weightUnitLabel(weightUnit)})`}
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder={weightUnit === "lbs" ? "e.g. 154" : "e.g. 70"}
-                  keyboardType="decimal-pad"
-                  isLast
-                  error={errors.weight?.message}
-                  foregroundColor={foregroundColor}
-                  placeholderColor={placeholderColor}
-                />
-              )}
-            />
-          </View>
+          />
+
+          <View className="mt-2" />
+
+          <Controller
+            control={control}
+            name="weight"
+            render={({ field }) => (
+              <WeightInputField
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                defaultUnit={weightUnit}
+                foregroundColor={foregroundColor}
+                placeholderColor={placeholderColor}
+                error={errors.weight?.message}
+              />
+            )}
+          />
 
           {/* Activity Level */}
           <SectionHeader title="Activity Level" />

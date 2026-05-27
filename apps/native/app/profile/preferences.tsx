@@ -70,11 +70,15 @@ export default function PreferencesScreen() {
           Preferences
         </Text>
 
-        <IconButton onPress={() => router.push("/profile/edit-preferences")}>
-          <IconButtonLabel className="text-sm font-medium text-primary">
-            Edit
-          </IconButtonLabel>
-        </IconButton>
+        {preferences ? (
+          <IconButton onPress={() => router.push("/profile/edit-preferences")}>
+            <IconButtonLabel className="text-sm font-medium text-primary">
+              Edit
+            </IconButtonLabel>
+          </IconButton>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <ScrollView
@@ -101,7 +105,7 @@ export default function PreferencesScreen() {
           ) : (
             <View className="py-10 items-center">
               <Text className="text-sm text-muted-foreground text-center">
-                No preferences set yet.
+                Configure you profile first
               </Text>
             </View>
           )}

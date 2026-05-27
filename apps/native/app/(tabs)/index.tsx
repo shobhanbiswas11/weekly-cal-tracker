@@ -8,9 +8,11 @@ import {
   calculateStat,
   getTodayISO,
 } from "@weekly-cal/core";
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -70,14 +72,23 @@ function SummaryDashboard() {
 
   if (!data?.profile || !result) {
     return (
-      <View className="flex-1 items-center justify-center px-6">
+      <View className="flex-1 items-center justify-center px-6 gap-4">
         <Text className="text-xl font-semibold text-foreground text-center">
-          No profile set up yet
+          Welcome! 👋
         </Text>
-        <Text className="text-sm text-muted-foreground text-center mt-2 max-w-70">
-          Use the chat assistant to set up your profile and get personalized
-          calorie goals.
+        <Text className="text-sm text-muted-foreground text-center max-w-72">
+          Set up your vitals so we can calculate your personalized calorie
+          goals.
         </Text>
+        <Pressable
+          onPress={() => router.push("/profile/edit-vitals")}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          className="bg-primary px-6 py-3 rounded-xl"
+        >
+          <Text className="text-sm font-semibold text-primary-foreground">
+            Set Up Your Vitals
+          </Text>
+        </Pressable>
       </View>
     );
   }
