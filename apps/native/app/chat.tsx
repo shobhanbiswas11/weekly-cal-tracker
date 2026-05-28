@@ -6,6 +6,7 @@ import {
   Tools,
   useAui,
 } from "@assistant-ui/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Thread } from "../components/chat";
 
 function ChatEventHandlers() {
@@ -18,11 +19,13 @@ export default function ChatModal() {
   const aui = useAui({ tools: Tools({ toolkit }) });
 
   return (
-    <AssistantRuntimeProvider runtime={runtime} aui={aui}>
-      <ChatEventHandlers />
-      <StyledSafeAreaView className="flex-1 bg-background">
-        <Thread />
-      </StyledSafeAreaView>
-    </AssistantRuntimeProvider>
+    <SafeAreaProvider>
+      <AssistantRuntimeProvider runtime={runtime} aui={aui}>
+        <ChatEventHandlers />
+        <StyledSafeAreaView className="flex-1 bg-background">
+          <Thread />
+        </StyledSafeAreaView>
+      </AssistantRuntimeProvider>
+    </SafeAreaProvider>
   );
 }
