@@ -1,6 +1,14 @@
-import { StyledSafeAreaView } from "@/components";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  StyledSafeAreaView,
+} from "@/components";
+import { CalorieInfoModal } from "@/components/dashboard/calorie-info-modal";
 import { CalorieRing } from "@/components/dashboard/calorie-ring";
-import { NutrientRow } from "@/components/dashboard/nutrient-row";
+import { NutrientPreview } from "@/components/dashboard/nutrient-preview";
+import { WeeklyInfoModal } from "@/components/dashboard/weekly-info-modal";
 import { WeeklyStrip } from "@/components/dashboard/weekly-strip";
 import { useSummaryQuery } from "@/hooks";
 import {
@@ -23,17 +31,9 @@ function fmt(n: number) {
   return Math.round(n).toLocaleString();
 }
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
-}
-
 function SummaryDashboard() {
   const { data, isLoading, error, refetch } = useSummaryQuery();
   const [refreshing, setRefreshing] = useState(false);
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -127,28 +127,19 @@ function SummaryDashboard() {
       }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Greeting */}
-      <View className="mb-1">
-        <Text className="text-2xl font-bold text-foreground">
-          Good {getGreeting()} 👋
-        </Text>
-        <Text className="text-sm text-muted-foreground mt-0.5">
-          {new Date().toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </Text>
-      </View>
-
-      {/* Today card */}
-      <View className="bg-card rounded-2xl p-5 shadow-sm">
-        {/* Calorie ring */}
-        <View className="items-center mb-5">
+      {/* Daily Calorie Ring */}
+      <Card>
+        <CardContent className="items-center">
           <CalorieRing consumed={netConsumed} budget={dailyCalorieBudget} />
-        </View>
-        {/* 4-column breakdown */}
-        <View className="flex-row border-t border-border">
+          <CalorieInfoModal
+            bmr={result.bmr}
+            tdee={result.tdee}
+            dailyCalorieBudget={dailyCalorieBudget}
+            activityLevel={data.profile.activityLevel}
+            goal={data.profile.goal}
+          />
+        </CardContent>
+        <CardFooter className="flex-row">
           <View className="flex-1 items-center pt-3 px-2">
             <Text className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
               Budget
@@ -186,15 +177,16 @@ function SummaryDashboard() {
               {fmt(Math.abs(net))}
             </Text>
           </View>
-        </View>
-      </View>
+        </CardFooter>
+      </Card>
 
       {/* This Week card */}
-      <View className="bg-card rounded-2xl p-4 shadow-sm">
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-sm font-medium text-muted-foreground">
-            This Week
-          </Text>
+      <Card>
+        <CardHeader className="flex-row justify-between items-center">
+          <WeeklyInfoModal
+            weeklyStat={weeklyStat}
+            dailyCalorieBudget={dailyCalorieBudget}
+          />
           <Text
             className={`text-sm font-bold ${weeklyOver ? "text-red-500" : "text-primary"}`}
           >
@@ -202,62 +194,78 @@ function SummaryDashboard() {
               ? `${fmt(-weeklyBalance)} kcal over`
               : `${fmt(weeklyBalance)} kcal left`}
           </Text>
-        </View>
-        <WeeklyStrip weekDates={weekDates} dailyStats={dailyStats} />
-        {weeklyOver && (
-          <View className="mt-2.5 flex-row items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2">
-            <Text className="text-xs text-red-500">
-              ⚠ You&apos;re{" "}
-              <Text className="font-bold">{fmt(-weeklyBalance)} kcal</Text> over
-              your weekly budget.
-            </Text>
-          </View>
-        )}
-      </View>
+        </CardHeader>
+        <CardContent>
+          <WeeklyStrip weekDates={weekDates} dailyStats={dailyStats} />
+          {weeklyOver && (
+            <View className="mt-2.5 flex-row items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2">
+              <Text className="text-xs text-red-500">
+                ⚠ You&apos;re{" "}
+                <Text className="font-bold">{fmt(-weeklyBalance)} kcal</Text>{" "}
+                over your weekly budget.
+              </Text>
+            </View>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Nutrients card */}
-      <View className="bg-card rounded-2xl p-4 shadow-sm">
-        <Text className="text-sm font-medium text-muted-foreground mb-3.5">
-          Today&apos;s Nutrients
-        </Text>
-        <View className="gap-3.5">
-          <NutrientRow
-            label="Protein"
-            consumed={nutrients?.protein ?? 0}
-            target={nutrientTargets.protein}
-            unit="g"
-            color="#3b82f6"
-          />
-          <NutrientRow
-            label="Carbs"
-            consumed={nutrients?.carbs ?? 0}
-            target={nutrientTargets.carbs}
-            unit="g"
-            color="#f59e0b"
-          />
-          <NutrientRow
-            label="Fat"
-            consumed={nutrients?.fats ?? 0}
-            target={nutrientTargets.fats}
-            unit="g"
-            color="#f97316"
-          />
-          <NutrientRow
-            label="Fiber"
-            consumed={nutrients?.fiber ?? 0}
-            target={nutrientTargets.fiber}
-            unit="g"
-            color="#10b981"
-          />
-          <NutrientRow
-            label="Sodium"
-            consumed={nutrients?.sodium ?? 0}
-            target={nutrientTargets.sodium}
-            unit="mg"
-            color="#8b5cf6"
-          />
-        </View>
-      </View>
+      <Card>
+        <CardHeader>
+          <Text className="text-sm font-medium text-muted-foreground">
+            Today&apos;s Nutrients
+          </Text>
+        </CardHeader>
+        <CardContent>
+          <View className="gap-3.5">
+            <NutrientPreview
+              nutrientKey="protein"
+              label="Protein"
+              unit="g"
+              color="#3b82f6"
+              consumed={nutrients?.protein ?? 0}
+              target={nutrientTargets.protein}
+              meals={(data.mealEntries ?? []).filter((m) => m.date === today)}
+            />
+            <NutrientPreview
+              nutrientKey="carbs"
+              label="Carbs"
+              unit="g"
+              color="#f59e0b"
+              consumed={nutrients?.carbs ?? 0}
+              target={nutrientTargets.carbs}
+              meals={(data.mealEntries ?? []).filter((m) => m.date === today)}
+            />
+            <NutrientPreview
+              nutrientKey="fats"
+              label="Fat"
+              unit="g"
+              color="#f97316"
+              consumed={nutrients?.fats ?? 0}
+              target={nutrientTargets.fats}
+              meals={(data.mealEntries ?? []).filter((m) => m.date === today)}
+            />
+            <NutrientPreview
+              nutrientKey="fiber"
+              label="Fiber"
+              unit="g"
+              color="#10b981"
+              consumed={nutrients?.fiber ?? 0}
+              target={nutrientTargets.fiber}
+              meals={(data.mealEntries ?? []).filter((m) => m.date === today)}
+            />
+            <NutrientPreview
+              nutrientKey="sodium"
+              label="Sodium"
+              unit="mg"
+              color="#8b5cf6"
+              consumed={nutrients?.sodium ?? 0}
+              target={nutrientTargets.sodium}
+              meals={(data.mealEntries ?? []).filter((m) => m.date === today)}
+            />
+          </View>
+        </CardContent>
+      </Card>
     </ScrollView>
   );
 }

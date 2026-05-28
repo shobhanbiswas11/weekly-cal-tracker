@@ -24,10 +24,10 @@
 
 ## Phase 3 — Dashboard Enhancements
 
-- [ ] ℹ️ button on calorie ring — explain how calculation works
-- [ ] Day tap → popup with day details
-- [ ] Nutrient tap → macro source modal
-- [ ] Weekly ℹ️ button
+- [x] ℹ️ button on calorie ring — explain how calculation works
+- [x] Day tap → popup with day details
+- [x] Nutrient tap → macro source modal
+- [x] Weekly ℹ️ button
 
 ---
 
@@ -43,12 +43,12 @@
 
 - [x] Edit profile (without chat)
 - [ ] Edit daily calorie / macro goals
-- [ ] Logout
+- [x] Logout
 - [ ] App appearance — theme toggle (light / dark / system)
 - [ ] Delete account
 - [ ] Privacy Policy & Terms of Service links
 - [ ] App version / About
-- [ ] Interactive onboarding flow _(requires edit profile first)_
+- [x] Interactive onboarding flow _(requires edit profile first)_
 
 ---
 
