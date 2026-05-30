@@ -2,8 +2,10 @@ import { StyledSafeAreaView } from "@/components";
 import { useAppAuth, useSummaryQuery } from "@/hooks";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
@@ -102,6 +104,89 @@ export default function ProfileScreen() {
             </View>
             <Ionicons name="chevron-forward" size={16} color={mutedColor} />
           </Pressable>
+        </View>
+
+        {/* Legal */}
+        <View className="mx-4 mt-3 rounded-2xl bg-card border border-border overflow-hidden">
+          {(
+            [
+              {
+                label: "Privacy Policy",
+                url: "https://www.botobrain.com/privacy",
+                icon: "shield-checkmark-outline",
+              },
+              {
+                label: "Terms of Service",
+                url: "https://www.botobrain.com/terms",
+                icon: "document-text-outline",
+              },
+              {
+                label: "Contact Us",
+                url: "https://www.botobrain.com/contact",
+                icon: "mail-outline",
+              },
+            ] as const
+          ).map(({ label, url, icon }, index, arr) => (
+            <View key={label}>
+              <Pressable
+                onPress={() => WebBrowser.openBrowserAsync(url)}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.5 : 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 16,
+                  paddingVertical: 16,
+                })}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <Ionicons name={icon} size={20} color={mutedColor} />
+                  <Text className="text-base font-medium text-foreground">
+                    {label}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+              </Pressable>
+              {index < arr.length - 1 && (
+                <View className="h-px bg-border mx-4" />
+              )}
+            </View>
+          ))}
+        </View>
+
+        {/* About */}
+        <View className="mx-4 mt-3 rounded-2xl bg-card border border-border overflow-hidden px-4 py-4">
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            className="mb-1"
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={mutedColor}
+            />
+            <Text className="text-base font-medium text-foreground">About</Text>
+          </View>
+          <Text className="text-sm text-muted-foreground mt-1">
+            Weekly Health by{" "}
+            <Text
+              className="text-primary"
+              onPress={() =>
+                WebBrowser.openBrowserAsync("https://www.botobrain.com")
+              }
+            >
+              botobrain.com
+            </Text>
+          </Text>
+          <Text className="text-sm text-muted-foreground mt-0.5">
+            Version {Constants.expoConfig?.version ?? "1.0.0"}
+          </Text>
         </View>
 
         {/* Sign Out */}

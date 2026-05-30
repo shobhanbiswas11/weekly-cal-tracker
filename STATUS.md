@@ -46,8 +46,8 @@
 - [x] Logout
 - [ ] App appearance — theme toggle (light / dark / system)
 - [ ] Delete account
-- [ ] Privacy Policy & Terms of Service links
-- [ ] App version / About
+- [x] Privacy Policy & Terms of Service links
+- [x] App version / About
 - [x] Interactive onboarding flow _(requires edit profile first)_
 
 ---
