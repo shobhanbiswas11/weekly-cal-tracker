@@ -58,6 +58,10 @@ function RootLayout() {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+            name="profile/subscription"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="profile/edit-preferences"
             options={{
               presentation: "modal",

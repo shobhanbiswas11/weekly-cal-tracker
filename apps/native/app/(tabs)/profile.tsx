@@ -136,6 +136,31 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
+        {/* Subscription row */}
+        <View className="mx-4 mt-3 rounded-2xl bg-card border border-border overflow-hidden">
+          <Pressable
+            onPress={() => router.push("/profile/subscription")}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.5 : 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+            })}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            >
+              <Ionicons name="star-outline" size={20} color={mutedColor} />
+              <Text className="text-base font-medium text-foreground">
+                Subscription
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+          </Pressable>
+        </View>
+
         {/* Legal */}
         <View className="mx-4 mt-3 rounded-2xl bg-card border border-border overflow-hidden">
           {(
