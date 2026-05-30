@@ -1,4 +1,5 @@
 import {
+  AccountService,
   ActivityService,
   MealService,
   ProfileService,
@@ -220,6 +221,14 @@ const handleDeleteActivity: RouteHandler = async (event, userId) => {
   return createResponse({ message: "Activity deleted successfully" });
 };
 
+// DELETE /account - Delete all user data and Clerk account
+const handleDeleteAccount: RouteHandler = async (_event, userId) => {
+  const container = createRequestContainer(userId);
+  const accountService = container.get(AccountService);
+  await accountService.deleteAccount(userId);
+  return createResponse({ message: "Account deleted" });
+};
+
 // =============================================================================
 // Route Definitions
 // =============================================================================
@@ -289,5 +298,11 @@ export const routes: Route[] = [
     method: "DELETE",
     pattern: /^\/activities\/[^/]+\/[^/]+$/,
     handler: handleDeleteActivity,
+  },
+  // Account
+  {
+    method: "DELETE",
+    pattern: /^\/account$/,
+    handler: handleDeleteAccount,
   },
 ];

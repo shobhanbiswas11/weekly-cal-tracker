@@ -1,12 +1,13 @@
 import { StyledSafeAreaView } from "@/components";
-import { useAppAuth, useSummaryQuery } from "@/hooks";
+import { useAppAuth, useCreateApiClient, useSummaryQuery } from "@/hooks";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
 function getInitials(name: string | null): string {
@@ -21,9 +22,38 @@ export default function ProfileScreen() {
   const { username, avatarUrl, email } = useAppAuth();
   const { data } = useSummaryQuery();
   const mutedColor = useCSSVariable("--color-muted-foreground") as string;
+  const apiClient = useCreateApiClient();
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const profile = data?.profile;
   const displayName = profile?.name ?? username ?? "You";
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      "Delete Account",
+      "This will permanently delete your account and all your data. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setDeletingAccount(true);
+            try {
+              await apiClient.deleteAccount();
+              await signOut();
+            } catch (e) {
+              setDeletingAccount(false);
+              Alert.alert(
+                "Error",
+                "Failed to delete account. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <StyledSafeAreaView edges={["top"]} className="flex-1 bg-background">
@@ -189,7 +219,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* Sign Out */}
+        {/* Danger zone */}
         <View className="mx-4 mt-6 rounded-2xl bg-card border border-border overflow-hidden">
           <Pressable
             onPress={() => signOut()}
@@ -211,6 +241,30 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+          </Pressable>
+
+          <View className="h-px bg-border mx-4" />
+
+          <Pressable
+            onPress={confirmDeleteAccount}
+            disabled={deletingAccount}
+            style={({ pressed }) => ({
+              opacity: pressed || deletingAccount ? 0.5 : 1,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+            })}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <Text className="text-base font-medium text-red-500">
+                {deletingAccount ? "Deleting…" : "Delete Account"}
+              </Text>
+            </View>
           </Pressable>
         </View>
       </ScrollView>

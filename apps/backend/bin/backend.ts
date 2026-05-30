@@ -9,6 +9,7 @@ const app = new cdk.App();
 // Get configuration from environment variables
 const jwtIssuer = process.env.JWT_ISSUER;
 const openaiApiKey = process.env.OPENAI_API_KEY;
+const clerkSecretKey = process.env.CLERK_SECRET_KEY;
 const certificateArn = process.env.CERTIFICATE_ARN;
 const domainName = process.env.DOMAIN_NAME;
 
@@ -18,6 +19,10 @@ if (!jwtIssuer) {
 
 if (!openaiApiKey) {
   throw new Error("OPENAI_API_KEY environment variable is required");
+}
+
+if (!clerkSecretKey) {
+  throw new Error("CLERK_SECRET_KEY environment variable is required");
 }
 
 new BackendStack(app, "CalorieTrackerStack", {
@@ -30,6 +35,7 @@ new BackendStack(app, "CalorieTrackerStack", {
   // Stack-specific configuration
   jwtIssuer,
   openaiApiKey,
+  clerkSecretKey,
 
   // Stack tags
   tags: {

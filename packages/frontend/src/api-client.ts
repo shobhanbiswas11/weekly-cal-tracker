@@ -97,5 +97,7 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
       }),
     deleteActivity: (date: string, id: string) =>
       fetchApi(`/activities/${date}/${id}`, { method: "DELETE" }),
+    deleteAccount: () =>
+      fetchApi<{ message: string }>("/account", { method: "DELETE" }),
   };
 }

@@ -11,6 +11,7 @@ import * as path from "path";
 interface BackendStackProps extends cdk.StackProps {
   jwtIssuer: string;
   openaiApiKey: string;
+  clerkSecretKey: string;
 }
 
 export class BackendStack extends cdk.Stack {
@@ -20,7 +21,7 @@ export class BackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    const { jwtIssuer, openaiApiKey } = props;
+    const { jwtIssuer, openaiApiKey, clerkSecretKey } = props;
 
     // =====================
     // DynamoDB Table (Single Table Design)
@@ -45,6 +46,7 @@ export class BackendStack extends cdk.Stack {
     const lambdaEnvironment = {
       TABLE_NAME: table.tableName,
       ALLOWED_ORIGIN: "*",
+      CLERK_SECRET_KEY: clerkSecretKey,
     };
 
     const lambdaDefaults: Partial<lambdaNodejs.NodejsFunctionProps> = {

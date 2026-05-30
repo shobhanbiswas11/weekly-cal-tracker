@@ -8,6 +8,7 @@ import { injectable } from "../di-utils";
 const appConfigSchema = z.object({
   TABLE_NAME: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  CLERK_SECRET_KEY: z.string().optional(),
   PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-mini"), // gpt-5.4-nano
   ENABLE_DEV_TOOLS: z
     .string()
@@ -38,6 +39,13 @@ export class AppConfigService {
       );
     }
     return this.config.OPENAI_API_KEY;
+  }
+
+  get clerkSecretKey(): string {
+    if (!this.config.CLERK_SECRET_KEY) {
+      throw new Error("CLERK_SECRET_KEY environment variable is required");
+    }
+    return this.config.CLERK_SECRET_KEY;
   }
 
   get primaryModelName(): string {

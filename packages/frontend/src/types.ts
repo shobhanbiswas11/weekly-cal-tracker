@@ -47,4 +47,5 @@ export interface ApiClient {
     data: UpdateActivityEntryDto,
   ) => Promise<ActivityEntry>;
   deleteActivity: (date: string, id: string) => Promise<unknown>;
+  deleteAccount: () => Promise<{ message: string }>;
 }

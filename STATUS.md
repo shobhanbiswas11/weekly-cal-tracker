@@ -45,7 +45,7 @@
 - [ ] Edit daily calorie / macro goals
 - [x] Logout
 - [ ] App appearance — theme toggle (light / dark / system)
-- [ ] Delete account
+- [x] Delete account
 - [x] Privacy Policy & Terms of Service links
 - [x] App version / About
 - [x] Interactive onboarding flow _(requires edit profile first)_

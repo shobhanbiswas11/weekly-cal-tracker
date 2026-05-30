@@ -11,6 +11,7 @@ export {
 // Services
 // =============================================================================
 export {
+  AccountService,
   ActivityService,
   ChatService,
   MealService,

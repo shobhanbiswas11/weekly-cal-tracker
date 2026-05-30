@@ -1,3 +1,4 @@
+export { AccountService } from "./account.service";
 export { ActivityService } from "./activity.service";
 export { AppConfigService } from "./app-config.service";
 export { AuthService } from "./auth.service";
