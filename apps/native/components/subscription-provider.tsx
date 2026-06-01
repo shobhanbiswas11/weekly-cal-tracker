@@ -17,32 +17,30 @@ import Purchases, {
 } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
-export interface RevenueCatContextType {
-  customerInfo: CustomerInfo | null;
+export interface SubscriptionContextType {
   isProUser: boolean;
   isLoading: boolean;
-  offerings: PurchasesOfferings | null;
+  activeSubscription: string | undefined;
+  expirationDate: string | null;
   presentPaywall: () => Promise<boolean>;
   presentPaywallIfNeeded: () => Promise<boolean>;
-  presentCustomerCenter: () => Promise<void>;
-  purchasePackage: (pkg: PurchasesPackage) => Promise<boolean>;
-  restorePurchases: () => Promise<CustomerInfo>;
-  refreshCustomerInfo: () => Promise<void>;
+  manageSubscription: () => Promise<void>;
+  restorePurchases: () => Promise<void>;
 }
 
-export const RevenueCatContext = createContext<RevenueCatContextType | null>(
+export const SubscriptionContext = createContext<SubscriptionContextType | null>(
   null,
 );
 
-interface RevenueCatProviderProps {
+interface SubscriptionProviderProps {
   children: React.ReactNode;
   userId?: string | null;
 }
 
-export function RevenueCatProvider({
+export function SubscriptionProvider({
   children,
   userId,
-}: RevenueCatProviderProps) {
+}: SubscriptionProviderProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -177,36 +175,42 @@ export function RevenueCatProvider({
     }
   }, []);
 
-  const value = useMemo(
+  const manageSubscription = presentCustomerCenter;
+
+  const activeSubscription = customerInfo?.activeSubscriptions?.[0];
+  const expirationDate =
+    customerInfo?.entitlements.active[ENTITLEMENT_ID]?.expirationDate ?? null;
+
+  const restorePurchasesWrapped = useCallback(async () => {
+    await restorePurchases();
+  }, [restorePurchases]);
+
+  const value: SubscriptionContextType = useMemo(
     () => ({
-      customerInfo,
       isProUser,
       isLoading,
-      offerings,
+      activeSubscription,
+      expirationDate,
       presentPaywall,
       presentPaywallIfNeeded,
-      presentCustomerCenter,
-      purchasePackage,
-      restorePurchases,
-      refreshCustomerInfo,
+      manageSubscription,
+      restorePurchases: restorePurchasesWrapped,
     }),
     [
-      customerInfo,
       isProUser,
       isLoading,
-      offerings,
+      activeSubscription,
+      expirationDate,
       presentPaywall,
       presentPaywallIfNeeded,
-      presentCustomerCenter,
-      purchasePackage,
-      restorePurchases,
-      refreshCustomerInfo,
+      manageSubscription,
+      restorePurchasesWrapped,
     ],
   );
 
   return (
-    <RevenueCatContext.Provider value={value}>
+    <SubscriptionContext.Provider value={value}>
       {children}
-    </RevenueCatContext.Provider>
+    </SubscriptionContext.Provider>
   );
 }

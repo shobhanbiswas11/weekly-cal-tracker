@@ -8,6 +8,7 @@ export function useAppAuth() {
     getToken,
     isSignedIn,
     isLoaded,
+    userId: user?.id ?? null,
     username: user?.username ?? user?.firstName ?? null,
     avatarUrl: user?.imageUrl ?? null,
     email: user?.primaryEmailAddress?.emailAddress ?? null,

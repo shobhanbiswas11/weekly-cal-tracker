@@ -1,7 +1,6 @@
-import { StyledSafeAreaView } from "@/components";
-import { useRevenueCat } from "@/hooks";
+import { NavHeader, ScreenLayout } from "@/components";
+import { useSubscription } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,61 +14,31 @@ export default function SubscriptionScreen() {
   const {
     isProUser,
     isLoading,
-    customerInfo,
+    activeSubscription,
+    expirationDate,
     presentPaywall,
-    presentCustomerCenter,
+    manageSubscription,
     restorePurchases,
-  } = useRevenueCat();
+  } = useSubscription();
 
-  const mutedColor = useCSSVariable("--color-muted-foreground") as string;
   const primaryColor = useCSSVariable("--color-primary") as string;
 
-  const activeSubscription = customerInfo?.activeSubscriptions?.[0];
-  const expirationDate =
-    customerInfo?.entitlements.active["Weekly Health Pro"]?.expirationDate;
-
   return (
-    <StyledSafeAreaView edges={["top"]} className="flex-1 bg-background">
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-        }}
-        className="border-border"
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-        >
-          <Ionicons name="chevron-back" size={24} color={mutedColor} />
-        </Pressable>
-
-        <Text className="text-base font-semibold text-foreground">
-          Subscription
-        </Text>
-
-        <View style={{ width: 24 }} />
-      </View>
+    <ScreenLayout>
+      <NavHeader>
+        <NavHeader.BackButton />
+        <NavHeader.Title>Subscription</NavHeader.Title>
+        <NavHeader.Right />
+      </NavHeader>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 24 }}>
         {isLoading ? (
-          <ActivityIndicator size="large" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" className="mt-10" />
         ) : (
           <>
             {/* Status Card */}
-            <View
-              style={{ borderRadius: 12, padding: 20, gap: 12 }}
-              className="bg-card border border-border"
-            >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
+            <View className="bg-card border border-border rounded-xl p-5 gap-3">
+              <View className="flex-row items-center gap-2">
                 <Ionicons
                   name={isProUser ? "star" : "star-outline"}
                   size={24}
@@ -106,14 +75,10 @@ export default function SubscriptionScreen() {
                 style={({ pressed }) => ({
                   opacity: pressed ? 0.8 : 1,
                   backgroundColor: primaryColor,
-                  paddingVertical: 14,
-                  borderRadius: 10,
-                  alignItems: "center",
                 })}
+                className="py-3.5 rounded-[10px] items-center"
               >
-                <Text
-                  style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}
-                >
+                <Text className="text-white font-semibold text-base">
                   Upgrade to Pro
                 </Text>
               </Pressable>
@@ -121,15 +86,9 @@ export default function SubscriptionScreen() {
 
             {isProUser && (
               <Pressable
-                onPress={presentCustomerCenter}
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.8 : 1,
-                  paddingVertical: 14,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  borderWidth: 1,
-                })}
-                className="border-border"
+                onPress={manageSubscription}
+                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                className="py-3.5 rounded-[10px] items-center border border-border"
               >
                 <Text className="text-foreground font-semibold text-base">
                   Manage Subscription
@@ -145,11 +104,8 @@ export default function SubscriptionScreen() {
                   // Error already logged in hook
                 }
               }}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.8 : 1,
-                paddingVertical: 14,
-                alignItems: "center",
-              })}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+              className="py-3.5 items-center"
             >
               <Text className="text-sm text-muted-foreground underline">
                 Restore Purchases
@@ -158,6 +114,6 @@ export default function SubscriptionScreen() {
           </>
         )}
       </ScrollView>
-    </StyledSafeAreaView>
+    </ScreenLayout>
   );
 }

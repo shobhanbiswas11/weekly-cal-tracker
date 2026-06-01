@@ -1,16 +1,8 @@
-import { StyledSafeAreaView } from "@/components";
+import { NavHeader, ScreenLayout } from "@/components";
 import { IconButton, IconButtonLabel } from "@/components/ui/icon-button";
 import { useSummaryQuery } from "@/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useCSSVariable } from "uniwind";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 function PrefRow({
   label,
@@ -40,46 +32,26 @@ function PrefRow({
 
 export default function PreferencesScreen() {
   const { data, isLoading } = useSummaryQuery();
-  const mutedColor = useCSSVariable("--color-muted-foreground") as string;
 
   const preferences = data?.profile?.preferences;
 
   return (
-    <StyledSafeAreaView edges={["top"]} className="flex-1 bg-background">
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-        }}
-        className="border-border"
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-        >
-          <Ionicons name="chevron-back" size={24} color={mutedColor} />
-        </Pressable>
-
-        <Text className="text-base font-semibold text-foreground">
-          Preferences
-        </Text>
-
-        {preferences ? (
-          <IconButton onPress={() => router.push("/profile/edit-preferences")}>
-            <IconButtonLabel className="text-sm font-medium text-primary">
-              Edit
-            </IconButtonLabel>
-          </IconButton>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
-      </View>
+    <ScreenLayout>
+      <NavHeader>
+        <NavHeader.BackButton />
+        <NavHeader.Title>Preferences</NavHeader.Title>
+        <NavHeader.Right>
+          {preferences && (
+            <IconButton
+              onPress={() => router.push("/profile/edit-preferences")}
+            >
+              <IconButtonLabel className="text-sm font-medium text-primary">
+                Edit
+              </IconButtonLabel>
+            </IconButton>
+          )}
+        </NavHeader.Right>
+      </NavHeader>
 
       <ScrollView
         className="flex-1"
@@ -111,6 +83,6 @@ export default function PreferencesScreen() {
           )}
         </View>
       </ScrollView>
-    </StyledSafeAreaView>
+    </ScreenLayout>
   );
 }

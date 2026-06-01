@@ -1,18 +1,18 @@
-import { useUser } from "@clerk/expo";
+import { useAppAuth } from "@/hooks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppApiProvider } from "./app-api-provider";
 import { ClerkProvider } from "./clerk-provider";
-import { RevenueCatProvider } from "./revenuecat-provider";
+import { SubscriptionProvider } from "./subscription-provider";
 
 const queryClient = new QueryClient();
 
 function InnerProviders({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { userId } = useAppAuth();
 
   return (
-    <RevenueCatProvider userId={user?.id ?? null}>
+    <SubscriptionProvider userId={userId}>
       <QueryClientProvider client={queryClient}>
         <AppApiProvider>
           <KeyboardProvider>
@@ -20,7 +20,7 @@ function InnerProviders({ children }: { children: React.ReactNode }) {
           </KeyboardProvider>
         </AppApiProvider>
       </QueryClientProvider>
-    </RevenueCatProvider>
+    </SubscriptionProvider>
   );
 }
 
