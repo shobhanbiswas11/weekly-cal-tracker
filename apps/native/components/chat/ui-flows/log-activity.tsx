@@ -2,7 +2,7 @@ import { isCompleteOrCancelledUIFlow, uiFlowActivity } from "@weekly-cal/core";
 import { useApi } from "@weekly-cal/frontend";
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { useInvalidateSummaryQuery } from "../../../hooks/use-summary-query";
+import { useInvalidateWeeklySummaryQuery } from "../../../hooks/use-weekly-summary-query";
 import { FlowActionButtons, FlowCard, FlowResultCard } from "./common";
 import type { UIFlowRendererProps } from "./types";
 
@@ -14,7 +14,7 @@ function formatNumber(value: number): string {
 export function LogActivity({ addResult, flow }: UIFlowRendererProps) {
   const [loading, setLoading] = useState(false);
   const { createActivity } = useApi();
-  const invalidateSummary = useInvalidateSummaryQuery();
+  const invalidateSummary = useInvalidateWeeklySummaryQuery();
 
   if (isCompleteOrCancelledUIFlow(flow)) {
     return <FlowResultCard state={flow.state} message={flow.message} />;

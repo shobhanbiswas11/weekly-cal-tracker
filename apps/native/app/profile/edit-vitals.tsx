@@ -3,7 +3,10 @@ import {
   HeightInputField,
   WeightInputField,
 } from "@/components/unit-input-fields";
-import { useInvalidateSummaryQuery, useSummaryQuery } from "@/hooks";
+import {
+  useInvalidateWeeklySummaryQuery,
+  useWeeklySummaryQuery,
+} from "@/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import type {
@@ -180,9 +183,9 @@ const ACTIVITY_LEVELS = schemaActivityLevel.options as ActivityLevel[];
 const GOALS = schemaGoal.options as Goal[];
 
 export default function EditVitalsScreen() {
-  const { data } = useSummaryQuery();
+  const { data } = useWeeklySummaryQuery();
   const api = useApi();
-  const invalidateSummary = useInvalidateSummaryQuery();
+  const invalidateSummary = useInvalidateWeeklySummaryQuery();
 
   const profile = data?.profile;
   const heightUnit: HeightUnit = profile?.preferences?.heightUnit ?? "cm";

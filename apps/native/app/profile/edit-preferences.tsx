@@ -1,5 +1,8 @@
 import { StyledSafeAreaView } from "@/components";
-import { useInvalidateSummaryQuery, useSummaryQuery } from "@/hooks";
+import {
+  useInvalidateWeeklySummaryQuery,
+  useWeeklySummaryQuery,
+} from "@/hooks";
 import { useMutation } from "@tanstack/react-query";
 import type {
   HeightUnit,
@@ -63,9 +66,9 @@ const HEIGHT_UNITS = schemaHeightUnit.options as [HeightUnit, HeightUnit];
 const WEIGHT_UNITS = schemaWeightUnit.options as [WeightUnit, WeightUnit];
 
 export default function EditPreferencesScreen() {
-  const { data } = useSummaryQuery();
+  const { data } = useWeeklySummaryQuery();
   const api = useApi();
-  const invalidateSummary = useInvalidateSummaryQuery();
+  const invalidateSummary = useInvalidateWeeklySummaryQuery();
 
   const preferences = data?.profile?.preferences;
 

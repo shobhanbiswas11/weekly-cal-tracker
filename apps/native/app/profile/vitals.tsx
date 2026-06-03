@@ -1,6 +1,6 @@
 import { NavHeader, ScreenLayout } from "@/components";
 import { IconButton, IconButtonLabel } from "@/components/ui/icon-button";
-import { useSummaryQuery } from "@/hooks";
+import { useWeeklySummaryQuery } from "@/hooks";
 import { calcAge, formatHeight, formatWeight } from "@weekly-cal/core";
 import { router } from "expo-router";
 import {
@@ -38,7 +38,7 @@ function VitalRow({
 }
 
 export default function VitalsScreen() {
-  const { data, isLoading } = useSummaryQuery();
+  const { data, isLoading } = useWeeklySummaryQuery();
 
   const profile = data?.profile;
 

@@ -4,7 +4,7 @@ import {
   IconButtonIcon,
   StyledSafeAreaView,
 } from "@/components";
-import { useSummaryQuery } from "@/hooks";
+import { useWeeklySummaryQuery } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import type { ActivityEntry, MealEntry } from "@weekly-cal/core";
 import { formatDateLabel, getTodayISO, shiftDay } from "@weekly-cal/core";
@@ -274,7 +274,7 @@ function ActivityRow({
 // --- Content ---
 
 function DailyContent({ selectedDate }: { selectedDate: string }) {
-  const { data, isLoading, error, refetch } = useSummaryQuery();
+  const { data, isLoading, error, refetch } = useWeeklySummaryQuery();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<MealEntry | null>(null);
   const [selectedActivity, setSelectedActivity] =

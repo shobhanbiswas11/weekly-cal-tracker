@@ -1,6 +1,6 @@
 import { NavHeader, ScreenLayout } from "@/components";
 import { IconButton, IconButtonLabel } from "@/components/ui/icon-button";
-import { useSummaryQuery } from "@/hooks";
+import { useWeeklySummaryQuery } from "@/hooks";
 import { router } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
@@ -31,7 +31,7 @@ function PrefRow({
 }
 
 export default function PreferencesScreen() {
-  const { data, isLoading } = useSummaryQuery();
+  const { data, isLoading } = useWeeklySummaryQuery();
 
   const preferences = data?.profile?.preferences;
 

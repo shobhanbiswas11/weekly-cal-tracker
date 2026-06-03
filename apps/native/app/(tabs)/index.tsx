@@ -10,7 +10,7 @@ import { CalorieRing } from "@/components/dashboard/calorie-ring";
 import { NutrientPreview } from "@/components/dashboard/nutrient-preview";
 import { WeeklyInfoModal } from "@/components/dashboard/weekly-info-modal";
 import { WeeklyStrip } from "@/components/dashboard/weekly-strip";
-import { useSummaryQuery } from "@/hooks";
+import { useWeeklySummaryQuery } from "@/hooks";
 import {
   calculateNutrientTargets,
   calculateStat,
@@ -32,7 +32,7 @@ function fmt(n: number) {
 }
 
 function SummaryDashboard() {
-  const { data, isLoading, error, refetch } = useSummaryQuery();
+  const { data, isLoading, error, refetch } = useWeeklySummaryQuery();
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = async () => {
     setRefreshing(true);

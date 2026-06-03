@@ -14,6 +14,6 @@ export function useSummaryQuery() {
   const { fetchSummary } = useApi();
   return useSuspenseQuery({
     queryKey: [SUMMARY_QUERY_KEY],
-    queryFn: fetchSummary,
+    queryFn: () => fetchSummary(),
   });
 }

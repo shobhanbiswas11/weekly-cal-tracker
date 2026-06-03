@@ -1,5 +1,5 @@
 import { StyledSafeAreaView } from "@/components";
-import { useAppAuth, useCreateApiClient, useSummaryQuery } from "@/hooks";
+import { useAppAuth, useCreateApiClient, useWeeklySummaryQuery } from "@/hooks";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
@@ -20,7 +20,7 @@ function getInitials(name: string | null): string {
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { username, avatarUrl, email } = useAppAuth();
-  const { data } = useSummaryQuery();
+  const { data } = useWeeklySummaryQuery();
   const mutedColor = useCSSVariable("--color-muted-foreground") as string;
   const apiClient = useCreateApiClient();
   const [deletingAccount, setDeletingAccount] = useState(false);

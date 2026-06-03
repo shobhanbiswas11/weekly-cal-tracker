@@ -6,7 +6,6 @@ import {
   createRequestContainer,
 } from "@weekly-cal/api";
 import {
-  getWeekBoundaries,
   isValidDateFormat,
   isValidWeekFormat,
   schemaCreateActivityEntry,
@@ -28,29 +27,19 @@ const ok = (res: Response, data: unknown, status = 200) =>
 const err = (res: Response, message: string, status = 400) =>
   res.status(status).json({ success: false, error: message });
 
-// GET /summary
-router.get("/summary", async (_req, res) => {
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
-  const queryService = container.get(QueryService);
-  const summary = await queryService.summary();
-  ok(res, summary);
-});
+// GET /summary?weekId=2026-W23 (optional)
+router.get("/summary", async (req, res) => {
+  const weekId = req.query.weekId as string | undefined;
 
-// GET /weeks/:weekId
-router.get("/weeks/:weekId", async (req, res) => {
-  const { weekId } = req.params;
-
-  if (!isValidWeekFormat(weekId)) {
+  if (weekId && !isValidWeekFormat(weekId)) {
     return err(res, "Invalid week format. Use YYYY-Www (e.g., 2026-W13)");
   }
 
-  const { start, end } = getWeekBoundaries(weekId);
   const userId = getUserId();
   const container = createRequestContainer(userId);
-  const mealService = container.get(MealService);
-  const mealEntries = await mealService.getByDateRange(userId, start, end);
-  ok(res, { weekId, mealEntries });
+  const queryService = container.get(QueryService);
+  const summary = await queryService.summary(weekId);
+  ok(res, summary);
 });
 
 // GET /entries/:date

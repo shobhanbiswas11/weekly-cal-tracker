@@ -1,11 +1,8 @@
-import { ResponseSummary } from "@weekly-cal/core";
 import {
-  endOfISOWeek,
-  format,
-  getISOWeek,
-  getISOWeekYear,
-  startOfISOWeek,
-} from "date-fns";
+  getCurrentWeekId,
+  getWeekBoundaries,
+  type ResponseSummary,
+} from "@weekly-cal/core";
 import { inject, injectable } from "../di-utils";
 import { ActivityService } from "./activity.service";
 import { AuthService } from "./auth.service";
@@ -21,12 +18,11 @@ export class QueryService {
     private activityService = inject(ActivityService),
   ) {}
 
-  async summary(): Promise<ResponseSummary> {
+  async summary(weekId?: string): Promise<ResponseSummary> {
     const userId = this.auth.userId;
-    const today = new Date();
-    const weekStart = format(startOfISOWeek(today), "yyyy-MM-dd");
-    const weekEnd = format(endOfISOWeek(today), "yyyy-MM-dd");
-    const weekId = `${getISOWeekYear(today)}-W${String(getISOWeek(today)).padStart(2, "0")}`;
+    const resolvedWeekId = weekId ?? getCurrentWeekId();
+    const { start: weekStart, end: weekEnd } =
+      getWeekBoundaries(resolvedWeekId);
 
     const [profile, mealEntries, activityEntries] = await Promise.all([
       this.profileService.getByUserId(userId),
@@ -34,6 +30,6 @@ export class QueryService {
       this.activityService.getByDateRange(userId, weekStart, weekEnd),
     ]);
 
-    return { profile, weekId, mealEntries, activityEntries };
+    return { profile, weekId: resolvedWeekId, mealEntries, activityEntries };
   }
 }

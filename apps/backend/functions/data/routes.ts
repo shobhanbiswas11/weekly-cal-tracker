@@ -7,7 +7,6 @@ import {
   createRequestContainer,
 } from "@weekly-cal/api";
 import {
-  getWeekBoundaries,
   isValidDateFormat,
   isValidWeekFormat,
   schemaCreateActivityEntry,
@@ -29,34 +28,21 @@ import {
 // Route Handlers
 // =============================================================================
 
-// GET /summary - App init data
-const handleGetSummary: RouteHandler = async (_event, userId) => {
-  const container = createRequestContainer(userId);
-  const queryService = container.get(QueryService);
-  const summary = await queryService.summary();
-  return createResponse(summary);
-};
+// GET /summary?weekId=2026-W23 (optional)
+const handleGetSummary: RouteHandler = async (event, userId) => {
+  const weekId = event.queryStringParameters?.weekId;
 
-// GET /weeks/{weekId} - Get specific week summary
-const handleGetWeek: RouteHandler = async (event, userId) => {
-  const weekId = event.pathParameters?.weekId;
-
-  if (!weekId) {
-    return createErrorResponse("Week ID is required", 400);
-  }
-
-  if (!isValidWeekFormat(weekId)) {
+  if (weekId && !isValidWeekFormat(weekId)) {
     return createErrorResponse(
       "Invalid week format. Use YYYY-Www (e.g., 2026-W13)",
       400,
     );
   }
 
-  const { start, end } = getWeekBoundaries(weekId);
   const container = createRequestContainer(userId);
-  const mealService = container.get(MealService);
-  const mealEntries = await mealService.getByDateRange(userId, start, end);
-  return createResponse({ weekId, mealEntries });
+  const queryService = container.get(QueryService);
+  const summary = await queryService.summary(weekId);
+  return createResponse(summary);
 };
 
 // GET /entries/{date} - Get entries for a specific date
@@ -239,11 +225,6 @@ export const routes: Route[] = [
     method: "GET",
     pattern: /^\/summary$/,
     handler: handleGetSummary,
-  },
-  {
-    method: "GET",
-    pattern: /^\/weeks\/[^/]+$/,
-    handler: handleGetWeek,
   },
   {
     method: "GET",

@@ -27,8 +27,7 @@ export interface ResponseActivitiesByDate {
 }
 
 export interface ApiClient {
-  fetchSummary: () => Promise<ResponseSummary>;
-  fetchWeeklySummary: (weekId: string) => Promise<ResponseSummary>;
+  fetchSummary: (weekId?: string) => Promise<ResponseSummary>;
   fetchEntriesByDate: (date: string) => Promise<ResponseEntriesByDate>;
   createEntry: (data: CreateMealEntryDto) => Promise<MealEntry>;
   updateEntry: (

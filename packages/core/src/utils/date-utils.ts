@@ -1,7 +1,10 @@
 import {
   addDays,
+  addWeeks,
   differenceInYears,
   format,
+  getISOWeek,
+  getISOWeekYear,
   parseISO,
   setISOWeek,
   startOfISOWeek,
@@ -69,4 +72,35 @@ export const formatTime = (iso: string | undefined | null): string => {
 
 export const calcAge = (dob: string): number => {
   return differenceInYears(new Date(), parseISO(dob));
+};
+
+export const getCurrentWeekId = (): string => {
+  const today = new Date();
+  return `${getISOWeekYear(today)}-W${String(getISOWeek(today)).padStart(2, "0")}`;
+};
+
+export const shiftWeek = (weekId: string, n: number): string => {
+  const match = weekId.match(/^(\d{4})-W(\d{2})$/);
+  if (!match) return weekId;
+  const year = parseInt(match[1]);
+  const week = parseInt(match[2]);
+  const dateInWeek = setISOWeek(new Date(year, 0, 4), week);
+  const monday = startOfISOWeek(dateInWeek);
+  const shifted = addWeeks(monday, n);
+  return `${getISOWeekYear(shifted)}-W${String(getISOWeek(shifted)).padStart(2, "0")}`;
+};
+
+export const formatWeekLabel = (weekId: string): string => {
+  const match = weekId.match(/^(\d{4})-W(\d{2})$/);
+  if (!match) return weekId;
+  const year = parseInt(match[1]);
+  const week = parseInt(match[2]);
+  const dateInWeek = setISOWeek(new Date(year, 0, 4), week);
+  const monday = startOfISOWeek(dateInWeek);
+  const sunday = addDays(monday, 6);
+  return `${format(monday, "MMM d")} – ${format(sunday, "MMM d")}`;
+};
+
+export const formatDayShort = (iso: string): string => {
+  return format(parseISO(iso), "EEE, MMM d");
 };

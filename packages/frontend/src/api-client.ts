@@ -56,9 +56,10 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     apiFetch<T>(endpoint, config, options);
 
   return {
-    fetchSummary: () => fetchApi<ResponseSummary>("/summary"),
-    fetchWeeklySummary: (weekId: string) =>
-      fetchApi<ResponseSummary>(`/weeks/${weekId}`),
+    fetchSummary: (weekId?: string) =>
+      fetchApi<ResponseSummary>(
+        weekId ? `/summary?weekId=${weekId}` : "/summary",
+      ),
     fetchEntriesByDate: (date: string) =>
       fetchApi<ResponseEntriesByDate>(`/entries/${date}`),
     createEntry: (data: CreateMealEntryDto) =>
