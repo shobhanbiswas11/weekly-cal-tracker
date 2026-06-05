@@ -26,7 +26,11 @@ function findLatestUserMsgIndex(messages: readonly { role: string }[]): number {
   return -1;
 }
 
-export function Thread() {
+export function Thread({
+  onOpenThreadList,
+}: {
+  onOpenThreadList?: () => void;
+}) {
   const { height } = useReanimatedKeyboardAnimation();
   const listRef = useRef<FlatList>(null);
   const [listHeight, setListHeight] = useState(0);
@@ -72,7 +76,7 @@ export function Thread() {
   return (
     <Animated.View style={[{ flex: 1 }, animatedStyle]}>
       <View className="flex-1 bg-background">
-        <Header />
+        <Header onOpenThreadList={onOpenThreadList} />
         <ThreadPrimitive.Messages
           {...({ ref: listRef } as any)}
           contentContainerStyle={{ flexGrow: 1 }}

@@ -168,6 +168,9 @@ importers:
       '@weekly-cal/frontend':
         specifier: workspace:*
         version: link:../../packages/frontend
+      assistant-stream:
+        specifier: ^0.3.20
+        version: 0.3.20
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -210,6 +213,9 @@ importers:
       expo-splash-screen:
         specifier: ~55.0.21
         version: 55.0.21(expo@55.0.26)(typescript@5.9.3)
+      expo-sqlite:
+        specifier: ~55.0.16
+        version: 55.0.16(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       expo-status-bar:
         specifier: ~55.0.6
         version: 55.0.6(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
@@ -4783,6 +4789,17 @@ packages:
       redis:
         optional: true
 
+  assistant-stream@0.3.20:
+    resolution: {integrity: sha512-CniC84epmE9JrMSDzlZVWJ13O5rYbjoqEzh0jT+QfsrR07LBls42DMJ60XNxKXm8Hrn6MHSZcxqBUqwXRtoutA==}
+    peerDependencies:
+      ioredis: ^5.10.1
+      redis: ^5.12.1
+    peerDependenciesMeta:
+      ioredis:
+        optional: true
+      redis:
+        optional: true
+
   ast-types@0.16.1:
     resolution: {integrity: sha512-6t10qk83GOG8p0vKmaCr8eiilZwO171AvbROMtvvNiwrTly62t+7XkA8RdIIVbpMhCASAsxgAzdRSwh6nw/5Dg==}
     engines: {node: '>=4'}
@@ -4801,6 +4818,9 @@ packages:
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
+
+  await-lock@2.2.2:
+    resolution: {integrity: sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==}
 
   aws-cdk-lib@2.257.0:
     resolution: {integrity: sha512-GoHfWklrBJcMwLtDlY64pvaT7cD2KyDXC8sik89DR6jHl6nQsBtYTKSJCM+C/k4jgXaecbv8myNX75FySejq0A==}
@@ -6027,6 +6047,13 @@ packages:
     resolution: {integrity: sha512-hFGEap69ggCckbHIdDXMe5rqfBR9TwcnY5gBhyaACUxU64w827T6prOQcIvLmAdv00kp3Gqt7hgE+mNn37EF+A==}
     peerDependencies:
       expo: '*'
+
+  expo-sqlite@55.0.16:
+    resolution: {integrity: sha512-v6EIL4ygqWt/+ZfI76jIIv+IIaU8PnWPNjkmIN95vEQgh0FrWqzwssqe5ffQmm79kIfqIPTtAgTdl8MuZv88gg==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
 
   expo-status-bar@55.0.6:
     resolution: {integrity: sha512-ijOUptfdiqYt7rObZ6jrPQ8sE5YN/8MxKCIJx0b7TY4nGkSJxhPIxeoW4GXcXCA8mTQ9PiOHH/ThLZgRVZvUlQ==}
@@ -10002,7 +10029,7 @@ snapshots:
     dependencies:
       '@assistant-ui/store': 0.2.12(@assistant-ui/tap@0.5.12(@types/react@19.2.15)(react@19.2.0))(@types/react@19.2.15)(react@19.2.0)
       '@assistant-ui/tap': 0.5.12(@types/react@19.2.15)(react@19.2.0)
-      assistant-stream: 0.3.16
+      assistant-stream: 0.3.20
       nanoid: 5.1.11
     optionalDependencies:
       '@types/react': 19.2.15
@@ -10017,7 +10044,7 @@ snapshots:
     dependencies:
       '@assistant-ui/store': 0.2.12(@assistant-ui/tap@0.5.12(@types/react@19.2.15)(react@19.2.6))(@types/react@19.2.15)(react@19.2.6)
       '@assistant-ui/tap': 0.5.12(@types/react@19.2.15)(react@19.2.6)
-      assistant-stream: 0.3.16
+      assistant-stream: 0.3.20
       nanoid: 5.1.11
     optionalDependencies:
       '@types/react': 19.2.15
@@ -10082,7 +10109,7 @@ snapshots:
       '@assistant-ui/core': 0.2.5(@assistant-ui/store@0.2.12(@assistant-ui/tap@0.5.12(@types/react@19.2.15)(react@19.2.0))(@types/react@19.2.15)(react@19.2.0))(@assistant-ui/tap@0.5.12(@types/react@19.2.15)(react@19.2.0))(@types/react@19.2.15)(assistant-cloud@0.1.29)(react@19.2.0)(zustand@5.0.13(@types/react@19.2.15)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)))
       '@assistant-ui/store': 0.2.12(@assistant-ui/tap@0.5.12(@types/react@19.2.15)(react@19.2.0))(@types/react@19.2.15)(react@19.2.0)
       '@assistant-ui/tap': 0.5.12(@types/react@19.2.15)(react@19.2.0)
-      assistant-stream: 0.3.16
+      assistant-stream: 0.3.20
       react: 19.2.0
       react-native: 0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)
       zustand: 5.0.13(@types/react@19.2.15)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
@@ -15084,12 +15111,18 @@ snapshots:
 
   assistant-cloud@0.1.29:
     dependencies:
-      assistant-stream: 0.3.16
+      assistant-stream: 0.3.20
     transitivePeerDependencies:
       - ioredis
       - redis
 
   assistant-stream@0.3.16:
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      nanoid: 5.1.11
+      secure-json-parse: 4.1.0
+
+  assistant-stream@0.3.20:
     dependencies:
       '@standard-schema/spec': 1.1.0
       nanoid: 5.1.11
@@ -15108,6 +15141,8 @@ snapshots:
   available-typed-arrays@1.0.7:
     dependencies:
       possible-typed-array-names: 1.1.0
+
+  await-lock@2.2.2: {}
 
   aws-cdk-lib@2.257.0(constructs@10.6.0):
     dependencies:
@@ -16575,6 +16610,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  expo-sqlite@55.0.16(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0):
+    dependencies:
+      await-lock: 2.2.2
+      expo: 55.0.26(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(bufferutil@4.1.0)(expo-router@55.0.16)(react-dom@19.2.0(react@19.2.0))(react-native-worklets@0.8.3(patch_hash=40e7645fcca09e58bdeb42c470f2f0ed31c6b31dac72e06e1011aa9bbd0f4397)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      react: 19.2.0
+      react-native: 0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)
 
   expo-status-bar@55.0.6(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.15)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0):
     dependencies:

@@ -34,8 +34,8 @@
 ## Phase 4 — Chat
 
 - [x] Swipe-down to dismiss chat modal
-- [ ] Chat history — last 5 conversations on device
-- [ ] Archive icon → select previous thread _(requires chat history first)_
+- [x] Chat history — last 5 conversations on device
+- [x] Archive icon → select previous thread _(requires chat history first)_
 
 ---
 
