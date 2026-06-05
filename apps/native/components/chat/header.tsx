@@ -5,14 +5,19 @@ export function Header() {
   const router = useRouter();
 
   return (
-    <View className="flex-row items-center justify-between py-3.5 px-4 border-b border-border bg-background">
-      <View className="w-11" />
-      <Text className="text-lg font-semibold text-foreground">
-        Calorie Coach
-      </Text>
-      <Pressable onPress={() => router.back()}>
-        <Text className="text-base text-primary font-medium">Done</Text>
-      </Pressable>
+    <View className="border-b border-border bg-background">
+      <View className="items-center pt-2 pb-1">
+        <View className="w-9 h-1 rounded-full bg-muted-foreground/30" />
+      </View>
+      <View className="flex-row items-center justify-between py-3.5 px-4">
+        <View className="w-11" />
+        <Text className="text-lg font-semibold text-foreground">
+          Calorie Coach
+        </Text>
+        <Pressable onPress={() => router.back()}>
+          <Text className="text-base text-primary font-medium">Done</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

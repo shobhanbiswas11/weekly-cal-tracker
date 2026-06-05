@@ -37,8 +37,9 @@ function RootLayout() {
           <Stack.Screen
             name="chat"
             options={{
-              presentation: "fullScreenModal",
+              presentation: "modal",
               headerShown: false,
+              gestureEnabled: true,
             }}
           />
           {/* Profile */}

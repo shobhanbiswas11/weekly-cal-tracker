@@ -17,7 +17,7 @@
 
 - [x] Dashboard page
 - [x] Daily View page
-- [ ] Weekly View page
+- [x] Weekly View page
 - [x] Profile screen
 
 ---
@@ -33,7 +33,7 @@
 
 ## Phase 4 — Chat
 
-- [ ] Swipe-down to dismiss chat modal
+- [x] Swipe-down to dismiss chat modal
 - [ ] Chat history — last 5 conversations on device
 - [ ] Archive icon → select previous thread _(requires chat history first)_
 
