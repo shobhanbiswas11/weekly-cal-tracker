@@ -1,5 +1,10 @@
-import { listThreads, type ThreadRow as ThreadRowData } from "@/lib/chat-db";
+import {
+  deleteThread,
+  listThreads,
+  type ThreadRow as ThreadRowData,
+} from "@/lib/chat-db";
 import { useAui, useAuiState } from "@assistant-ui/react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { Modal, ModalContent, ModalTrigger } from "../ui";
@@ -21,10 +26,12 @@ function ThreadRow({
   thread,
   isActive,
   onSelect,
+  onDelete,
 }: {
   thread: ThreadRowData;
   isActive: boolean;
   onSelect: () => void;
+  onDelete: () => void;
 }) {
   return (
     <Pressable
@@ -38,9 +45,12 @@ function ThreadRow({
         >
           {thread.title || "New conversation"}
         </Text>
-        <Text className="text-xs text-muted-foreground">
+        <Text className="text-xs text-muted-foreground mr-3">
           {formatRelativeTime(thread.updated_at)}
         </Text>
+        <Pressable onPress={onDelete} hitSlop={8}>
+          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+        </Pressable>
       </View>
     </Pressable>
   );
@@ -65,6 +75,11 @@ export function ThreadListModal({ children }: { children: React.ReactNode }) {
   const handleSelectThread = (remoteId: string) => {
     aui.threads().switchToThread(remoteId);
     setOpen(false);
+  };
+
+  const handleDeleteThread = (id: string) => {
+    deleteThread(id);
+    setThreads((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
@@ -97,6 +112,7 @@ export function ThreadListModal({ children }: { children: React.ReactNode }) {
                 thread={item}
                 isActive={item.id === mainThreadId}
                 onSelect={() => handleSelectThread(item.id)}
+                onDelete={() => handleDeleteThread(item.id)}
               />
             )}
             className="flex-1"
