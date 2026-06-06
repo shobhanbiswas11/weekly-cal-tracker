@@ -2,12 +2,7 @@ import { listThreads, type ThreadRow as ThreadRowData } from "@/lib/chat-db";
 import { useAui, useAuiState } from "@assistant-ui/react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-import { Modal, ModalContent } from "../ui";
-
-export type ThreadListModalProps = {
-  visible: boolean;
-  onClose: () => void;
-};
+import { Modal, ModalContent, ModalTrigger } from "../ui";
 
 function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
@@ -51,28 +46,30 @@ function ThreadRow({
   );
 }
 
-export function ThreadListModal({ visible, onClose }: ThreadListModalProps) {
+export function ThreadListModal({ children }: { children: React.ReactNode }) {
   const aui = useAui();
   const mainThreadId = useAuiState((s) => s.threads.mainThreadId);
   const [threads, setThreads] = useState<ThreadRowData[]>([]);
+  const [open, setOpen] = useState(false);
 
   // Refresh thread list from SQLite when modal becomes visible
   useEffect(() => {
-    if (visible) setThreads(listThreads());
-  }, [visible]);
+    if (open) setThreads(listThreads());
+  }, [open]);
 
   const handleNewChat = () => {
     aui.threads().switchToNewThread();
-    onClose();
+    setOpen(false);
   };
 
   const handleSelectThread = (remoteId: string) => {
     aui.threads().switchToThread(remoteId);
-    onClose();
+    setOpen(false);
   };
 
   return (
-    <Modal open={visible} onOpenChange={(open) => !open && onClose()}>
+    <Modal open={open} onOpenChange={setOpen}>
+      <ModalTrigger>{children}</ModalTrigger>
       <ModalContent height={420}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 pt-4 pb-3 border-b border-border">
