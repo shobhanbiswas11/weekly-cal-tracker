@@ -28,6 +28,9 @@ importers:
       '@aws-sdk/client-dynamodb':
         specifier: ^3.1019.0
         version: 3.1063.0
+      '@aws-sdk/client-ssm':
+        specifier: ^3.1063.0
+        version: 3.1063.0
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.1019.0
         version: 3.1063.0(@aws-sdk/client-dynamodb@3.1063.0)
@@ -281,7 +284,7 @@ importers:
         version: 4.3.0
       uniwind:
         specifier: ^1.6.4
-        version: 1.8.0(@expo/metro-config@55.0.23(bufferutil@4.1.0)(expo@55.0.26)(typescript@5.9.3)(utf-8-validate@6.0.6))(metro-cache@0.83.7)(metro-transform-worker@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(metro@0.83.7(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(tailwindcss@4.3.0)
+        version: 1.8.0(@expo/metro-config@55.0.23(bufferutil@4.1.0)(expo@55.0.26)(typescript@5.9.3)(utf-8-validate@6.0.6))(metro-cache@0.84.4)(metro-transform-worker@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(metro@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(tailwindcss@4.3.0)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -724,6 +727,10 @@ packages:
 
   '@aws-sdk/client-dynamodb@3.1063.0':
     resolution: {integrity: sha512-RH5PM9lJsGgTDYyIjhPIqwRTuIZdVzRfEdLWB9/p11VVoDjQ+itbzZ7Qi/KMaw6AucAo8uXxnlVp1fZ0cVQjuA==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/client-ssm@3.1063.0':
+    resolution: {integrity: sha512-qLXNofwgCB7/3mhWR9pz/bnNgyvSxjp38SvhTazESrt3mLtX9+kMg8UOKTZol0mvZg209UVIS82xY1JhJDtGpA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.974.18':
@@ -10396,6 +10403,19 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.972.52
       '@aws-sdk/dynamodb-codec': 3.973.18
       '@aws-sdk/middleware-endpoint-discovery': 3.972.17
+      '@aws-sdk/types': 3.973.11
+      '@smithy/core': 3.24.6
+      '@smithy/fetch-http-handler': 5.4.6
+      '@smithy/node-http-handler': 4.7.7
+      '@smithy/types': 4.14.3
+      tslib: 2.8.1
+
+  '@aws-sdk/client-ssm@3.1063.0':
+    dependencies:
+      '@aws-crypto/sha256-browser': 5.2.0
+      '@aws-crypto/sha256-js': 5.2.0
+      '@aws-sdk/core': 3.974.18
+      '@aws-sdk/credential-provider-node': 3.972.52
       '@aws-sdk/types': 3.973.11
       '@smithy/core': 3.24.6
       '@smithy/fetch-http-handler': 5.4.6
@@ -21316,14 +21336,14 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  uniwind@1.8.0(@expo/metro-config@55.0.23(bufferutil@4.1.0)(expo@55.0.26)(typescript@5.9.3)(utf-8-validate@6.0.6))(metro-cache@0.83.7)(metro-transform-worker@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(metro@0.83.7(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(tailwindcss@4.3.0):
+  uniwind@1.8.0(@expo/metro-config@55.0.23(bufferutil@4.1.0)(expo@55.0.26)(typescript@5.9.3)(utf-8-validate@6.0.6))(metro-cache@0.84.4)(metro-transform-worker@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(metro@0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(tailwindcss@4.3.0):
     dependencies:
       '@tailwindcss/node': 4.3.0
       '@tailwindcss/oxide': 4.3.0
       culori: 4.0.2
       lightningcss: 1.30.1
-      metro: 0.83.7(bufferutil@4.1.0)(utf-8-validate@6.0.6)
-      metro-cache: 0.83.7
+      metro: 0.84.4(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+      metro-cache: 0.84.4
       react: 19.2.0
       react-native: 0.83.6(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)
       tailwindcss: 4.3.0

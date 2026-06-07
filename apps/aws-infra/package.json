@@ -32,6 +32,7 @@
     "@ai-sdk/openai": "^3.0.49",
     "@assistant-ui/react-ai-sdk": "^1.3.16",
     "@aws-sdk/client-dynamodb": "^3.1019.0",
+    "@aws-sdk/client-ssm": "^3.1063.0",
     "@aws-sdk/lib-dynamodb": "^3.1019.0",
     "@needle-di/core": "^1.1.2",
     "@weekly-cal/api": "workspace:*",

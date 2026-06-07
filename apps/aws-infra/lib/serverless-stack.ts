@@ -2,6 +2,7 @@ import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as apigatewayv2Authorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as apigatewayv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as cdk from "aws-cdk-lib/core";
@@ -22,14 +23,11 @@ export class ServerlessStack extends cdk.Stack {
     const { jwtIssuer } = props;
 
     // =====================
-    // SSM Parameters (secrets stored externally)
+    // SSM Parameter Names (secrets fetched at runtime)
     // =====================
-    const openaiApiKey = cdk.SecretValue.ssmSecure(
-      "/weekly-health/openai-api-key",
-    );
-    const clerkSecretKey = cdk.SecretValue.ssmSecure(
-      "/weekly-health/clerk-secret-key",
-    );
+    const ssmPrefix = "/weekly-health";
+    const openaiApiKeyParam = `${ssmPrefix}/openai-api-key`;
+    const clerkSecretKeyParam = `${ssmPrefix}/clerk-secret-key`;
 
     // =====================
     // DynamoDB Table (Single Table Design)
@@ -53,7 +51,7 @@ export class ServerlessStack extends cdk.Stack {
     // =====================
     const lambdaEnvironment = {
       TABLE_NAME: table.tableName,
-      CLERK_SECRET_KEY: clerkSecretKey.unsafeUnwrap(),
+      SSM_CLERK_SECRET_KEY: clerkSecretKeyParam,
     };
 
     const lambdaDefaults: Partial<lambdaNodejs.NodejsFunctionProps> = {
@@ -90,12 +88,23 @@ export class ServerlessStack extends cdk.Stack {
       memorySize: 512,
       environment: {
         ...lambdaEnvironment,
-        OPENAI_API_KEY: openaiApiKey.unsafeUnwrap(),
+        SSM_OPENAI_API_KEY: openaiApiKeyParam,
         JWT_ISSUER: jwtIssuer,
       },
     });
 
     table.grantReadWriteData(chatFn);
+
+    // Grant SSM read access to Lambdas
+    const ssmPolicy = new iam.PolicyStatement({
+      actions: ["ssm:GetParameter"],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter${openaiApiKeyParam}`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter${clerkSecretKeyParam}`,
+      ],
+    });
+    dataFn.addToRolePolicy(ssmPolicy);
+    chatFn.addToRolePolicy(ssmPolicy);
 
     // Add Lambda Function URL with response streaming for chat
     const chatFnUrl = chatFn.addFunctionUrl({

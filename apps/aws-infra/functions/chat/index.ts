@@ -6,9 +6,18 @@ import {
 import type { UIMessage } from "ai";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { createCorsHeaders } from "../shared/http";
+import { getSecret } from "../shared/secrets";
 
-// Initialize DI container (validates env vars at cold start)
-initContainer();
+// Fetch secrets from SSM at cold start, then initialize
+const init = (async () => {
+  const [openaiKey, clerkKey] = await Promise.all([
+    getSecret(process.env.SSM_OPENAI_API_KEY!),
+    getSecret(process.env.SSM_CLERK_SECRET_KEY!),
+  ]);
+  process.env.OPENAI_API_KEY = openaiKey;
+  process.env.CLERK_SECRET_KEY = clerkKey;
+  initContainer();
+})();
 
 // Create JWKS fetcher at cold start (caches keys automatically)
 // This is exactly how API Gateway validates JWTs - fetch public keys from {issuer}/.well-known/jwks.json
@@ -42,6 +51,8 @@ function sendError(
 // Handler for Lambda with response streaming
 export const handler = awslambda.streamifyResponse(
   async (event: any, responseStream: any, _context: any) => {
+    await init;
+
     // Handle preflight
     if (event.requestContext?.http?.method === "OPTIONS") {
       responseStream.setContentType("text/plain");
