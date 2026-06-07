@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "@weekly-cal/aws-infra",
   "version": "0.1.0",
   "bin": {
     "backend": "dist/bin/backend.js"
@@ -11,7 +11,7 @@
     "test": "jest",
     "cdk": "cdk",
     "synth": "cdk synth",
-    "awsdeploy": "pnpx cdk deploy CalorieTrackerStack"
+    "deploy:serverless": "pnpx cdk deploy WeeklyHealthServerlessStack"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",

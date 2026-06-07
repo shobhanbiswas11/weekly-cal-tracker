@@ -8,26 +8,34 @@ import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import * as path from "path";
 
-interface BackendStackProps extends cdk.StackProps {
+interface ServerlessStackProps extends cdk.StackProps {
   jwtIssuer: string;
-  openaiApiKey: string;
-  clerkSecretKey: string;
 }
 
-export class BackendStack extends cdk.Stack {
+export class ServerlessStack extends cdk.Stack {
   public readonly apiUrl: cdk.CfnOutput;
   public readonly chatUrl: cdk.CfnOutput;
 
-  constructor(scope: Construct, id: string, props: BackendStackProps) {
+  constructor(scope: Construct, id: string, props: ServerlessStackProps) {
     super(scope, id, props);
 
-    const { jwtIssuer, openaiApiKey, clerkSecretKey } = props;
+    const { jwtIssuer } = props;
+
+    // =====================
+    // SSM Parameters (secrets stored externally)
+    // =====================
+    const openaiApiKey = cdk.SecretValue.ssmSecure(
+      "/weekly-health/openai-api-key",
+    );
+    const clerkSecretKey = cdk.SecretValue.ssmSecure(
+      "/weekly-health/clerk-secret-key",
+    );
 
     // =====================
     // DynamoDB Table (Single Table Design)
     // =====================
-    const table = new dynamodb.Table(this, "WeeklyCalorieTrackerTable", {
-      tableName: "WeeklyCalorieTracker",
+    const table = new dynamodb.Table(this, "Table", {
+      tableName: "WeeklyHealth",
       partitionKey: {
         name: "PK",
         type: dynamodb.AttributeType.STRING,
@@ -45,8 +53,7 @@ export class BackendStack extends cdk.Stack {
     // =====================
     const lambdaEnvironment = {
       TABLE_NAME: table.tableName,
-      ALLOWED_ORIGIN: "*",
-      CLERK_SECRET_KEY: clerkSecretKey,
+      CLERK_SECRET_KEY: clerkSecretKey.unsafeUnwrap(),
     };
 
     const lambdaDefaults: Partial<lambdaNodejs.NodejsFunctionProps> = {
@@ -83,7 +90,7 @@ export class BackendStack extends cdk.Stack {
       memorySize: 512,
       environment: {
         ...lambdaEnvironment,
-        OPENAI_API_KEY: openaiApiKey,
+        OPENAI_API_KEY: openaiApiKey.unsafeUnwrap(),
         JWT_ISSUER: jwtIssuer,
       },
     });
@@ -104,8 +111,8 @@ export class BackendStack extends cdk.Stack {
     // =====================
     // HTTP API with JWT Authorizer
     // =====================
-    const httpApi = new apigatewayv2.HttpApi(this, "WeeklyCalorieTrackerApi", {
-      apiName: "WeeklyCalorieTrackerApi",
+    const httpApi = new apigatewayv2.HttpApi(this, "Api", {
+      apiName: "WeeklyHealthApi",
       corsPreflight: {
         allowOrigins: ["*"],
         allowMethods: [
@@ -125,7 +132,6 @@ export class BackendStack extends cdk.Stack {
       jwtIssuer,
       {
         jwtAudience: ["*"],
-        identitySource: ["$request.header.Authorization"],
       },
     );
 
