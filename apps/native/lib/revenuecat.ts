@@ -1,6 +1,6 @@
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
-const REVENUECAT_API_KEY = "test_GXBaSpvLZndmmlhtrOvJxdHpVUb";
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY!;
 
 export const ENTITLEMENT_ID = "Weekly Health Pro";
 
