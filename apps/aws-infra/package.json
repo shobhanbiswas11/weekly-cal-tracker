@@ -11,7 +11,8 @@
     "test": "jest",
     "cdk": "cdk",
     "synth": "cdk synth",
-    "deploy:serverless": "pnpx cdk deploy WeeklyHealthServerlessStack"
+    "deploy:serverless": "pnpx cdk deploy WeeklyHealthServerlessStack",
+    "describe-stack": "bash scripts/describe-stack.sh"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
