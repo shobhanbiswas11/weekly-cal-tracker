@@ -19,8 +19,6 @@ import { Router, type Response } from "express";
 
 const router = Router();
 
-const getUserId = () => process.env.TEST_USER_ID || "test-user";
-
 const ok = (res: Response, data: unknown, status = 200) =>
   res.status(status).json({ success: true, data });
 
@@ -35,8 +33,7 @@ router.get("/summary", async (req, res) => {
     return err(res, "Invalid week format. Use YYYY-Www (e.g., 2026-W13)");
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const queryService = container.get(QueryService);
   const summary = await queryService.summary(weekId);
   ok(res, summary);
@@ -50,10 +47,9 @@ router.get("/entries/:date", async (req, res) => {
     return err(res, "Invalid date format. Use YYYY-MM-DD");
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const mealService = container.get(MealService);
-  const entries = await mealService.getByDate(userId, date);
+  const entries = await mealService.getByDate(req.userId, date);
   ok(res, { entries });
 });
 
@@ -64,10 +60,9 @@ router.post("/entries", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const mealService = container.get(MealService);
-  const entry = await mealService.create(userId, result.data);
+  const entry = await mealService.create(req.userId, result.data);
   ok(res, entry, 201);
 });
 
@@ -84,10 +79,9 @@ router.put("/entries/:date/:id", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const mealService = container.get(MealService);
-  const entry = await mealService.update(userId, id, result.data);
+  const entry = await mealService.update(req.userId, id, result.data);
   ok(res, entry);
 });
 
@@ -99,10 +93,9 @@ router.delete("/entries/:date/:id", async (req, res) => {
     return err(res, "Invalid date format. Use YYYY-MM-DD");
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const mealService = container.get(MealService);
-  await mealService.delete(userId, id);
+  await mealService.delete(req.userId, id);
   ok(res, { message: "Entry deleted successfully" });
 });
 
@@ -113,10 +106,9 @@ router.post("/profile", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const profileService = container.get(ProfileService);
-  const profile = await profileService.create(userId, result.data);
+  const profile = await profileService.create(req.userId, result.data);
   ok(res, { profile }, 201);
 });
 
@@ -127,10 +119,9 @@ router.put("/profile", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const profileService = container.get(ProfileService);
-  const profile = await profileService.update(userId, result.data);
+  const profile = await profileService.update(req.userId, result.data);
   ok(res, { profile });
 });
 
@@ -142,10 +133,9 @@ router.get("/activities/:date", async (req, res) => {
     return err(res, "Invalid date format. Use YYYY-MM-DD");
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const activityService = container.get(ActivityService);
-  const entries = await activityService.getByDate(userId, date);
+  const entries = await activityService.getByDate(req.userId, date);
   ok(res, { entries });
 });
 
@@ -156,10 +146,9 @@ router.post("/activities", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const activityService = container.get(ActivityService);
-  const entry = await activityService.create(userId, result.data);
+  const entry = await activityService.create(req.userId, result.data);
   ok(res, entry, 201);
 });
 
@@ -176,10 +165,9 @@ router.put("/activities/:date/:id", async (req, res) => {
     return err(res, `Invalid request body: ${result.error.message}`);
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const activityService = container.get(ActivityService);
-  const entry = await activityService.update(userId, id, result.data);
+  const entry = await activityService.update(req.userId, id, result.data);
   ok(res, entry);
 });
 
@@ -191,10 +179,9 @@ router.delete("/activities/:date/:id", async (req, res) => {
     return err(res, "Invalid date format. Use YYYY-MM-DD");
   }
 
-  const userId = getUserId();
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const activityService = container.get(ActivityService);
-  await activityService.delete(userId, id);
+  await activityService.delete(req.userId, id);
   ok(res, { message: "Activity deleted successfully" });
 });
 

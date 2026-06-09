@@ -5,6 +5,7 @@ import {
 } from "@weekly-cal/api";
 import { config } from "dotenv";
 import express from "express";
+import { authMiddleware } from "./middleware/auth";
 import dataRouter from "./routes";
 config();
 
@@ -13,6 +14,7 @@ initContainer();
 
 const app = express();
 app.use(express.json());
+app.use(authMiddleware);
 
 app.use("/", dataRouter);
 
@@ -24,10 +26,7 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "Messages array required" });
   }
 
-  // For dev, use a test user (integrate real auth later)
-  const userId = process.env.TEST_USER_ID || "test-user";
-
-  const container = createRequestContainer(userId);
+  const container = createRequestContainer(req.userId);
   const chatService = container.get(ChatService);
 
   const result = await chatService.streamChat(messages, tools, system);
