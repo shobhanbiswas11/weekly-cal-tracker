@@ -68,9 +68,38 @@
 ## Phase 7 — Auth & Release
 
 - [x] Chat memory / context
-- [ ] Add Apple Sign-In
+- [x] Add Apple Sign-In
 - [ ] Clerk production keys — Google + Apple _(requires Apple Sign-In first)_
 - [ ] Android build & testing
 - [ ] Error logging (Sentry or similar)
 - [ ] Force update mechanism
+
+---
+
+## Phase 8 — iOS App Store Submission
+
+### Must Have
+
+- [x] Add Apple Sign-In (entitlement exists, must implement or remove)
+- [x] ~~Fix iOS icon~~ — intentional (dark icon as default)
+- [x] Verify privacy policy URL is live (`botobrain.com/privacy`)
+- [x] Verify terms of service URL is live (`botobrain.com/terms`)
+- [ ] Configure RevenueCat products in App Store Connect (yearly + monthly)
+- [ ] Ensure "Restore Purchases" flow works correctly
+- [ ] Clerk production keys configured
+- [ ] App Store Connect metadata (description, keywords, category)
+- [ ] Screenshots for required device sizes (6.7", 6.5", 5.5")
+- [ ] Age rating questionnaire
+- [ ] Provide demo account for Apple review team
+- [ ] Test full purchase + restore flow on TestFlight
+
+### Good to Have
+
+- [ ] Fix duplicate agent calls on send (Phase 1 leftover)
+- [ ] Remove dev-only plist entries (`NSLocalNetworkUsageDescription`, `NSBonjourServices`)
+- [ ] Remove `exp+weekly-health` URL scheme (Expo Go artifact)
+- [ ] Empty states for no-data screens
+- [ ] Error boundaries & friendly messages
+- [ ] Loading skeletons
+- [ ] App preview video for App Store listing
 
