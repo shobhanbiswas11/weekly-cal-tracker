@@ -9,6 +9,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.botobrain.weeklyhealth",
+      "buildNumber": "3",
       "icon": {
         "light": "./assets/icons/ios-dark.png",
         "dark": "./assets/icons/ios-dark.png",
@@ -44,9 +45,7 @@
           }
         }
       ],
-      [
-        "@clerk/expo"
-      ],
+      ["@clerk/expo"],
       "expo-secure-store",
       "expo-font",
       "expo-web-browser",
