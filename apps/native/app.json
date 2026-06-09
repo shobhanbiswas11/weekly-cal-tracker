@@ -57,10 +57,7 @@
       "autolinkingModuleResolution": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "ec9c3fa1-2cc3-4a3c-af4f-e9bc8ba2a664"
-      }
+      "router": {}
     }
   }
 }
