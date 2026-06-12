@@ -4,14 +4,14 @@ import {
   PutCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { inject, injectable } from "@needle-di/core";
-import { schemaProfileEntity } from "@weekly-cal/core";
+import { inject, injectable } from "../di-utils";
 import { AppConfigService } from "../services";
 import { DynamoDBClient } from "./dynamodb";
-import type {
+import {
   CreateProfile,
   Profile,
   ProfileRepo,
+  schemaProfileEntity,
 } from "./profile.repo.interface";
 
 type DynamoDBProfile = Profile & { PK: string; SK: string };
@@ -158,5 +158,31 @@ export class DynamoDBProfileRepo implements ProfileRepo {
     }
 
     return result.Item as Pick<Profile, T>;
+  }
+
+  async incrementChatMessageCount(userId: string): Promise<number> {
+    const result = await this.db.client.send(
+      new UpdateCommand({
+        TableName: this.config.tableName,
+        Key: {
+          PK: DynamoDBClient.createPK(userId),
+          SK: DynamoDBProfileRepo.PROFILE_SK,
+        },
+        UpdateExpression:
+          "SET #count = if_not_exists(#count, :zero) + :one, #updatedAt = :now",
+        ExpressionAttributeNames: {
+          "#count": "chatMessageCount",
+          "#updatedAt": "updatedAt",
+        },
+        ExpressionAttributeValues: {
+          ":zero": 0,
+          ":one": 1,
+          ":now": new Date().toISOString(),
+        },
+        ReturnValues: "ALL_NEW",
+      }),
+    );
+
+    return (result.Attributes?.chatMessageCount as number) ?? 0;
   }
 }

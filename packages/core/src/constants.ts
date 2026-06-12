@@ -32,3 +32,10 @@ export type HeightUnit = z.infer<typeof schemaHeightUnit>;
 
 export const schemaWeightUnit = z.enum(["kg", "lbs"]);
 export type WeightUnit = z.infer<typeof schemaWeightUnit>;
+
+// =============================================================================
+// Subscription
+// =============================================================================
+
+export const FREE_TIER_CHAT_LIMIT = 20;
+export const REVENUECAT_ENTITLEMENT_ID = "Weekly Health Pro";

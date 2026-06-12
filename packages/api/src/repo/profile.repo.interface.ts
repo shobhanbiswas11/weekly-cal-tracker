@@ -1,9 +1,11 @@
-import { schemaCreateProfile, schemaProfileEntity } from "@weekly-cal/core";
-import type { z } from "zod";
+import type {
+  CreateProfileDto as CreateProfile,
+  Profile,
+} from "@weekly-cal/core";
 import { InjectionToken } from "../di-utils";
 
-export type Profile = z.infer<typeof schemaProfileEntity>;
-export type CreateProfile = z.infer<typeof schemaCreateProfile>;
+export { schemaProfileEntity } from "@weekly-cal/core";
+export type { CreateProfile, Profile };
 
 export interface ProfileRepo {
   create: (userId: string, data: CreateProfile) => Promise<Profile>;
@@ -14,6 +16,7 @@ export interface ProfileRepo {
     userId: string,
     fields: T[],
   ) => Promise<Pick<Profile, T> | null>;
+  incrementChatMessageCount: (userId: string) => Promise<number>;
 }
 
 export const PROFILE_REPO_TOKEN = new InjectionToken<ProfileRepo>(

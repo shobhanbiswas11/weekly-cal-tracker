@@ -13,8 +13,12 @@ export {
 export {
   AccountService,
   ActivityService,
+  AuthService,
+  ChatAccess,
   ChatService,
   MealService,
   ProfileService,
   QueryService,
+  SubscriptionService,
+  TokenVerificationService,
 } from "./services";

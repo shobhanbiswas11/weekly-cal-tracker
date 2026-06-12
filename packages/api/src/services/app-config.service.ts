@@ -7,8 +7,10 @@ import { injectable } from "../di-utils";
 
 const appConfigSchema = z.object({
   TABLE_NAME: z.string().optional(),
+  JWT_ISSUER: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   CLERK_SECRET_KEY: z.string().optional(),
+  REVENUECAT_SECRET_KEY: z.string().optional(),
   PRIMARY_MODEL_NAME: z.string().optional().default("gpt-5.4-mini"), // gpt-5.4-nano
   ENABLE_DEV_TOOLS: z
     .string()
@@ -30,6 +32,13 @@ export class AppConfigService {
       throw new Error("TABLE_NAME environment variable is required");
     }
     return this.config.TABLE_NAME;
+  }
+
+  get jwtIssuer(): string {
+    if (!this.config.JWT_ISSUER) {
+      throw new Error("JWT_ISSUER environment variable is required");
+    }
+    return this.config.JWT_ISSUER;
   }
 
   get openaiApiKey(): string {
@@ -54,5 +63,14 @@ export class AppConfigService {
 
   get enableDevTools(): boolean {
     return this.config.ENABLE_DEV_TOOLS;
+  }
+
+  get revenuecatSecretKey(): string {
+    if (!this.config.REVENUECAT_SECRET_KEY) {
+      throw new Error(
+        "REVENUECAT_SECRET_KEY environment variable is required for subscription features",
+      );
+    }
+    return this.config.REVENUECAT_SECRET_KEY;
   }
 }

@@ -47,6 +47,12 @@ export const schemaProfileEntity = z.object({
     ),
 
   // ---------------------------------------------------------------------------
+  chatMessageCount: z
+    .number()
+    .default(0)
+    .describe("Total number of chat messages sent (for free-tier limiting)"),
+
+  // ---------------------------------------------------------------------------
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
