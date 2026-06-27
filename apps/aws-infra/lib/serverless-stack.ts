@@ -11,6 +11,7 @@ import * as path from "path";
 
 interface ServerlessStackProps extends cdk.StackProps {
   jwtIssuer: string;
+  stage: string;
 }
 
 export class ServerlessStack extends cdk.Stack {
@@ -20,12 +21,16 @@ export class ServerlessStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ServerlessStackProps) {
     super(scope, id, props);
 
-    const { jwtIssuer } = props;
+    const { jwtIssuer, stage } = props;
+    const isProduction = stage === "production";
+    const suffix = isProduction ? "" : `-${stage}`;
 
     // =====================
     // SSM Parameter Names (secrets fetched at runtime)
     // =====================
-    const ssmPrefix = "/weekly-health";
+    const ssmPrefix = isProduction
+      ? "/weekly-health"
+      : `/weekly-health-${stage}`;
     const openaiApiKeyParam = `${ssmPrefix}/openai-api-key`;
     const clerkSecretKeyParam = `${ssmPrefix}/clerk-secret-key`;
 
@@ -33,7 +38,7 @@ export class ServerlessStack extends cdk.Stack {
     // DynamoDB Table (Single Table Design)
     // =====================
     const table = new dynamodb.Table(this, "Table", {
-      tableName: "WeeklyHealth",
+      tableName: `WeeklyHealth${suffix}`,
       partitionKey: {
         name: "PK",
         type: dynamodb.AttributeType.STRING,
@@ -121,7 +126,7 @@ export class ServerlessStack extends cdk.Stack {
     // HTTP API with JWT Authorizer
     // =====================
     const httpApi = new apigatewayv2.HttpApi(this, "Api", {
-      apiName: "WeeklyHealthApi",
+      apiName: `WeeklyHealthApi${suffix}`,
       corsPreflight: {
         allowOrigins: ["*"],
         allowMethods: [
