@@ -8,6 +8,8 @@
     "start:native": "pnpm --filter native start",
     "start:native:ios": "pnpm --filter native ios",
     "run:single": "pnpx tsx",
+    "test:api": "pnpm --filter api test",
+    "test:api:watch": "pnpm --filter api test:watch",
     "awsdeploy:frontend": "pnpm --filter pwa awsdeploy",
     "awsdeploy:backend": "pnpm --filter backend awsdeploy",
     "awsdeploy": "pnpm awsdeploy:backend && pnpm awsdeploy:frontend",

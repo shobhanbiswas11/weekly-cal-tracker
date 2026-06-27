@@ -102,4 +102,5 @@
 - [ ] Error boundaries & friendly messages
 - [ ] Loading skeletons
 - [ ] App preview video for App Store listing
+- [ ] Add domain before lambda function and api gateway then deploy app
 
