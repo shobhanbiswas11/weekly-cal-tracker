@@ -1,0 +1,29 @@
+{
+  "appName": "weekly-health",
+  "stages": [
+    {
+      "name": "production",
+      "description": "Live production environment",
+      "secretsFile": "secrets/production.json",
+      "ssmKeys": {
+        "openaiApiKey": "openai-api-key",
+        "clerkSecretKey": "clerk-secret-key"
+      },
+      "env": {
+        "jwtIssuer": "https://clerk.botobrain.com"
+      }
+    },
+    {
+      "name": "staging",
+      "description": "Staging/testing environment",
+      "secretsFile": "secrets/staging.json",
+      "ssmKeys": {
+        "openaiApiKey": "openai-api-key",
+        "clerkSecretKey": "clerk-secret-key"
+      },
+      "env": {
+        "jwtIssuer": "https://clerk.botobrain.com"
+      }
+    }
+  ]
+}

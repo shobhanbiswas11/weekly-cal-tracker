@@ -8,10 +8,11 @@ import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import * as path from "path";
+import appConfig from "../app-config.json";
+import { getStageConfig } from "./config";
 
 interface ServerlessStackProps extends cdk.StackProps {
-  jwtIssuer: string;
-  stage: string;
+  stageName: string;
 }
 
 export class ServerlessStack extends cdk.Stack {
@@ -21,24 +22,23 @@ export class ServerlessStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ServerlessStackProps) {
     super(scope, id, props);
 
-    const { jwtIssuer, stage } = props;
-    const isProduction = stage === "production";
-    const suffix = isProduction ? "" : `-${stage}`;
+    const { appName } = appConfig;
+    const stage = props.stageName;
+    const { ssmKeys, env: stageEnv } = getStageConfig(stage);
+    const { jwtIssuer } = stageEnv;
 
     // =====================
     // SSM Parameter Names (secrets fetched at runtime)
     // =====================
-    const ssmPrefix = isProduction
-      ? "/weekly-health"
-      : `/weekly-health-${stage}`;
-    const openaiApiKeyParam = `${ssmPrefix}/openai-api-key`;
-    const clerkSecretKeyParam = `${ssmPrefix}/clerk-secret-key`;
+    const ssmPrefix = `/${appName}/${stage}`;
+    const openaiApiKeyParam = `${ssmPrefix}/${ssmKeys.openaiApiKey}`;
+    const clerkSecretKeyParam = `${ssmPrefix}/${ssmKeys.clerkSecretKey}`;
 
     // =====================
     // DynamoDB Table (Single Table Design)
     // =====================
     const table = new dynamodb.Table(this, "Table", {
-      tableName: `WeeklyHealth${suffix}`,
+      tableName: `${appName}-${stage}`,
       partitionKey: {
         name: "PK",
         type: dynamodb.AttributeType.STRING,
@@ -126,7 +126,7 @@ export class ServerlessStack extends cdk.Stack {
     // HTTP API with JWT Authorizer
     // =====================
     const httpApi = new apigatewayv2.HttpApi(this, "Api", {
-      apiName: `WeeklyHealthApi${suffix}`,
+      apiName: `${appName}-api-${stage}`,
       corsPreflight: {
         allowOrigins: ["*"],
         allowMethods: [

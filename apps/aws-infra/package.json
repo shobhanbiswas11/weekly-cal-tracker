@@ -5,17 +5,12 @@
     "backend": "dist/bin/backend.js"
   },
   "scripts": {
-    "dev": "tsx watch app.ts",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk",
-    "synth": "cdk synth",
-    "deploy:serverless": "pnpx cdk deploy WeeklyHealthServerlessStack",
-    "deploy:serverless:staging": "pnpx cdk deploy WeeklyHealthServerlessStack-staging -c stage=staging",
+    "list-stacks": "pnpx cdk ls",
+    "deploy:production": "pnpx cdk deploy \"weekly-health-production/*\"",
+    "deploy:staging": "pnpx cdk deploy \"weekly-health-staging/*\"",
     "push-secrets": "bash scripts/push-secrets.sh",
-    "push-secrets:staging": "bash scripts/push-secrets.sh staging",
-    "describe-stack": "bash scripts/describe-stack.sh"
+    "destroy-secrets": "bash scripts/destroy-secrets.sh",
+    "describe-stacks": "bash scripts/describe-stacks.sh"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",

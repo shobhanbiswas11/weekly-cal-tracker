@@ -1,17 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
-PREFIX="/weekly-health"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/../app-config.json"
 
-echo "Deleting secrets from SSM Parameter Store..."
+APP_NAME=$(jq -r '.appName' "$CONFIG_FILE")
+STAGE_COUNT=$(jq -r '.stages | length' "$CONFIG_FILE")
 
-aws ssm delete-parameter --name "$PREFIX/openai-api-key" 2>/dev/null && \
-  echo "  ✓ Deleted $PREFIX/openai-api-key" || \
-  echo "  - $PREFIX/openai-api-key not found (skipped)"
+for (( i=0; i<STAGE_COUNT; i++ )); do
+  STAGE_NAME=$(jq -r ".stages[$i].name" "$CONFIG_FILE")
+  EXPECTED_KEYS=$(jq -r ".stages[$i].ssmKeys | values[]" "$CONFIG_FILE")
 
-aws ssm delete-parameter --name "$PREFIX/clerk-secret-key" 2>/dev/null && \
-  echo "  ✓ Deleted $PREFIX/clerk-secret-key" || \
-  echo "  - $PREFIX/clerk-secret-key not found (skipped)"
+  PREFIX="/${APP_NAME}/${STAGE_NAME}"
+  echo "=== Stage: $STAGE_NAME ==="
+  echo "Deleting secrets..."
 
-echo ""
+  for KEY in $EXPECTED_KEYS; do
+    aws ssm delete-parameter --name "$PREFIX/$KEY" 2>/dev/null && \
+      echo "  ✓ Deleted $PREFIX/$KEY" || \
+      echo "  - $PREFIX/$KEY not found (skipped)"
+  done
+
+  echo ""
+done
+
 echo "Done. All secrets removed from SSM."

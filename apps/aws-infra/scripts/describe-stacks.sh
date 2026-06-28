@@ -7,21 +7,30 @@ OUTPUT_FILE="$CDK_DIR/stack-output.json"
 
 # List all stacks in the CDK app
 echo "Discovering stacks..."
-STACKS=$(cd "$CDK_DIR" && npx cdk ls 2>/dev/null)
+ALL_STACKS=$(cd "$CDK_DIR" && npx cdk ls 2>/dev/null)
 
-if [ -z "$STACKS" ]; then
+if [ -z "$ALL_STACKS" ]; then
   echo "Error: No stacks found in CDK app"
   exit 1
 fi
 
 echo "Found stacks:"
-echo "$STACKS" | sed 's/^/  - /'
+echo "$ALL_STACKS" | sed 's/^/  - /'
 echo ""
 
 # Build a combined JSON object keyed by stack name
 COMBINED="{}"
 
-while IFS= read -r STACK_NAME; do
+while IFS= read -r LINE; do
+  # cdk ls outputs: "Stage/StackId (CloudFormationStackName)"
+  # Extract the CloudFormation stack name from parentheses, or use the line as-is
+  PATTERN='\(([^)]+)\)'
+  if [[ "$LINE" =~ $PATTERN ]]; then
+    STACK_NAME="${BASH_REMATCH[1]}"
+  else
+    STACK_NAME="$LINE"
+  fi
+
   echo "Describing stack: $STACK_NAME..."
 
   OUTPUTS=$(aws cloudformation describe-stacks \
@@ -39,7 +48,7 @@ while IFS= read -r STACK_NAME; do
   COMBINED=$(echo "$COMBINED" | jq --arg name "$STACK_NAME" --argjson outputs "$FLAT" '. + {($name): $outputs}')
 
   echo "  ✓ Done"
-done <<< "$STACKS"
+done <<< "$ALL_STACKS"
 
 echo "$COMBINED" | jq '.' > "$OUTPUT_FILE"
 

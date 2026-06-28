@@ -2,43 +2,60 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/../app-config.json"
+BASE_DIR="$SCRIPT_DIR/.."
 
-# Accept stage as first argument (default: production)
-STAGE="${1:-production}"
+APP_NAME=$(jq -r '.appName' "$CONFIG_FILE")
+STAGE_COUNT=$(jq -r '.stages | length' "$CONFIG_FILE")
 
-if [ "$STAGE" = "production" ]; then
-  ENV_FILE="$SCRIPT_DIR/../.env"
-  PREFIX="/weekly-health"
-else
-  ENV_FILE="$SCRIPT_DIR/../.env.${STAGE}"
-  PREFIX="/weekly-health-${STAGE}"
-fi
+for (( i=0; i<STAGE_COUNT; i++ )); do
+  STAGE_NAME=$(jq -r ".stages[$i].name" "$CONFIG_FILE")
+  SECRETS_REL=$(jq -r ".stages[$i].secretsFile" "$CONFIG_FILE")
+  SECRETS_FILE="$BASE_DIR/$SECRETS_REL"
+  EXPECTED_KEYS=$(jq -r ".stages[$i].ssmKeys | values[]" "$CONFIG_FILE" | sort)
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "Error: env file not found at $ENV_FILE"
-  echo "Copy .env.example to .env.${STAGE} and fill in your values."
-  exit 1
-fi
+  echo "=== Stage: $STAGE_NAME ==="
 
-source "$ENV_FILE"
+  if [ ! -f "$SECRETS_FILE" ]; then
+    echo "Error: Secrets file not found: $SECRETS_FILE"
+    echo "Create it from secrets/example.json and fill in your values."
+    exit 1
+  fi
 
-echo "Pushing secrets to SSM Parameter Store (stage: $STAGE)..."
+  # Validate secrets file keys match ssmKeys in config
+  ACTUAL_KEYS=$(jq -r 'keys[]' "$SECRETS_FILE" | sort)
 
-aws ssm put-parameter \
-  --name "$PREFIX/openai-api-key" \
-  --value "$OPENAI_API_KEY" \
-  --type SecureString \
-  --overwrite
+  MISSING=$(comm -23 <(echo "$EXPECTED_KEYS") <(echo "$ACTUAL_KEYS"))
+  EXTRA=$(comm -13 <(echo "$EXPECTED_KEYS") <(echo "$ACTUAL_KEYS"))
 
-echo "  ✓ $PREFIX/openai-api-key"
+  if [ -n "$MISSING" ]; then
+    echo "Error: $SECRETS_REL is missing keys expected by app-config.json:"
+    echo "$MISSING" | sed 's/^/  - /'
+    exit 1
+  fi
 
-aws ssm put-parameter \
-  --name "$PREFIX/clerk-secret-key" \
-  --value "$CLERK_SECRET_KEY" \
-  --type SecureString \
-  --overwrite
+  if [ -n "$EXTRA" ]; then
+    echo "Warning: $SECRETS_REL has keys not in app-config.json:"
+    echo "$EXTRA" | sed 's/^/  - /'
+  fi
 
-echo "  ✓ $PREFIX/clerk-secret-key"
+  # Push secrets to SSM
+  PREFIX="/${APP_NAME}/${STAGE_NAME}"
+  echo "Pushing secrets..."
 
-echo ""
-echo "Done. All secrets pushed to SSM (prefix: $PREFIX)."
+  for KEY in $(jq -r 'keys[]' "$SECRETS_FILE"); do
+    VALUE=$(jq -r ".\"${KEY}\"" "$SECRETS_FILE")
+
+    aws ssm put-parameter \
+      --name "$PREFIX/$KEY" \
+      --value "$VALUE" \
+      --type SecureString \
+      --overwrite
+
+    echo "  ✓ $PREFIX/$KEY"
+  done
+
+  echo ""
+done
+
+echo "Done. All secrets pushed to SSM."
