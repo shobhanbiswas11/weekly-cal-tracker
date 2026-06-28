@@ -81,6 +81,7 @@ function SummaryDashboard() {
           goals.
         </Text>
         <Pressable
+          testID="setup-vitals-button"
           onPress={() => router.push("/profile/edit-vitals")}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           className="bg-primary px-6 py-3 rounded-xl"
@@ -115,6 +116,7 @@ function SummaryDashboard() {
 
   return (
     <ScrollView
+      testID="dashboard-screen"
       className="flex-1"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />

@@ -97,6 +97,7 @@ export type HeightInputFieldProps = {
   foregroundColor: string;
   placeholderColor: string;
   error?: string;
+  testID?: string;
 };
 
 export function HeightInputField({
@@ -107,6 +108,7 @@ export function HeightInputField({
   foregroundColor,
   placeholderColor,
   error,
+  testID,
 }: HeightInputFieldProps) {
   // Initialise all display strings from the canonical cm value on mount.
   const initCm = parseFloat(value);
@@ -209,6 +211,7 @@ export function HeightInputField({
             Height (cm)
           </Text>
           <TextInput
+            testID={testID}
             value={cmText}
             onChangeText={handleCmChange}
             onBlur={onBlur}
@@ -273,6 +276,7 @@ export type WeightInputFieldProps = {
   foregroundColor: string;
   placeholderColor: string;
   error?: string;
+  testID?: string;
 };
 
 export function WeightInputField({
@@ -283,6 +287,7 @@ export function WeightInputField({
   foregroundColor,
   placeholderColor,
   error,
+  testID,
 }: WeightInputFieldProps) {
   const initKg = parseFloat(value);
   const validInit = !isNaN(initKg) && initKg > 0;
@@ -363,6 +368,7 @@ export function WeightInputField({
           {isKg ? "Weight (kg)" : "Weight (lbs)"}
         </Text>
         <TextInput
+          testID={testID}
           value={isKg ? kgText : lbsText}
           onChangeText={isKg ? handleKgChange : handleLbsChange}
           onBlur={onBlur}

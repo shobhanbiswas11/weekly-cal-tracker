@@ -27,8 +27,11 @@ Thumbs.db
 
 # Environment
 .env
+.env.*
 .env.local
 .env.*.local
+secrets.json
+secrets/
 
 # Testing
 coverage/

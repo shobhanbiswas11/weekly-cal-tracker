@@ -46,6 +46,7 @@ export function Button({
   variant = "default",
   size = "md",
   className,
+  testID,
 }: {
   children: ReactNode;
   onPress?: () => void;
@@ -53,11 +54,13 @@ export function Button({
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
+  testID?: string;
 }) {
   const isGhost = variant === "ghost" || variant === "ghost-primary";
 
   return (
     <Pressable
+      testID={testID}
       onPress={disabled ? undefined : onPress}
       hitSlop={isGhost ? { top: 8, bottom: 8, left: 8, right: 8 } : undefined}
       style={({ pressed }) => ({

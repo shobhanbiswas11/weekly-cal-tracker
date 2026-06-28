@@ -1,0 +1,13 @@
+{
+  "name": "native-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "bash run.sh"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1019.0",
+    "@types/node": "^26.0.1",
+    "tsx": "^4.19.4"
+  }
+}

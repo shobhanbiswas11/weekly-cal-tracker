@@ -1,0 +1,79 @@
+appId: com.botobrain.weeklyhealth
+---
+# New User Onboarding: Sign in → see welcome → fill vitals form → see dashboard
+#
+# Pre-requisites:
+#   - User is already signed in (pre-authenticated via Clerk dev session)
+#   - User data has been reset (run via run-e2e.sh wrapper script)
+
+# ─── Launch & verify welcome screen ──────────────────────────────────────────
+
+- launchApp
+- waitForAnimationToEnd
+
+- assertVisible:
+    id: "setup-vitals-button"
+
+# ─── Navigate to vitals form ─────────────────────────────────────────────────
+
+- tapOn:
+    id: "setup-vitals-button"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "save-vitals-button"
+
+# ─── Fill in Personal Details ─────────────────────────────────────────────────
+
+- tapOn:
+    id: "input-name"
+- inputText: "Test User"
+- tapOn:
+    id: "vitals-form"
+
+- tapOn:
+    id: "input-dob"
+- inputText: "1995-06-15"
+- tapOn:
+    id: "vitals-form"
+
+# ─── Select Biological Sex (Male is pre-selected, pick Female to verify) ─────
+
+- tapOn: "Female"
+
+# ─── Fill in Body Measurements ───────────────────────────────────────────────
+
+- tapOn:
+    id: "input-height"
+- inputText: "165"
+- tapOn:
+    id: "vitals-form"
+
+- tapOn:
+    id: "input-weight"
+- inputText: "60"
+- tapOn:
+    id: "vitals-form"
+
+# ─── Select Activity Level ──────────────────────────────────────────────────
+
+- tapOn: "Lightly Active"
+
+# ─── Select Goal ────────────────────────────────────────────────────────────
+
+- scrollUntilVisible:
+    element: "Goal"
+    direction: DOWN
+- tapOn: "Maintain Healthy Lifestyle"
+
+# ─── Save the form ──────────────────────────────────────────────────────────
+
+- tapOn:
+    id: "save-vitals-button"
+- waitForAnimationToEnd
+
+# ─── Verify we're back on the dashboard with data loaded ────────────────────
+
+- extendedWaitUntil:
+    visible:
+      id: "dashboard-screen"
+    timeout: 15000

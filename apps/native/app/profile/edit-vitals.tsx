@@ -79,6 +79,7 @@ function InputRow({
   foregroundColor,
   placeholderColor,
   error,
+  testID,
 }: {
   label: string;
   value: string;
@@ -91,6 +92,7 @@ function InputRow({
   foregroundColor: string;
   placeholderColor: string;
   error?: string;
+  testID?: string;
 }) {
   return (
     <View
@@ -102,6 +104,7 @@ function InputRow({
     >
       <Text className="text-xs text-muted-foreground mb-1 mt-1">{label}</Text>
       <TextInput
+        testID={testID}
         value={value}
         onChangeText={onChangeText}
         onBlur={onBlur}
@@ -275,6 +278,7 @@ export default function EditVitalsScreen() {
           {profile ? "Edit Vitals" : "Set Up Vitals"}
         </Text>
         <Button
+          testID="save-vitals-button"
           variant="ghost-primary"
           size="lg"
           onPress={onSubmit}
@@ -289,6 +293,7 @@ export default function EditVitalsScreen() {
         className="flex-1"
       >
         <ScrollView
+          testID="vitals-form"
           className="flex-1"
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
@@ -301,6 +306,7 @@ export default function EditVitalsScreen() {
               name="name"
               render={({ field }) => (
                 <InputRow
+                  testID="input-name"
                   label="Name"
                   value={field.value}
                   onChangeText={field.onChange}
@@ -317,6 +323,7 @@ export default function EditVitalsScreen() {
               name="dateOfBirth"
               render={({ field }) => (
                 <InputRow
+                  testID="input-dob"
                   label="Date of Birth"
                   value={field.value}
                   onChangeText={field.onChange}
@@ -354,6 +361,7 @@ export default function EditVitalsScreen() {
             name="height"
             render={({ field }) => (
               <HeightInputField
+                testID="input-height"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -372,6 +380,7 @@ export default function EditVitalsScreen() {
             name="weight"
             render={({ field }) => (
               <WeightInputField
+                testID="input-weight"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}

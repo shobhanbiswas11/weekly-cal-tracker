@@ -122,6 +122,8 @@ pnpm-workspace.yaml          # pnpm workspaces config
 - **No default exports** — Use named exports everywhere for better refactoring and IDE support.
 - **Barrel files** — Each feature folder should have an `index.ts` that re-exports its public API.
 
+### E2E Testing
 
+See [`apps/native-e2e/CONVENTIONS.md`](apps/native-e2e/CONVENTIONS.md) for Maestro + React Native iOS testing conventions.
 
 
